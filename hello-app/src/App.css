@@ -1,0 +1,438 @@
+/* Global Styles */
+.App {
+  text-align: center;
+  color: black;
+}
+
+/* Login Page */
+
+.css-login1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+  background-color: white;
+  background-image: url('/public/asset/001.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.css-login2 {
+  margin-bottom: 20px;
+  height: 35px;
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.css-login3 {
+  background-color: #f7f7f7;
+  padding: 20px;
+  border-radius: 9px;
+}
+.Header {
+  font-size: 30px; /* ขนาดฟอนต์ */
+  font-family: 'Arial', sans-serif; /* ฟอนต์หลัก */
+  font-weight: bold; /* น้ำหนักฟอนต์ */
+  color: #2c3e50; /* สีฟอนต์หลัก */
+  text-align: center; /* จัดตำแหน่งข้อความ */
+  margin-bottom: 20px; /* ระยะห่างด้านล่าง */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* เงาข้อความ */
+  letter-spacing: 0.5px; /* ระยะห่างระหว่างตัวอักษร */
+  background: linear-gradient(45deg, #1eeb81, #f39c12); /* พื้นหลังแบบไล่สี */
+  -webkit-text-fill-color: transparent; /* ซ่อนสีพื้นหลังที่ไม่ได้ใช้ */
+  padding: 10px; /* ระยะห่างภายใน */
+  border-radius: 5px; /* มุมโค้ง */
+}
+
+.Login {
+  background-color: rgb(255, 255, 255);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
+input.login-email, input.login-Password {
+  margin-bottom: 20px;
+  height: 35px;
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.div-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  width: 300px;
+}
+
+.css-checkbox {
+  margin-right: 10px;
+}
+.css-text1{
+  margin-left: 10px;
+}
+.css-text2{
+  margin-left: 20px;
+}
+.css-text {
+  font-size: 16px;
+  color: black;
+}
+
+.button-container {
+  width: 100%;
+}
+
+button.btn-primary {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.text-danger {
+  color: red;
+  font-size: 12px;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Register Page */
+.navbar {
+  background: #3495EA;
+
+}
+.navbar1{
+  background-color: #ccc;
+}
+
+.Register {
+  width: 800px;
+  padding: 20px;
+  color: black;
+  margin: 0 auto;
+  max-width: 600px;
+  background-color: #D9F8FF;
+  margin-top: 30px;
+  border-radius: 3px;
+  
+}
+
+.register1 {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  box-sizing: border-box;
+  
+}
+
+.register2 {
+  background-color: rgb(67, 137, 235);
+  height: 50px;
+  font-size: 25px;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 2px;
+}
+
+.register3 {
+  margin-top: 15px;
+  background-color: #D9F8FF;
+}
+.button-container {
+  display: flex;
+  justify-content: center; /* จัดตำแหน่งปุ่มให้อยู่กลาง */
+  gap: 20px; /* ระยะห่างระหว่างปุ่ม */
+  margin-top: 20px; /* ระยะห่างด้านบน */
+  
+}
+
+.div-container1 {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 300px;
+  margin-left: 80px;
+}
+
+.username, .email, .password, .Confirm-Password, .name-lastname, .phone-number, .birthday, .ab {
+  margin-bottom: 10px;
+  height: 40px;
+  width: 100%;
+  max-width: 400px;
+  padding: 10px;
+  border: 0.1px solid #29E5F1;
+  border-radius: 1px;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .register1 {
+    padding: 15px;
+    margin: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .register1 {
+    padding: 10px;
+    margin: 10px;
+    width: calc(100% - 20px);
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    height: auto;
+  }
+
+  .Register {
+    margin: 20px;
+  }
+}
+
+/* Upload Page */
+.css-upload{
+  height: 100%;
+  background-image: url('/public/asset/001.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+}
+.upload1 {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #D9F8FF;
+  margin-top: 50px;
+}
+
+.upload2 {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2.5px;
+  
+}
+
+.upload2 label {
+  margin-bottom: 0.5px;
+  margin-right: 0;
+  text-align: left;
+  font-weight: bold;
+}
+
+.upload2 input[type='text'], .upload2 input[type='file'], .upload2 textarea, .upload2 input[type='date'] {
+  width: 100%;
+  padding: 10px;
+  border: 0.1px solid #29E5F1;
+  border-radius: 1px;
+}
+
+.upload2 textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+.button-upload {
+  text-align: center;
+}
+
+.button-upload button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button-upload button:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .upload1 {
+    padding: 15px;
+  }
+
+  .upload2 label {
+    font-size: 14px;
+  }
+
+  .button-upload button {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .upload1 {
+    padding: 10px;
+  }
+
+  .upload2 label {
+    font-size: 12px;
+  }
+
+  .button-upload button {
+    font-size: 12px;
+  }
+}
+
+/* Home Page */
+.home-container {
+  padding: 30px;
+  background-color: #D9F8FF;
+  height: 100%;
+  background-image: url('/public/asset/001.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.loading, .error {
+  font-size: 18px;
+  color: #333;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.user-table th, .user-table td {
+  border: 0.1px solid #dddddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.user-table th {
+  background-color: #22dd80;
+}
+
+.edit-button,.delete-button, .submit-button, .cancel-button {
+  padding: 5px 10px;
+  margin: 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.edit-button {
+  background-color: #29E6AD;
+  color: #fff;
+}
+.delete-button {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.submit-button {
+  background-color: #29E6AD;
+  color: #fff;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .user-table th, .user-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .user-table th {
+    display: none;
+  }
+
+  .user-table td {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 5px;
+  }
+
+  .user-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+}
+.file-link {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.file-link:hover {
+  text-decoration: none;
+}
+
+
+/* Toastify */
+.toastify-toast {
+  margin: 0;
+}
+
+.toastify-toast-container {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+
+.edit-button :hover{
+  background-color: #1a7258;
+}
+.delete-button:hover {
+
+  background-color: #c62232;
+}
+
