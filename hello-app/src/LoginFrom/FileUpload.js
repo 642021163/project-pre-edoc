@@ -108,39 +108,38 @@ function FileUpload() {
     e.preventDefault();
 
     if (validate()) {
-        try {
-            console.log('Submitting form...');
-
-            const user_fname = localStorage.getItem('user_fname');
-            const user_lname = localStorage.getItem('user_lname');
-
-            
-
-            const formData = new FormData();
-            formData.append('upload_date', values.upload_date);
-            formData.append('subject', values.subject);
-            formData.append('to_recipient', values.to_recipient);
-            formData.append('document_type', values.document_type);
-            formData.append('notes', values.notes);
-            formData.append('user_fname', user_fname); // เพิ่มชื่อ
-            formData.append('user_lname', user_lname); // เพิ่มนามสกุล
-            console.log(user_fname,user_lname)
-            if (values.file) {
-                formData.append('file', values.file);
-            }
-
-            const response = await axios.post('http://localhost:3000/documents', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-
-            console.log('Upload successful', response);
-        } catch (error) {
-            console.error("Error during upload", error);
+      try {
+        console.log('Submitting form...');
+        const formData = new FormData();
+        formData.append('upload_date', values.upload_date);
+        formData.append('subject', values.subject);
+        formData.append('to_recipient', values.to_recipient);
+        formData.append('document_type', values.document_type);
+        formData.append('notes', values.notes);
+        formData.append('user_fname', user_fname); // เพิ่มชื่อ
+        formData.append('user_lname', user_lname); // เพิ่มนามสกุล
+        console.log(user_fname, user_lname)
+        if (values.file) {
+          formData.append('file', values.file);
         }
+
+        const response = await axios.post('http://localhost:3000/documents', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+       
+
+        console.log('Upload successful', response);
+      } catch (error) {
+        console.error("Error during upload", error);
+      }
+       // ตั้งข้อความสำเร็จและเปิด Dialog
+       setSuccessMessage('อัปโหลดเอกสารสำเร็จ');
+       setDialogOpen(true);
+       resetForm();
     }
-};
+  };
 
 
 
