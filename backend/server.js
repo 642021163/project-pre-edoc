@@ -108,21 +108,31 @@ const upload = multer({ storage: storage }); // สร้าง instance ขอ�
 
 app.post('/documents', upload.single('file'), (req, res) => {
     console.log("Received request to create document with data:", req.body);
-    console.log("Received file:", req.file); // ตรวจสอบข้อมูลของไฟล์ที่อัปโหลด
-    const filePath = req.file ? path.join('uploads', req.file.filename) : null; // สร้างเส้นทางไฟล์
-    console.log("File path to be saved in DB:", filePath);
-    const sql = "INSERT INTO documents (upload_date, subject, to_recipient, document_type, file, notes, status, is_read ,received_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)";
+    console.log("Received file:", req.file);
+
+    // ตรวจสอบค่าที่รับมาจาก req.body
+    console.log('user_fname:', req.body.user_fname);
+    console.log('user_lname:', req.body.user_lname);
+
+    const filePath = req.file ? path.join('uploads', req.file.filename) : null;
+
+    // สร้าง SQL สำหรับการแทรกข้อมูลลงในฐานข้อมูล
+    const sql = "INSERT INTO documents (upload_date, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
         req.body.upload_date,
         req.body.subject,
         req.body.to_recipient,
         req.body.document_type,
-        filePath, // ใช้เส้นทางไฟล์
+        filePath,
         req.body.notes,
-        0, 
-        0,  
-        0 
+        0, // status
+        0, // is_read
+        0, // received_by
+        req.body.user_fname, // ชื่อผู้ใช้ที่ส่งฟอร์ม
+        req.body.user_lname  // นามสกุลผู้ใช้ที่ส่งฟอร์ม
     ];
+
+    // ส่งคำสั่ง SQL ไปยังฐานข้อมูล
     db.query(sql, values, (err, data) => {
         if (err) {
             console.error('Database Error:', err.code, err.message, err.sql);
@@ -132,6 +142,8 @@ app.post('/documents', upload.single('file'), (req, res) => {
         return res.status(201).json({ message: 'Document created successfully', data: data });
     });
 });
+
+
 
 
 // เส้นทางสำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
@@ -188,12 +200,12 @@ async function comparePassword(plainPassword, hashedPassword) { // ฟังก�
 const logger = winston.createLogger({ // กำหนดการตั้งค่าของ winston
     level: 'info',
     format: winston.format.combine(
-      winston.format.timestamp(),
-      winston.format.json()
+        winston.format.timestamp(),
+        winston.format.json()
     ),
     transports: [
-      new winston.transports.Console(),
-      new winston.transports.File({ filename: 'combined.log' })
+        new winston.transports.Console(),
+        new winston.transports.File({ filename: 'combined.log' })
     ],
 });
 
@@ -362,8 +374,9 @@ app.get('/api/document-count', (req, res) => {
 // เส้นทางสำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง admin
 app.get('/admin/documents', (req, res) => {
     const sql = `
-        SELECT  document_id ,upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
-        FROM documents
+       SELECT document_id, upload_date, subject, to_recipient, document_type, file, notes, status, is_read, user_fname, user_lname
+        FROM documents;
+
     `;
 
     db.query(sql, (err, results) => {

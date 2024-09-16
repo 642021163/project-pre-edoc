@@ -64,14 +64,14 @@ function FileUpload() {
 
   useEffect(() => {
     const storedUser_fname = localStorage.getItem('user_fname');
-    const storedUser_lname= localStorage.getItem('user_lname');
+    const storedUser_lname = localStorage.getItem('user_lname');
 
     console.log('Stored user_fname:', storedUser_fname); // ตรวจสอบค่า
     console.log('Stored user_lname:', storedUser_lname); // ตรวจสอบค่า
 
     setUser_fname(storedUser_fname || '');
     setUser_lname(storedUser_lname || '');
-    console.log(storedUser_fname,"Not null");
+    console.log(storedUser_fname, "Not null");
 
     const handleBeforeUnload = (event) => {
       if (isFormDirty) { // ตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลง
@@ -108,43 +108,40 @@ function FileUpload() {
     e.preventDefault();
 
     if (validate()) {
-      try {
-        console.log('Submitting form...');
+        try {
+            console.log('Submitting form...');
 
-        const formData = new FormData();
-        formData.append('upload_date', values.upload_date);
-        formData.append('subject', values.subject);
-        formData.append('to_recipient', values.to_recipient);
-        formData.append('document_type', values.document_type);
-        formData.append('notes', values.notes);
-        formData.append('status', 0);
+            const user_fname = localStorage.getItem('user_fname');
+            const user_lname = localStorage.getItem('user_lname');
 
-        if (values.file) {
-          formData.append('file', values.file);
+            
+
+            const formData = new FormData();
+            formData.append('upload_date', values.upload_date);
+            formData.append('subject', values.subject);
+            formData.append('to_recipient', values.to_recipient);
+            formData.append('document_type', values.document_type);
+            formData.append('notes', values.notes);
+            formData.append('user_fname', user_fname); // เพิ่มชื่อ
+            formData.append('user_lname', user_lname); // เพิ่มนามสกุล
+            console.log(user_fname,user_lname)
+            if (values.file) {
+                formData.append('file', values.file);
+            }
+
+            const response = await axios.post('http://localhost:3000/documents', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            console.log('Upload successful', response);
+        } catch (error) {
+            console.error("Error during upload", error);
         }
-
-        const response = await axios.post('http://localhost:3000/documents', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        });
-
-        console.log('Upload successful', response);
-
-        setSuccessMessage('บันทึกสำเร็จ!');
-        setDialogOpen(true); // เปิด Dialog
-
-        resetForm();
-      } catch (error) {
-        console.error("Error during upload", error);
-        setSuccessMessage('เกิดข้อผิดพลาดในการบันทึก');
-        setDialogOpen(true); // เปิด Dialog
-      }
-    } else {
-      setSuccessMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
-      setDialogOpen(true); // เปิด Dialog
     }
-  };
+};
+
 
 
   // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
@@ -250,15 +247,29 @@ function FileUpload() {
         </List>
       </Box>
 
-      <Box sx={{ flex: 1, p: 2 }}>
+      <Box sx={{ flex: 1, p: 2, maxWidth: 800, mx: 'auto', bgcolor: '#f9f9f9', borderRadius: 2, boxShadow: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-          <Typography variant="h4" gutterBottom>
-            Welcome, {user_fname} {user_lname} !
-          </Typography>
 
           <Typography variant="h4" gutterBottom>
-            Upload Document
+            ส่งเอกสาร
           </Typography>
+
+          {/* กรอบพื้นหลังสำหรับชื่อผู้ส่งเอกสาร */}
+          <Box
+            sx={{
+              bgcolor: '#e3f2fd',
+              p: 2,
+              borderRadius: 1,
+              mb: 3,
+              border: '1px solid #bbdefb',
+              boxShadow: 1,
+              textAlign: 'center'
+            }}
+          >
+            <Typography variant="h7" gutterBottom>
+              {user_fname} {user_lname}
+            </Typography>
+          </Box>
 
 
 
@@ -312,9 +323,9 @@ function FileUpload() {
                 <MenuItem value="">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="ประเภทที่ 1">ประเภทที่ 1</MenuItem>
-                <MenuItem value="ประเภทที่ 1">ประเภทที่ 2</MenuItem>
-                <MenuItem value="ประเภทที่ 1">ประเภทที่ 3</MenuItem>
+                <MenuItem value="เอกสารภายใน">เอกสารภายใน</MenuItem>
+                <MenuItem value="เอกสารภายนอก">เอกสารภายนอก</MenuItem>
+                <MenuItem value="เอกสารสำคัญ">เอกสารสำคัญ</MenuItem>
               </Select>
               {errors.document_type && <Typography variant="caption" color="error">{errors.document_type}</Typography>}
             </FormControl>

@@ -31,14 +31,9 @@ function Documents() {
     }, [activeTab]); // กำหนดให้ useEffect ทำงานเมื่อ activeTab เปลี่ยนแปลง
 
 
-    console.log('All Documents:', allDocuments);
-    console.log('Unread Documents:', unreadDocuments);
-
-
     const fetchAllDocuments = async () => {
         try {
             const response = await axios.get('http://localhost:3000/admin/documents');
-            console.log('All Documents:', response.data); // ตรวจสอบข้อมูลที่ได้รับ
             setAllDocuments(response.data);
         } catch (error) {
             console.error('Error fetching all documents:', error);
@@ -127,6 +122,16 @@ function Documents() {
             }
         } catch (error) {
             console.error('Error handling document receive:', error);
+        }
+    };
+
+    // ฟังก์ชันจัดการปุ่มรับเอกสาร
+    const handleReceiveButtonClick = (docId) => {
+        // ตรวจสอบสถานะเอกสารก่อนการเรียกใช้งาน
+        const document = (activeTab === 'all' ? allDocuments : unreadDocuments).find(doc => doc.document_id === docId);
+
+        if (document && document.status !== 1) { // ตรวจสอบสถานะเอกสาร
+            handleDocumentReceive(docId, 1, adminId, paperCost);
         }
     };
 
@@ -274,12 +279,13 @@ function Documents() {
                     <Table>
                         <TableHead>
                             <TableRow sx={{ backgroundColor: '#f0f8ff' }}>
-                                <TableCell sx={{ fontWeight: 'bold' }}>No.</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Date</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Subject</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Recipient</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>File</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Status</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>ลำดับ.</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>วันที่</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>ชื่อ-สกุล</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>เรื่อง</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>ถึง</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>ไฟล์</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>สถานะ</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
@@ -290,6 +296,7 @@ function Documents() {
                                     <TableRow key={doc.document_id}>
                                         <TableCell>{index + 1}</TableCell>
                                         <TableCell>{formatDateTime(doc.upload_date)}</TableCell>
+                                        <TableCell>{`${doc.user_fname} ${doc.user_lname}`}</TableCell>
                                         <TableCell>{doc.subject}</TableCell>
                                         <TableCell>{doc.to_recipient}</TableCell>
                                         <TableCell>
@@ -316,13 +323,12 @@ function Documents() {
                                             </IconButton>
                                             <IconButton
                                                 sx={{ mx: 1, color: '#1976d2' }}
-                                                onClick={() => {
-                                                    console.log('Receive button clicked for document_id:', doc.document_id); // ตรวจสอบค่า document_id ที่ถูกคลิก
-                                                    handleDocumentReceive(doc.document_id, 1, adminId, paperCost); // เรียกฟังก์ชันเพื่อรับเอกสาร
-                                                }}
+                                                onClick={() => handleReceiveButtonClick(doc.document_id)}
+                                                disabled={doc.status === 1} // ป้องกันการกดซ้ำถ้าสถานะเป็น 1
                                             >
-                                                <CheckCircle /> {/* ใช้ไอคอนที่นำเข้ามา */}
+                                                <CheckCircle />
                                             </IconButton>
+
                                             <IconButton
                                                 sx={{ mx: 1, color: '#d32f2f' }}
                                                 onClick={() => {

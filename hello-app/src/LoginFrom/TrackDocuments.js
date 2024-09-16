@@ -31,6 +31,9 @@ const TrackDocuments = () => {
     const indexOfLastDocument = page * rowsPerPage;
     const indexOfFirstDocument = indexOfLastDocument - rowsPerPage;
     const currentDocuments = documents.slice(indexOfFirstDocument, indexOfLastDocument);
+    const storedUserFname = localStorage.getItem('user_fname');
+    const storedUserLname = localStorage.getItem('user_lname');
+    const senderName = `${storedUserFname} ${storedUserLname}`;
 
     // ใช้สำหรับการนำทางในแอป
     const navigate = useNavigate(); // ใช้สำหรับนำทาง
@@ -307,7 +310,7 @@ const TrackDocuments = () => {
                                 { label: 'เลขที่เอกสาร:', value: selectedDocument.document_number },
                                 { label: 'ประเภทเอกสาร:', value: selectedDocument.document_type },
                                 { label: 'หมายเหตุ:', value: selectedDocument.notes },
-                                { label: 'ผู้ส่ง:', value: selectedDocument.sender },
+                                { label: 'ผู้ส่ง:',value: senderName },
                                 { label: 'ผู้รับเอกสาร:', value: selectedDocument.recipient },
                             ].map((item, index) => (
                                 <Grid item xs={12} key={index}>
