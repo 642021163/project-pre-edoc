@@ -12,11 +12,14 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอ�
 
 const drawerWidth = 240; // หรือค่าที่คุณต้องการ
 
+
+
 function EditDocuments() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [document, setDocument] = useState({
     upload_date: '',
+    user_id : localStorage.getItem('user_id'),
     subject: '',
     to_recipient: '',
     document_number: '',
@@ -30,7 +33,7 @@ function EditDocuments() {
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false); // สถานะเปิด/ปิด Dialog
   const [successMessage, setSuccessMessage] = useState(''); // สถานะข้อความสำเร็จ
-
+  const [recipients, setRecipients] = useState([]);
 
   const statusOptions = [
     { value: 0, label: 'รอดำเนินการ' },
@@ -38,12 +41,11 @@ function EditDocuments() {
     { value: 2, label: 'ดำเนินการเรียบร้อย' }
   ];
   const document_typeOptions = ([
-    { value: 'ประเภทที่ 1', label: 'ประเภทที่ 1' },
-    { value: 'ประเภทที่ 2', label: 'ประเภทที่ 2' },
-    { value: 'ประเภทที่ 3', label: 'ประเภทที่ 3' }
+    { value: 'เอกสารภายใน', label: 'เอกสารภายใน' },
+    { value: 'เอกสารภายนอก', label: 'เอกสารภายนอก' },
+    { value: 'เอกสารสำคัญ', label: 'เอกสารสำคัญ' }
   ]);
 
-  const [recipientOptions] = useState(['John Doe', 'Jane Smith']); // ตัวเลือกตัวอย่าง
 
 
   // ดึงข้อมูลผู้ใช้จากเซิร์ฟเวอร์
@@ -59,7 +61,16 @@ function EditDocuments() {
         setLoading(false);
       }
     };
+    const fetchAdmins = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/admins');
+        setRecipients(response.data);
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+      }
+    };
 
+    fetchAdmins();
     fetchDocument();
   }, [id]);
 
@@ -73,7 +84,6 @@ function EditDocuments() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log('Field changed:', name, value); // ดีบัก: ตรวจสอบการเปลี่ยนแปลงของฟิลด์
     setDocument(prev => ({
       ...prev,
       [name]: value
@@ -93,7 +103,6 @@ function EditDocuments() {
       setError('เกิดข้อผิดพลาดในการอัปเดตเอกสาร');
     }
   };
-
   // ปิด Dialog
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -202,15 +211,19 @@ function EditDocuments() {
                     <Select
                       label="Recipient"
                       name="recipient"
-                      value={document.recipient}
+                      value={document.recipient || ''}
                       onChange={handleChange}
                       required
                     >
-                      {recipientOptions.map(option => (
-                        <MenuItem key={option} value={option}>
-                          {option}
-                        </MenuItem>
-                      ))}
+                      {recipients.length > 0 ? (
+                        recipients.map(admin => (
+                          <MenuItem key={admin.user_id} value={admin.user_id}>
+                            {admin.user_fname} {admin.user_lname}
+                          </MenuItem>
+                        ))
+                      ) : (
+                        <MenuItem value="">No Recipients Available</MenuItem>
+                      )}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -316,7 +329,7 @@ function EditDocuments() {
               <Button
                 color="secondary"
                 variant="outlined"
-                onClick={() => navigate('/doc')}
+                onClick={() => console.log()}
               >
                 ยกเลิก
               </Button>

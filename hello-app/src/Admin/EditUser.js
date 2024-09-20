@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, CssBaseline, AppBar, Toolbar, Typography, IconButton, Badge, InputBase, Drawer, List, ListItem,
   ListItemIcon, ListItemText, Paper, Button, Grid, TextField, FormControl, InputLabel, Select,
-  MenuItem, Dialog, DialogActions, DialogContent, DialogTitle,Tooltip 
+  MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip
 } from '@mui/material';
 import { Search, Notifications, Home, PersonAdd } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -27,6 +27,10 @@ function EditUser() {
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false); // สถานะเปิด/ปิด Dialog
   const [successMessage, setSuccessMessage] = useState(''); // สถานะข้อความสำเร็จ
+  const [resetPassword, setResetPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showResetForm, setShowResetForm] = useState(false);
+
 
   const roleOptions = [
     { value: 'Admin', label: 'Admin' },
@@ -78,6 +82,36 @@ function EditUser() {
       setError('เกิดข้อผิดพลาดในการอัปเดตผู้ใช้');
     }
   };
+
+
+  // ฟังก์ชันสำหรับรีเซ็ตรหัสผ่าน
+  const handleResetPassword = async () => {
+    if (resetPassword !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+  
+    try {
+      // ส่งคำขอไปที่ API
+      const response = await axios.put(`http://localhost:3000/api/reset-password`, {
+        userId: id, // ใช้ `id` ที่มาจาก useParams
+        newPassword: resetPassword
+      });
+  
+      // แสดงข้อความเมื่อการรีเซ็ตรหัสผ่านสำเร็จ
+      alert('Password updated successfully');
+  
+      // รีเซ็ตค่าของฟิลด์รหัสผ่าน
+      setResetPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('Failed to update password');
+    }
+  };
+  
+
+
 
   // ปิด Dialog
   const handleDialogClose = () => {
@@ -165,12 +199,13 @@ function EditUser() {
           }}
         >
           <form onSubmit={handleSubmit}>
+            <Typography variant="h6" gutterBottom sx={{ p: 2 }}>แก้ไขข้อมูลผู้ใช้</Typography>
             <Box mb={2}>
               <Grid container spacing={2}>
                 {/* Row 1 */}
                 <Grid item xs={12} md={6}>
                   <TextField
-                    label="First Name"
+                    label="ชื่อ"
                     name="user_fname"
                     value={user.user_fname}
                     onChange={handleChange}
@@ -180,7 +215,7 @@ function EditUser() {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    label="Last Name"
+                    label="นามสกุล"
                     name="user_lname"
                     value={user.user_lname}
                     onChange={handleChange}
@@ -202,7 +237,7 @@ function EditUser() {
 
                 <Grid item xs={12} md={6}>
                   <TextField
-                    label="Phone Number"
+                    label="หมายเลขโทรศัพท์"
                     name="phone_number"
                     value={user.phone_number}
                     onChange={handleChange}
@@ -213,7 +248,7 @@ function EditUser() {
 
                 <Grid item xs={12} md={6}>
                   <TextField
-                    label="Affiliation"
+                    label="สังกัด"
                     name="affiliation"
                     value={user.affiliation}
                     onChange={handleChange}
@@ -241,18 +276,7 @@ function EditUser() {
                   </FormControl>
                 </Grid>
 
-                {/* Row 6 */}
-                <Grid item xs={12}>
-                  <TextField
-                    label="Notes"
-                    name="notes"
-                    value={user.notes || ''}
-                    onChange={handleChange}
-                    fullWidth
-                    multiline
-                    rows={4}
-                  />
-                </Grid>
+
               </Grid>
             </Box>
             <DialogActions style={{ justifyContent: 'center' }}>
@@ -267,14 +291,55 @@ function EditUser() {
               <Button
                 variant="outlined"
                 color="secondary"
-                onClick={() => navigate('/user-list')}
+                onClick={() => navigate('/list')}
               >
                 Cancel
               </Button>
             </DialogActions>
           </form>
         </Paper>
-
+        {/* Form for Resetting Password */}
+        <Paper sx={{ padding: 3, mt: 3, backgroundColor: '#f5f5f5' }}>
+          <Typography variant="h6" gutterBottom>รีเซ็ตรหัสผ่านใหม่</Typography>
+          <TextField
+            margin="dense"
+            label="รหัสผ่านใหม่"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={resetPassword}
+            onChange={(e) => setResetPassword(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="ยืนยันรหัสผ่านอีกครั้ง"
+            type="password"
+            fullWidth
+            variant="outlined"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+          <Box sx={{ mt: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleResetPassword}
+              sx={{ mr: 2 }}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => {
+                setResetPassword('');
+                setConfirmPassword('');
+              }}
+            >
+              Cancel
+            </Button>
+          </Box>
+        </Paper>
         {/* Dialog */}
         <Dialog
           open={dialogOpen}

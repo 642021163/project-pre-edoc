@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import axios from 'axios'; // นำเข้า axios
-import { CssBaseline, Container, Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, IconButton, InputAdornment, FormHelperText } from '@mui/material';
+import { CssBaseline, Container, Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, IconButton, InputAdornment, FormHelperText, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
+import { useNavigate } from 'react-router-dom'; 
 
 const Logo = styled('img')(({ theme }) => ({
     height: '60px', // ปรับขนาดโลโก้ตามต้องการ
@@ -13,6 +13,8 @@ const Logo = styled('img')(({ theme }) => ({
 }));
 
 function RegisterFrom() {
+    const [dialogOpen, setDialogOpen] = useState(false); // State สำหรับ Dialog
+    const [successMessage, setSuccessMessage] = useState(''); // ข้อความสำเร็จ
     const [formValues, setFormValues] = useState({
         prefix: '',
         user_fname: '',
@@ -35,18 +37,27 @@ function RegisterFrom() {
         role: ''
     });
 
-
+    const navigate = useNavigate(); // ประกาศ navigate
 
     const handleChange = (event) => {
-        const { name, value } = event.target;
-        setFormValues({
-            ...formValues,
-            [name]: value
-        });
+        const { name, value } = event.target; // เปลี่ยน e เป็น event
+        setFormValues(prev => ({
+          ...prev,
+          [name]: value
+        }));
+
+        // เมื่อผู้ใช้กรอกข้อมูลในช่องที่มี error, ลบ error นั้นออก
+        if (errors[name]) {
+          setErrors(prev => ({
+            ...prev,
+            [name]: ''
+          }));
+        }
     };
+
     const handleClickShowPassword = () => {
         setShowPassword(!showPassword);
-    }
+    };
 
     const validateForm = (values) => {
         const newErrors = {};
@@ -60,6 +71,7 @@ function RegisterFrom() {
         if (!values.role) newErrors.role = 'Role is required';
         return newErrors;
     };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -72,41 +84,38 @@ function RegisterFrom() {
 
         try {
             const response = await axios.post('http://localhost:3000/users', formValues); // เปลี่ยน URL เป็นที่อยู่ API ของคุณ
-            toast.success('ลงทะเบียนสำเร็จ!', {
-                position: "top-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
+            
             console.log('Registration successful:', response.data);
-            // อาจทำการเปลี่ยนเส้นทางหรือแจ้งเตือนหลังจากลงทะเบียนสำเร็จ
-            setFormValues({
-                prefix: '',
-                user_fname: '',
-                user_lname: '',
-                username: '',
-                password: '',
-                phone_number: '',
-                affiliation: '',
-                role: ''
-            });
-
         } catch (error) {
             console.error("Error during registration", error);
-            toast.error('เกิดข้อผิดพลาดในการลงทะเบียน', {
-                position: "top-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
         }
 
+        // ตั้งข้อความสำเร็จและเปิด Dialog
+        setSuccessMessage('ลงทะเบียนสำเร็จ');
+        setDialogOpen(true);
+        resetForm();
+    };
+
+    // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
+    const resetForm = () => {
+        setFormValues({
+            prefix: '',
+            user_fname: '',
+            user_lname: '',
+            username: '',
+            password: '',
+            phone_number: '',
+            affiliation: '',
+            role: ''
+        });
+     };
+    
+     const handleDialogClose = () => {
+        setDialogOpen(false);
+        navigate('/loginpage'); 
+    };
+    const handleCancel = () => {
+        navigate('/loginpage'); 
     };
     return (
         <div>
@@ -160,24 +169,23 @@ function RegisterFrom() {
                                     error={Boolean(errors.prefix)}
                                     sx={{ flexBasis: '50%' }} >
 
-                                    <InputLabel>Prefix</InputLabel>
+                                    <InputLabel>คำนำหน้า</InputLabel>
                                     <Select
                                         name="prefix"
                                         value={formValues.prefix}
                                         onChange={handleChange}
                                         label="Prefix"
                                     >
-                                        <MenuItem value="Mr">Mr</MenuItem>
-                                        <MenuItem value="Ms">Ms</MenuItem>
-                                        <MenuItem value="Mrs">Mrs</MenuItem>
-                                        <MenuItem value="Dr">Dr</MenuItem>
-                                        <MenuItem value="Prof">Prof</MenuItem>
+                                        <MenuItem value="Mr">นาย</MenuItem>
+                                        <MenuItem value="Ms">นางสาว</MenuItem>
+                                        <MenuItem value="Mrs">ผศ.ดร</MenuItem>
+                                        <MenuItem value="Dr">ดร.</MenuItem>
                                     </Select>
                                     <FormHelperText>{errors.prefix}</FormHelperText>
                                 </FormControl>
                                 <TextField
                                     fullWidth
-                                    label="First Name"
+                                    label="ชื่อ"
                                     name="user_fname"
                                     variant="outlined"
                                     margin="normal"
@@ -188,7 +196,7 @@ function RegisterFrom() {
                                 />
                                 <TextField
                                     fullWidth
-                                    label="Last Name"
+                                    label="นามสกุล"
                                     name="user_lname"
                                     variant="outlined"
                                     margin="normal"
@@ -241,7 +249,7 @@ function RegisterFrom() {
                             />
                             <TextField
                                 fullWidth
-                                label="Phone Number"
+                                label="โทรศัพท์"
                                 name="phone_number"
                                 variant="outlined"
                                 margin="normal"
@@ -252,7 +260,7 @@ function RegisterFrom() {
                             />
                             <TextField
                                 fullWidth
-                                label="Department"
+                                label="สังกัด"
                                 name="affiliation"
                                 variant="outlined"
                                 margin="normal"
@@ -272,7 +280,7 @@ function RegisterFrom() {
 
 
                                     <MenuItem value="user">User</MenuItem>
-                                    <MenuItem value="admin">Admin</MenuItem>
+                                    
                                 </Select>
                                 <FormHelperText>{errors.role}</FormHelperText>
                             </FormControl>
@@ -281,7 +289,7 @@ function RegisterFrom() {
                                 <Button type="submit" variant="contained" color="primary" sx={{ mb: 2 }}>
                                     Register
                                 </Button>
-                                <Button variant="outlined" color="secondary">
+                                <Button variant="outlined" color="secondary" onClick={handleCancel}>
                                     Cancel
                                 </Button>
                             </Box>
@@ -289,7 +297,29 @@ function RegisterFrom() {
                     </Box>
                 </Container>
             </React.Fragment>
-
+            <Dialog
+                open={dialogOpen}
+                onClose={handleDialogClose}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle>
+                    <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
+                        <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
+                        สำเร็จ
+                    </Typography>
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        {successMessage}
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose} color="primary">
+                        ปิด
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     )
 }

@@ -192,9 +192,11 @@ function AddUser() {
                                     error={Boolean(errors.prefix)}
                                     helperText={errors.prefix}
                                 >
-                                    <MenuItem value="Mr.">Mr.</MenuItem>
-                                    <MenuItem value="Ms.">Ms.</MenuItem>
-                                    <MenuItem value="Mrs.">Mrs.</MenuItem>
+                                    <MenuItem value="Mr.">นาย</MenuItem>
+                                    <MenuItem value="Ms.">นาง</MenuItem>
+                                    <MenuItem value="Ms.">นางสาว</MenuItem>
+                                    <MenuItem value="Mrs.">ผศ.ดร.</MenuItem>
+                                    <MenuItem value="Mrs.">ดร.</MenuItem>
                                 </TextField>
                             </Grid>
                             <Grid item xs={4}>
@@ -224,7 +226,7 @@ function AddUser() {
                         </Grid>
                         <Box sx={{ mb: 2 }}>
                             <TextField
-                                label="ชื่อผู้ใช้"
+                                label="username"
                                 name="username"
                                 value={formData.username}
                                 onChange={handleChange}
@@ -236,7 +238,7 @@ function AddUser() {
                         </Box>
                         <Box sx={{ mb: 2 }}>
                             <TextField
-                                label="รหัสผ่าน"
+                                label="password"
                                 name="password"
                                 type="password"
                                 value={formData.password}
@@ -303,7 +305,7 @@ function AddUser() {
                 sx={{
                     position: 'fixed',
                     bottom: 0,
-                    left: '50%',
+                    textAlign:'center',
                     transform: 'translateX(-50%)'
                 }}
             >
