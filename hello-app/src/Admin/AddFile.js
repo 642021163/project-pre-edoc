@@ -34,9 +34,9 @@ function Addfile() {
     const [fileName, setFileName] = useState('');
 
     const document_typeOptions = [
-        { value: 'ประเภทที่ 1', label: 'ประเภทที่ 1' },
-        { value: 'ประเภทที่ 2', label: 'ประเภทที่ 2' },
-        { value: 'ประเภทที่ 3', label: 'ประเภทที่ 3' }
+        { value: 'เอกสารภายใน', label: 'เอกสารภายใน' },
+        { value: 'เอกสารภายนอก', label: 'เอกสารภายนอก' },
+        { value: 'เอกสารสำคัญ', label: 'เอกสารสำคัญ' }
     ];
 
     // จัดการการเปลี่ยนแปลงของฟอร์ม

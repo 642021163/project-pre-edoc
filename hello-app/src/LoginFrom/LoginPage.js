@@ -46,9 +46,11 @@ function LoginPage() {
         userType,
       });
   
-      const { token, user_fname, user_lname, prefix, phone_number, affiliation } = response.data;
-  
+      const { token, user_fname, user_lname, prefix, phone_number, affiliation,user_id } = response.data;
+      console.log(response.data);
+      
       localStorage.setItem('token', token);
+      localStorage.setItem('user_id', user_id);
       localStorage.setItem('username', username);
       localStorage.setItem('user_fname', user_fname);
       localStorage.setItem('user_lname', user_lname);
@@ -71,14 +73,6 @@ function LoginPage() {
   };
   
   
-
-  // useEffect(() => {
-  //   const token = localStorage.getItem('token');
-  //   if (token) {
-  //     navigate(userType === 'admin' ? '/admin-dashboard' : '/homepage');
-  //   }
-  // }, [navigate, userType]);
-
 
   return (
     <React.Fragment>

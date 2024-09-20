@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import axios from 'axios';
-import 'react-toastify/dist/ReactToastify.css';
+import 'react-toastify/dist/ReactToastify.css'; // นำเข้า CSS สำหรับการแสดง Toast
+
+// MUI Components
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, Dialog, DialogActions, DialogContent, DialogTitle, Paper } from '@mui/material'; // นำเข้า MUI Components
+
+// MUI Icons
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
-import { AccountCircle, ExitToApp, InsertDriveFile, Description } from '@mui/icons-material';
-import MenuIcon from '@mui/icons-material/Menu';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { AccountCircle, ExitToApp, InsertDriveFile, Description } from '@mui/icons-material'; // ไอคอนอื่นๆ
+import MenuIcon from '@mui/icons-material/Menu'; // ไอคอนเมนู
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'; // ไอคอน PDF
+import SendIcon from '@mui/icons-material/Send'; // นำเข้าไอคอน Send
+
+
+// React Router
+import { useNavigate, useLocation } from 'react-router-dom'; // สำหรับการนำทางและการเข้าถึง location
+
 
 function FileUpload() {
   // สร้าง state เพื่อเก็บค่าต่างๆ ของฟอร์ม
   const [values, setValues] = useState({
     upload_date: "",
     subject: "",
+    user_id: localStorage.getItem('user_id'),
     to_recipient: "",
     document_type: "",
     file: null,
@@ -25,6 +36,7 @@ function FileUpload() {
   const [successMessage, setSuccessMessage] = useState(''); // ข้อความสำเร็จ
   const [user_fname, setUser_fname] = useState('');
   const [user_lname, setUser_lname] = useState('');
+  const [fileName, setFileName] = useState(''); // เพิ่มการประกาศ fileName
 
 
 
@@ -45,21 +57,15 @@ function FileUpload() {
     }
   };
 
+
   const handleFileChange = e => {
-    const { name } = e.target;
+    const file = e.target.files[0];
     setValues(prev => ({
       ...prev,
-      file: e.target.files[0]
+      file
     }));
+    setFileName(file.name); // ตั้งค่า fileName เมื่อไฟล์ถูกเลือก
     setIsFormDirty(true); // กำหนดให้ฟอร์มมีการเปลี่ยนแปลง
-
-    // ลบ error เมื่อผู้ใช้เลือกไฟล์แล้ว
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
   useEffect(() => {
@@ -113,12 +119,16 @@ function FileUpload() {
         const formData = new FormData();
         formData.append('upload_date', values.upload_date);
         formData.append('subject', values.subject);
+        formData.append('user_id', localStorage.getItem('user_id'));
         formData.append('to_recipient', values.to_recipient);
         formData.append('document_type', values.document_type);
         formData.append('notes', values.notes);
         formData.append('user_fname', user_fname); // เพิ่มชื่อ
         formData.append('user_lname', user_lname); // เพิ่มนามสกุล
-        console.log(user_fname, user_lname)
+        console.log(formData.values)
+        for (let pair of formData.entries()) {
+          console.log(`${pair[0]}: ${pair[1]}`);
+        }
         if (values.file) {
           formData.append('file', values.file);
         }
@@ -128,52 +138,45 @@ function FileUpload() {
             'Content-Type': 'multipart/form-data'
           }
         });
-       
+
 
         console.log('Upload successful', response);
       } catch (error) {
         console.error("Error during upload", error);
       }
-       // ตั้งข้อความสำเร็จและเปิด Dialog
-       setSuccessMessage('อัปโหลดเอกสารสำเร็จ');
-       setDialogOpen(true);
-       resetForm();
+      // ตั้งข้อความสำเร็จและเปิด Dialog
+      setSuccessMessage('อัปโหลดเอกสารสำเร็จ');
+      setDialogOpen(true);
+      resetForm();
     }
   };
 
 
 
-  // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
   const resetForm = () => {
+    // รีเซ็ตค่าใน state
     setValues({
       upload_date: "",
       subject: "",
       to_recipient: "",
       document_type: "",
-      file: null, // ทำให้แน่ใจว่าไฟล์ถูกรีเซ็ต
+      file: null, // รีเซ็ตค่าไฟล์
       notes: ""
     });
-    // รีเซ็ตค่าใน <input type="file"> ด้วย
+
+    // รีเซ็ตค่าใน <input type="file">
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
-      fileInput.value = ""; // ทำให้ค่าใน <input type="file"> เป็นค่าว่าง
+      fileInput.value = ""; // ล้างค่าใน input file
     }
+
+    // รีเซ็ตชื่อไฟล์ที่แสดง
+    setFileName("");
   };
-
-
 
   // ฟังก์ชันเพื่อจัดการการนำทาง
   const navigate = useNavigate();
   const location = useLocation();
-
-  // ฟังก์ชันสำหรับการออกจากระบบ
-  const handleLogout = () => {
-    const confirmLogout = window.confirm("คุณแน่ใจว่าต้องการออกจากระบบไหม?");
-    if (confirmLogout) {
-      localStorage.removeItem('username');
-      navigate('/loginpage');
-    }
-  };
 
   // รายการเมนูใน Sidebar
   const menuItems = [
@@ -222,28 +225,6 @@ function FileUpload() {
           ))}
         </List>
         <Divider sx={{ my: 2 }} />
-        <List>
-          <ListItem
-            onClick={handleLogout}
-            sx={{
-              borderRadius: '4px',
-              backgroundColor: '#f44336', // สีพื้นหลังที่โดดเด่น
-              color: '#fff',
-              fontWeight: 'bold',
-              '&:hover': {
-                backgroundColor: '#d32f2f', // สีพื้นหลังเมื่อ hover
-              },
-              '&:active': {
-                backgroundColor: '#b71c1c', // สีพื้นหลังเมื่อคลิก
-              }
-            }}
-          >
-            <ListItemIcon>
-              <ExitToApp sx={{ color: '#fff' }} />
-            </ListItemIcon>
-            <ListItemText primary="ออกจากระบบ" />
-          </ListItem>
-        </List>
       </Box>
 
       <Box sx={{ flex: 1, p: 2, maxWidth: 800, mx: 'auto', bgcolor: '#f9f9f9', borderRadius: 2, boxShadow: 3 }}>
@@ -253,36 +234,37 @@ function FileUpload() {
             ส่งเอกสาร
           </Typography>
 
-          {/* กรอบพื้นหลังสำหรับชื่อผู้ส่งเอกสาร */}
-          <Box
-            sx={{
-              bgcolor: '#e3f2fd',
-              p: 2,
-              borderRadius: 1,
-              mb: 3,
-              border: '1px solid #bbdefb',
-              boxShadow: 1,
-              textAlign: 'center'
-            }}
-          >
-            <Typography variant="h7" gutterBottom>
-              {user_fname} {user_lname}
-            </Typography>
-          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            {/* กรอบพื้นหลังสำหรับชื่อผู้ส่งเอกสาร */}
+            <Box
+              sx={{
+                bgcolor: '#e3f2fd',
+                p: 2,
+                borderRadius: 1,
+                border: '1px solid #bbdefb',
+                boxShadow: 1,
+                textAlign: 'center',
+                flexShrink: 0, // Prevent shrinking
+                width: 'auto', // Adjust width to content
+              }}
+            >
+              <Typography variant="h7" gutterBottom>
+                เจ้าของเรื่อง : {user_fname} {user_lname}
+              </Typography>
+            </Box>
 
-
-
-          {/* แถวที่ 1: วันที่อัปโหลด */}
-          <Box sx={{ width: '100%', mb: 2 }}>
-            <TextField
-              type="datetime-local"
-              name="upload_date"
-              value={values.upload_date}
-              onChange={handleInput}
-              sx={{ width: 250 }}
-              error={!!errors.upload_date}
-              helperText={errors.upload_date}
-            />
+            {/* แถวที่ 1: วันที่อัปโหลด */}
+            <Box sx={{ flexGrow: 1 }}>
+              <TextField
+                type="datetime-local"
+                name="upload_date"
+                value={values.upload_date}
+                onChange={handleInput}
+                sx={{ width: 250 }}
+                error={!!errors.upload_date}
+                helperText={errors.upload_date}
+              />
+            </Box>
           </Box>
 
           {/* แถวที่ 2: เรื่อง*/}
@@ -330,27 +312,6 @@ function FileUpload() {
             </FormControl>
           </Box>
 
-          {/* แถวที่ 4: เลือกไฟล์และปุ่มอัปโหลด */}
-          <Box sx={{ width: '100%', mb: 5, display: 'flex', justifyContent: 'center', gap: 2 }}>
-            <TextField
-              type="file"
-              onChange={handleFileChange}
-              sx={{ width: '380px' }}
-              InputLabelProps={{ shrink: true }}
-              error={!!errors.file}
-              helperText={errors.file}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleSubmit}
-              disabled={!values.file}
-              sx={{ width: '150px', height: '50px', fontSize: '16px' }}
-            >
-              Upload
-            </Button>
-          </Box>
-
           {/* แถวที่ 5: หมายเหตุ */}
           <Box sx={{ width: '100%' }}>
             <TextField
@@ -365,7 +326,60 @@ function FileUpload() {
               helperText={errors.notes}
             />
           </Box>
+        </Box>
 
+        {/* แถวที่ 4: เลือกไฟล์และปุ่มอัปโหลด */}
+        <Box sx={{ width: '100%', mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+          {/* ช่องสำหรับเลือกไฟล์ */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <input
+              accept=".pdf, .doc, .docx, .jpg, .png"
+              id="upload-file"
+              type="file"
+              style={{ display: 'none' }} // ซ่อน input ดั้งเดิม
+              onChange={handleFileChange}
+            />
+            <label htmlFor="upload-file">
+              <Button
+                variant="contained"
+                component="span"
+                startIcon={<PictureAsPdfIcon />} // ใช้ไอคอนสำหรับไฟล์ PDF
+                sx={{ mr: 2, width: '150px', height: '50px', fontSize: '16px' }}
+              >
+                เลือกไฟล์
+              </Button>
+            </label>
+
+            {/* แสดงชื่อไฟล์ที่เลือก */}
+            {fileName && (
+              <Paper
+                elevation={2}
+                sx={{
+                  p: 1,
+                  backgroundColor: '#f5f5f5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  borderRadius: 1,
+                }}
+              >
+                <PictureAsPdfIcon sx={{ color: '#d32f2f', mr: 1 }} /> {/* แสดงไอคอน PDF ด้านหน้า */}
+                <Typography variant="body2" sx={{ color: 'black' }}>
+                  ไฟล์ที่เลือก: {fileName}
+                </Typography>
+              </Paper>
+            )}
+          </Box>
+        </Box>
+        <Box sx={{ mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+          {/* ปุ่มอัปโหลด */}
+          <Button
+            variant="contained" endIcon={<SendIcon />}
+            onClick={handleSubmit}
+            disabled={!fileName} // ป้องกันการคลิกถ้าไม่มีไฟล์ที่เลือก
+            sx={{ width: '150px', height: '50px', fontSize: '16px' }}
+          >
+            บันทึก
+          </Button>
         </Box>
       </Box>
       <Dialog

@@ -112,14 +112,15 @@ app.post('/documents', upload.single('file'), (req, res) => {
 
     // ตรวจสอบค่าที่รับมาจาก req.body
     console.log('user_fname:', req.body.user_fname);
-    console.log('user_lname:', req.body.user_lname);
+    console.log('user_id:', req.body.user_id);
 
     const filePath = req.file ? path.join('uploads', req.file.filename) : null;
 
     // สร้าง SQL สำหรับการแทรกข้อมูลลงในฐานข้อมูล
-    const sql = "INSERT INTO documents (upload_date, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const sql = "INSERT INTO documents (upload_date, user_id,subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
         req.body.upload_date,
+        req.body.user_id,
         req.body.subject,
         req.body.to_recipient,
         req.body.document_type,
@@ -149,7 +150,7 @@ app.post('/documents', upload.single('file'), (req, res) => {
 // เส้นทางสำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
 app.get('/documents', (req, res) => {
     const sql = `
-        SELECT upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
+        SELECT document_id, upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
         FROM documents
     `;
     db.query(sql, (err, results) => {
@@ -169,7 +170,7 @@ app.get('/documents/:id', (req, res) => {
         return res.status(400).json({ message: 'Document ID is required' });
     }
     const sql = `
-        SELECT upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
+        SELECT document_id, upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
         FROM documents
         WHERE user_id = ?
     `;
@@ -192,6 +193,65 @@ app.use((err, req, res, next) => {
 });
 
 
+// API สำหรับแก้ไขเอกสารตาม ID
+app.put('/useredit/document/:id', upload.single('file'), (req, res) => {
+    const docId = req.params.id;
+    const { upload_date, subject, to_recipient, document_type, notes } = req.body;
+    const newFileName = req.file ? req.file.filename : null; // ชื่อไฟล์ใหม่ถ้ามีการอัปโหลด
+
+    const updateDocument = `
+        UPDATE documents
+        SET upload_date = ?, subject = ?, to_recipient = ?, document_type = ?, notes = ? ${newFileName ? ', file = ?' : ''}
+        WHERE document_id = ?`;
+
+    const params = newFileName 
+        ? [upload_date, subject, to_recipient, document_type, notes, newFileName, docId] 
+        : [upload_date, subject, to_recipient, document_type, notes, docId];
+
+    db.query(updateDocument, params, (err, result) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ message: 'Error updating document', error: err.message });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Document not found' });
+        }
+        res.status(200).json({ message: 'Document updated successfully' });
+    });
+});
+
+
+
+
+// app.get('/user/:id', (req, res) => {
+//     const documentId = req.params.id; // ดึง ID จากพารามิเตอร์ URL
+//     if (!documentId) {
+//         return res.status(400).json({ message: 'Document ID is required' });
+//     }
+//     const sql = `
+//         SELECT *
+//         FROM user
+//         WHERE user_id = ?
+//     `;
+//     db.query(sql, [documentId], (err, results) => {
+//         if (err) {
+//             console.error('Database Error:', err.code, err.message, err.sql);
+//             return res.status(500).json({ message: "Error fetching document", error: err.message });
+//         }
+//         if (results.length === 0) {
+//             return res.status(404).json({ message: 'Document not found' });
+//         }
+//         console.log('Document fetched successfully:', results[0]);
+//         return res.status(200).json(results[0]);
+//     });
+// });
+
+
+// เพิ่ม middleware สำหรับ error handling
+app.use((err, req, res, next) => {
+    console.error('Unexpected error occurred:', err);
+    res.status(500).json({ message: 'An unexpected error occurred', error: err.message });
+});
 
 // api สำหรับ Login
 async function comparePassword(plainPassword, hashedPassword) { // ฟังก์ชันเปรียบเทียบรหัสผ่าน
@@ -254,6 +314,7 @@ app.post('/login', async (req, res) => {
         const responseData = {
             message: 'Login successful',
             token,
+            user_id: user.user_id,
             username: user.username,
             user_fname: user.user_fname || '',
             user_lname: user.user_lname || '',
@@ -496,21 +557,18 @@ app.put('/documents/:id', (req, res) => {
     });
 });
 
-
-// สร้าง API สำหรับ DELETE ข้อมูลเอกสารตาม ID
+// สร้าง API สำหรับ DELETE ข้อมูลเอกสารตาม ID ฝั่ง user
 app.delete('/document/:id', (req, res) => {
     const docId = req.params.id;
 
-    // ตรวจสอบว่ามีข้อมูลที่อ้างอิงอยู่ใน document_receipts หรือไม่
-    const checkReferences = 'SELECT * FROM document_receipts WHERE document_id = ?';
-    db.query(checkReferences, [docId], (err, results) => {
+    // ลบการอ้างอิงใน document_receipts ก่อน
+    const deleteReferences = 'DELETE FROM document_receipts WHERE document_id = ?';
+    db.query(deleteReferences, [docId], (err, result) => {
         if (err) {
-            console.error('Error checking references:', err.code, err.message);
-            return res.status(500).json({ message: "Error checking references", error: err.message });
+            console.error('Error deleting references:', err.code, err.message);
+            return res.status(500).json({ message: "Error deleting references", error: err.message });
         }
-        if (results.length > 0) {
-            return res.status(400).json({ message: 'Cannot delete document as it is referenced in document_receipts' });
-        }
+
 
         // ลบเอกสาร
         const deleteDocument = 'DELETE FROM documents WHERE document_id = ?';
@@ -530,26 +588,36 @@ app.delete('/document/:id', (req, res) => {
 
 
 
-// const logDocumentReceive = (req, res) => {
-//     const { documentId, adminId, dateReceived, paperCost } = req.body;
 
-//     const query = `
-//         INSERT INTO document_stats (document_id, admin_id, date_received, paper_cost)
-//         VALUES (?, ?, ?, ?)
-//     `;
+// API สำหรับรีเซ็ตรหัสผ่าน ฝั่ง admin
+app.put('/api/reset-password/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
 
-//     db.query(query, [documentId, adminId, dateReceived, paperCost], (error, results) => {
-//         if (error) {
-//             console.error('Error logging document receive:', error);
-//             return res.status(500).json({ error: 'Failed to log document receive' });
-//         }
-//         res.status(200).json({ message: 'Document receive logged successfully' });
-//     });
-// };
+    if (!userId || !newPassword) {
+        return res.status(400).json({ error: 'User ID and new password are required' });
+    }
 
-// module.exports = {
-//     logDocumentReceive
-// };
+    try {
+        // แฮชรหัสผ่านใหม่
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // อัปเดตรหัสผ่านในฐานข้อมูล
+        const [result] = await promisePool.query(
+            'UPDATE users SET password = ? WHERE user_id = ?',
+            [hashedPassword, userId]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Error updating password:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 //Api เส้น EditUser
@@ -569,7 +637,6 @@ app.get('/user/:id', (req, res) => {
         return res.status(200).json(results[0]);
     });
 });
-
 
 // อัปเดตข้อมูล user ตาม ID ฝั่ง Admin
 app.put('/user/:id', (req, res) => {
@@ -606,8 +673,7 @@ app.put('/user/:id', (req, res) => {
 });
 
 
-//  API สำหรับดูสถิติการรับเอกสารฝั่ง admin
-// Endpoint สำหรับอัปเดตสถานะเอกสาร
+//  API สำหรับดูสถิติการรับเอกสารฝั่ง admin และสำหรับอัปเดตสถานะเอกสาร
 app.put('/document/:id/status', (req, res) => {
     const { status, received_by } = req.body;
     const documentId = req.params.id;
@@ -626,7 +692,7 @@ app.put('/document/:id/status', (req, res) => {
 app.post('/document-stats', (req, res) => {
     const { documentId, adminId, dateReceived, paperCost } = req.body;
 
-    const sql = 'INSERT INTO document_receipts (document_id, admin_id, date_received, paper_cost) VALUES (?, ?, ?, ?)';
+    const sql = 'INSERT INTO document_receipts (document_id, user_id, date_received, paper_cost) VALUES (?, ?, ?, ?)';
     db.query(sql, [documentId, adminId, dateReceived, paperCost], (err, result) => {
         if (err) {
             console.error('Error inserting document receipt:', err);
@@ -636,9 +702,11 @@ app.post('/document-stats', (req, res) => {
     });
 });
 
-// Endpoint สำหรับดึงสถิติเอกสารที่รับโดยแอดมิน ฝั่ง addmin
-app.get('/api/document-receipts', (req, res) => {
-    const sql = 'SELECT * FROM document_receipts';
+
+// Endpoint สำหรับดึงข้อมูลทั้งหมดจากตาราง document_receipts
+app.get('/document-receipts', (req, res) => {
+    const sql = `SELECT * FROM document_receipts`;
+
     db.query(sql, (err, results) => {
         if (err) {
             console.error('Error fetching document receipts:', err);
@@ -648,9 +716,51 @@ app.get('/api/document-receipts', (req, res) => {
     });
 });
 
+app.get('/document-receipts/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const sql = `
+        SELECT receipt_id, document_id, user_id, date_received, paper_cost
+        FROM document_receipts
+        WHERE user_id = ?;
+    `;
+    db.query(sql, [userId], (err, results) => {
+        if (err) {
+            console.error('Error fetching document receipts:', err);
+            return res.status(500).json({ error: 'Error fetching document receipts' });
+        }
+        res.json(results);
+    });
+});
+
+
+// API นี้จะดึงข้อมูลจำนวนเอกสารที่แต่ละแอดมินรับไป
+app.get('/receipts', (req, res) => {
+    const sql = `
+        SELECT
+            user_id,
+            document_id,
+            COUNT(*) AS number_of_receipts
+        FROM
+            document_receipts
+        GROUP BY
+            user_id, document_id;
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Error fetching document receipts:', err);
+            return res.status(500).json({ error: 'Error fetching document receipts' });
+        }
+        res.json(results);
+    });
+});
+
+
+
+
 //API นี้จะดึงข้อมูลผู้ใช้ที่มีบทบาทเป็นแอดมินจากฐานข้อมูล
 app.get('/api/admins', (req, res) => {
-    const sql = `SELECT user_id, username FROM users WHERE role = 'admin'`;
+    const sql = `SELECT user_id, user_fname, user_lname FROM users WHERE role = 'admin'`;
     db.query(sql, (err, results) => {
         if (err) {
             console.error('Error fetching users:', err);

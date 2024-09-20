@@ -25,6 +25,7 @@ import ReceiptsList from './Admin/ReceiptsList';
 import AddUser from './Admin/AddUser';
 import EditUser from './Admin/EditUser';
 import Addfile from './Admin/AddFile';
+import EditDocument from './LoginFrom/EditDocument';
 
 
 function App() {
@@ -81,6 +82,7 @@ function AppContent() {
         <Route path='/newuser' element={<AddUser />} />
         <Route path='/editu/:id' element={<EditUser />} />
         <Route path='/addfile' element={<Addfile />} />
+        <Route path='/user-edit/:id' element={<EditDocument />} />
 
 
 

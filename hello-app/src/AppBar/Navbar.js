@@ -13,7 +13,7 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const pages = ['Home'];
 const settings = ['Logout'];
@@ -21,20 +21,33 @@ const settings = ['Logout'];
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
-  const [username, setUsername] = useState(''); // เก็บชื่อผู้ใช้
-  const navigate = useNavigate(); // Initialize useNavigate
+  const [username, setUsername] = useState('');
+  const [user_fname, setUser_fname] = useState('');
+  const [user_lname, setUser_lname] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // ดึงข้อมูลผู้ใช้จาก localStorage เมื่อคอมโพเนนต์นี้โหลด
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
+    const storedUser_fname = localStorage.getItem('user_fname');
+    const storedUser_lname = localStorage.getItem('user_lname');
+    const token = localStorage.getItem('token');
+
+    if (storedUsername && token) {
       setUsername(storedUsername);
+      setUser_fname(storedUser_fname || ''); // ตั้งค่า user_fname
+      setUser_lname(storedUser_lname || ''); // ตั้งค่า user_lname
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
     }
   }, []);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
+
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
@@ -48,19 +61,15 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    // แสดงกล่องยืนยันการออกจากระบบ
-    const confirmLogout = window.confirm('Are you sure you want to log out?');
-    
+    const confirmLogout = window.confirm('คุณแน่ใจหรือว่าต้องการออกจากระบบ?');
+
     if (confirmLogout) {
-      // ลบข้อมูลผู้ใช้จาก localStorage
-      localStorage.removeItem('username');
-      
-      // ทำการ redirect ไปยังหน้าเข้าสู่ระบบ
+      localStorage.clear();
+      setIsLoggedIn(false);
       navigate('/loginpage');
     }
   };
 
-  // ฟังก์ชันเพื่อสร้างสี Avatar ตามชื่อผู้ใช้
   const stringToColor = (string) => {
     let hash = 0;
     for (let i = 0; i < string.length; i++) {
@@ -74,7 +83,6 @@ function Navbar() {
     return color;
   };
 
-  // ฟังก์ชันเพื่อสร้างชื่อ Avatar
   const stringAvatar = (name) => {
     return {
       sx: {
@@ -84,17 +92,14 @@ function Navbar() {
     };
   };
 
-  // ฟังก์ชันสำหรับการนำทางไปยังหน้า HomePage
   const handleNavigateHome = () => {
-    navigate('/homepage'); // นำผู้ใช้ไปยังหน้า HomePage
+    navigate('/homepage');
   };
 
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-
-          {/* เมนูสำหรับหน้าจอขนาดเล็ก */}
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
@@ -132,7 +137,6 @@ function Navbar() {
             </Menu>
           </Box>
 
-          {/* แสดงชื่อเว็บไซต์ */}
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
           <Typography
             variant="h5"
@@ -153,12 +157,11 @@ function Navbar() {
             LOGO
           </Typography>
 
-          {/* เมนูสำหรับหน้าจอขนาดใหญ่ */}
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={handleNavigateHome} // ใช้ฟังก์ชันนี้แทน handleCloseNavMenu
+                onClick={handleNavigateHome}
                 sx={{ my: 2, color: 'white', display: 'block' }}
               >
                 {page}
@@ -166,43 +169,51 @@ function Navbar() {
             ))}
           </Box>
 
-          {/* แสดง Avatar และชื่อผู้ใช้ */}
           <Box sx={{ flexGrow: 0 }}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                <Avatar {...stringAvatar(username)} />
-              </IconButton>
-            </Tooltip>
-            <Menu
-              sx={{ mt: '45px' }}
-              id="menu-appbar"
-              anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}
-            >
-              <MenuItem>
-                {/* แสดงชื่อผู้ใช้ในเมนู */}
-                <Typography textAlign="center">{username}</Typography>
-              </MenuItem>
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={setting === 'Logout' ? handleLogout : handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
-                </MenuItem>
-              ))}
-            </Menu>
+            {isLoggedIn && (
+              <>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography variant="h6" sx={{ marginRight: 2 }}>
+                     {user_fname} {user_lname}
+                  </Typography>
+                  <Tooltip title="เปิดการตั้งค่า">
+                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                      <Avatar {...stringAvatar(username)} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+
+
+                <Menu
+                  sx={{ mt: '45px' }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  <MenuItem>
+                    <Typography textAlign="center">{username}</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <Typography textAlign="center">Logout</Typography>
+                  </MenuItem>
+                </Menu>
+              </>
+            )}
           </Box>
         </Toolbar>
       </Container>
     </AppBar>
   );
 }
+
 export default Navbar;

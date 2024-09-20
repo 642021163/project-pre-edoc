@@ -1,17 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Container, Grid, Paper, Typography, Box, Snackbar, TextField, IconButton, AppBar, Toolbar, Menu, MenuItem, Divider
+  Container, Grid, Paper, Typography, Box, Snackbar, TextField, IconButton, AppBar, Toolbar, Menu, MenuItem, Divider,
+  List, ListItem, ListItemIcon, ListItemText, Tooltip, Drawer, CssBaseline,Collapse
 } from '@mui/material';
-import { InsertDriveFile, Person, ReportProblem, Search, Notifications, AccountCircle, ExitToApp, Home as HomeIcon, FileUpload as FileUploadIcon } from '@mui/icons-material';
-import { List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
+import {
+  InsertDriveFile, Person, ReportProblem, PersonAdd, Home, Search, Notifications, AccountCircle, ExitToApp, Home as HomeIcon, FileUpload ,
+   BarChart,
+} from '@mui/icons-material';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import MuiAlert from '@mui/material/Alert';
+import MuiAlert from '@mui/material/Alert'; // สำหรับการแจ้งเตือน
 import axios from 'axios';
+
 
 function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
+const drawerWidth = 240; // หรือค่าที่คุณต้องการ
 function AdminHome() {
   const [username, setUsername] = useState('');
   const [userId, setUserId] = useState('');
@@ -24,16 +29,14 @@ function AdminHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation();
-
-
+  const location = useLocation(); 
+  const [openUserMenu, setOpenUserMenu] = useState(false);
 
 
   const handleLogout = () => {
     const confirmLogout = window.confirm("คุณแน่ใจว่าต้องการออกจากระบบไหม?");
     if (confirmLogout) {
-      localStorage.removeItem('username');
-      localStorage.removeItem('userId');
+      localStorage.clear();
       navigate('/loginpage');
     }
   };
@@ -45,6 +48,9 @@ function AdminHome() {
   const handleProfileMenuClose = () => {
     setProfileMenuAnchor(null);
   };
+  const handleBackToHome = () => {
+    navigate('/home'); // หรือเส้นทางที่คุณต้องการ
+  };
 
   const handleNotificationsClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -54,15 +60,29 @@ function AdminHome() {
     setAnchorEl(null);
   };
 
-  const menuItems = [
-    { text: 'เอกสารทั้งหมด', link: '/doc', icon: <InsertDriveFile /> },
-    { text: 'เอกสารที่ยังไม่อ่าน', link: '/track', icon: <FileUploadIcon /> },
-    { text: 'ข้อมูลผู้ใช้', link: `/profile/${userId}`, icon: <AccountCircle /> },
-  ];
 
   const handleCloseAlert = () => {
     setOpenAlert(false);
   };
+
+ 
+
+  const handleAddUser = () => {
+    navigate('/newuser');
+  };
+
+  const handleAllDocuments = () => {
+    navigate('/doc');
+  };
+
+  const handleStatistics = () => {
+    navigate('/rec');
+  };
+  const handleClick = () => {
+    setOpenUserMenu(!openUserMenu);
+  };
+
+ 
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,25 +142,26 @@ function AdminHome() {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, height: '100vh', display: 'flex' }}>
-      <AppBar position="fixed" sx={{ width: `calc(100% - 250px)`, ml: '250px' }}>
+    <Box >
+      <CssBaseline />
+      <AppBar position="fixed" sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px`, bgcolor: '#1976d2' }}>
         <Toolbar>
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             Admin Dashboard
           </Typography>
-            <TextField
-              variant="outlined"
-              placeholder="ค้นหา..."
-              size="small"
-              sx={{ marginRight: 2, bgcolor: '#fff' }}
-               InputProps={{
-                endAdornment: (
+          <TextField
+            variant="outlined"
+            placeholder="ค้นหา..."
+            size="small"
+            sx={{ marginRight: 2, bgcolor: '#fff' }}
+            InputProps={{
+              endAdornment: (
                 <IconButton>
                   <Search />
                 </IconButton>
               ),
             }}
-            />
+          />
           <IconButton onClick={handleNotificationsClick} color="inherit">
             <Notifications />
           </IconButton>
@@ -167,68 +188,91 @@ function AdminHome() {
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ width: 250, bgcolor: '#ffffff', p: 2, boxShadow: 3, position: 'fixed', height: '100%', top: 0 }}>
-        <Typography variant="h6" gutterBottom>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              backgroundColor: '#e3f2fd',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              color: '#0277bd',
+      <Drawer
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            bgcolor: '#1A2035',
+            color: '#B9BABF',
+          },
+        }}
+        variant="permanent"
+        anchor="left"
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto' }}>
+          <List>
+            <Tooltip title="Home" arrow>
+              <ListItem button onClick={handleBackToHome}>
+                <ListItemIcon sx={{ color: '#ddd' }}><HomeIcon /></ListItemIcon>
+                <ListItemText primary="Home" />
+              </ListItem>
+            </Tooltip>
 
-            }}
-          >
-            <HomeIcon sx={{ marginRight: '8px' }} />
-            Dashboard
-          </Box>
-        </Typography>
+            <Tooltip title="ผู้ใช้ที่ลงทะเบียน" arrow>
+              <ListItem button onClick={handleClick}>
+                <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
+                <ListItemText primary="ผู้ใช้ที่ลงทะเบียน" />
+              </ListItem>
+            </Tooltip>
 
-        <List>
-          {menuItems.map((item) => (
+            <Collapse in={openUserMenu} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem button sx={{ pl: 4 }} onClick={handleAddUser}>
+                  <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
+                  <ListItemText primary="เพิ่มผู้ใช้" />
+                </ListItem>
+                <ListItem button sx={{ pl: 4 }} onClick={() => navigate('/list')}>
+                  <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
+                  <ListItemText primary="รายชื่อผู้ใช้" />
+                </ListItem>
+              </List>
+            </Collapse>
+
+            <Tooltip title="เอกสารทั้งหมด" arrow>
+              <ListItem button onClick={handleAllDocuments}>
+                <ListItemIcon sx={{ color: '#ddd' }}><InsertDriveFile /></ListItemIcon>
+                <ListItemText primary="เอกสารทั้งหมด" />
+              </ListItem>
+            </Tooltip>
+
+            <Tooltip title="สถิติการรับเอกสาร" arrow>
+              <ListItem button onClick={handleStatistics}>
+                <ListItemIcon sx={{ color: '#ddd' }}><BarChart /></ListItemIcon>
+                <ListItemText primary="สถิติการรับเอกสาร" />
+              </ListItem>
+            </Tooltip>
+
+            <Divider sx={{ my: 2 }} />
+
             <ListItem
-              component={Link}
-              to={item.link}
-              key={item.text}
+              button
+              onClick={handleLogout}
               sx={{
                 borderRadius: '4px',
-                mb: 1,
-                backgroundColor: location.pathname === item.link ? '#bbdefb' : 'transparent',
-                '&:hover': { backgroundColor: '#e1f5fe' }
+                backgroundColor: '#f44336',
+                color: '#fff',
+                fontWeight: 'bold',
+                '&:hover': {
+                  backgroundColor: '#d32f2f',
+                },
+                '&:active': {
+                  backgroundColor: '#b71c1c',
+                }
               }}
             >
               <ListItemIcon>
-                {item.icon}
+                <ExitToApp sx={{ color: '#fff' }} />
               </ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText primary="ออกจากระบบ" />
             </ListItem>
-          ))}
-        </List>
-        <Divider sx={{ my: 2 }} />
-        <List>
-          <ListItem
-            onClick={handleLogout}
-            sx={{
-              borderRadius: '4px',
-              backgroundColor: '#f44336',
-              color: '#fff',
-              fontWeight: 'bold',
-              '&:hover': {
-                backgroundColor: '#d32f2f',
-              },
-              '&:active': {
-                backgroundColor: '#b71c1c',
-              }
-            }}
-          >
-            <ListItemIcon>
-              <ExitToApp sx={{ color: '#fff' }} />
-            </ListItemIcon>
-            <ListItemText primary="ออกจากระบบ" />
-          </ListItem>
-        </List>
-      </Box>
+          </List>
+        </Box>
+      </Drawer>
+
 
       <Box sx={{ flexGrow: 1, ml: '250px', p: 3, bgcolor: '#f0f2f5', mt: 8 }}>
         <Container maxWidth="lg">
