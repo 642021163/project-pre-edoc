@@ -26,6 +26,7 @@ import AddUser from './Admin/AddUser';
 import EditUser from './Admin/EditUser';
 import Addfile from './Admin/AddFile';
 import EditDocument from './LoginFrom/EditDocument';
+import UnreadDocuments from './Admin/UnreadDocuments';
 
 
 function App() {
@@ -48,7 +49,8 @@ function AppContent() {
                       location.pathname.startsWith('/re') ||
                       location.pathname.startsWith('/newuser') ||
                       location.pathname.startsWith('/editu') ||
-                      location.pathname.startsWith('/addfile') ;
+                      location.pathname.startsWith('/addfile') ||
+                      location.pathname.startsWith('/unread') ;
 
   return (
     <>
@@ -83,6 +85,7 @@ function AppContent() {
         <Route path='/editu/:id' element={<EditUser />} />
         <Route path='/addfile' element={<Addfile />} />
         <Route path='/user-edit/:id' element={<EditDocument />} />
+        <Route path='/unread' element={<UnreadDocuments />} />
 
 
 

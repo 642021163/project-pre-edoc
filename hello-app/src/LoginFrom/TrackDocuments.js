@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Link, Button, List, ListItem, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Link, Button, Tooltip, List, ListItem, Collapse, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Pagination from '@mui/material/Pagination';
 import { format } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Chip } from '@mui/material';
+
 
 
 
@@ -37,6 +39,7 @@ const TrackDocuments = () => {
     const storedUserLname = localStorage.getItem('user_lname');
     const senderName = `${storedUserFname} ${storedUserLname}`;
 
+    const [menuOpen, setMenuOpen] = useState(true); // สถานะสำหรับการซ่อน/แสดงเมนู
     // ใช้สำหรับการนำทางในแอป
     const navigate = useNavigate(); // ใช้สำหรับนำทาง
     const location = useLocation(); // ใช้สำหรับตรวจสอบที่อยู่ URL ปัจจุบัน
@@ -44,7 +47,10 @@ const TrackDocuments = () => {
     // ฟังก์ชันสำหรับดึงข้อมูลเอกสารจากเซิร์ฟเวอร์
     const fetchDocuments = async () => {
         try {
-            const response = await axios.get('http://localhost:3000/documents');
+            const token = localStorage.getItem('token'); // สมมุติว่าเก็บ token ไว้ใน localStorage
+            const response = await axios.get('http://localhost:3000/documents', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             const sortedDocuments = response.data.sort((a, b) => new Date(b.upload_date) - new Date(a.upload_date));
             setDocuments(sortedDocuments);
             setLoading(false);
@@ -52,8 +58,8 @@ const TrackDocuments = () => {
             setError(err.message);
             setLoading(false);
         }
-
     };
+
     const handleDelete = async (docId) => {
         if (!docId) {
             return;
@@ -109,13 +115,13 @@ const TrackDocuments = () => {
     const getStatusText = (status) => {
         switch (status) {
             case 0:
-                return 'รอดำเนินการ';
+                return { label: 'รอดำเนินการ', color: 'warning' }; // สีเหลือง
             case 1:
-                return 'กำลังดำเนินการ'; // ตัวอย่างข้อความอื่นๆ
+                return { label: 'กำลังดำเนินการ', color: 'info' }; // สีฟ้า
             case 2:
-                return 'ดำเนินการเรียบร้อย'
+                return { label: 'ดำเนินการเรียบร้อย', color: 'success' }; // สีเขียว
             default:
-                return 'ไม่ทราบสถานะ';
+                return { label: 'ไม่ทราบสถานะ', color: 'default' }; // สีเทา
         }
     };
 
@@ -126,46 +132,62 @@ const TrackDocuments = () => {
         { text: 'ข้อมูลผู้ใช้', link: `/profile/`, icon: <AccountCircle /> },
     ];
 
+    const toggleMenu = () => {
+        setMenuOpen((prev) => !prev); // เปลี่ยนสถานะของเมนู
+    };
+
     return (
         <Box sx={{ display: 'flex', height: '100vh' }}>
-            {/* แถบเมนูด้านซ้าย */}
-            <Box sx={{ width: 250, bgcolor: '#ffffff', p: 2, boxShadow: 2 }}>
+            {/* ส่วนหลักของ Menu ฝั่งซ้าย */}
+            <Box sx={{
+                width: menuOpen ? 250 : 60, // ขนาดของเมนูตามสถานะ
+                bgcolor: '#e3f2fd',
+                color: '#212121',
+                p: 2,
+                boxShadow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'width 0.3s' // เพิ่มแอนิเมชั่นให้กับการแสดง/ซ่อนเมนู
+            }}>
                 <Typography variant="h6" gutterBottom>
                     <Box
                         sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            backgroundColor: '#f4f4f4',
+                            backgroundColor: '#bbdefb',
                             padding: '8px 16px',
                             borderRadius: '4px',
                         }}
                     >
-                        <MenuIcon sx={{ marginRight: '8px', color: '#1976d2' }} />
-                        เมนู
+                        <MenuIcon sx={{ marginRight: '8px' }} onClick={toggleMenu} /> {/* ไอคอนเมนู */}
+                        {menuOpen && 'Menu'} {/* แสดงชื่อเมนูเฉพาะเมื่อเมนูเปิด */}
                     </Box>
                 </Typography>
-                <List>
-                    {menuItems.map((item) => (
-                        <ListItem
-                            component="a"
-                            href={item.link}
-                            key={item.text}
-                            sx={{
-                                borderRadius: '4px',
-                                mb: 1,
-                                backgroundColor: location.pathname === item.link ? '#e0e0e0' : 'transparent',
-                                '&:hover': { backgroundColor: '#f5f5f5' }
-                            }}
-                        >
-                            <ListItemIcon>
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText primary={item.text} />
-                        </ListItem>
-                    ))}
-                </List>
-                <Divider sx={{ my: 2 }} />
-
+                <Collapse in={menuOpen}>
+                    <List>
+                        {menuItems.map((item) => (
+                            <Tooltip title={item.text} key={item.text} arrow>
+                                <ListItem
+                                    component="a"
+                                    href={item.link}
+                                    sx={{
+                                        borderRadius: '4px',
+                                        mb: 1,
+                                        backgroundColor: location.pathname === item.link ? '#bbdefb' : 'transparent',
+                                        '&:hover': { backgroundColor: '#b3e5fc' },
+                                        color: '#212121'
+                                    }}
+                                >
+                                    <ListItemIcon sx={{ color: 'inherit' }}>
+                                        {item.icon}
+                                    </ListItemIcon>
+                                    {menuOpen && <ListItemText primary={item.text} />} {/* แสดงชื่อเมนูเฉพาะเมื่อเมนูเปิด */}
+                                </ListItem>
+                            </Tooltip>
+                        ))}
+                    </List>
+                </Collapse>
+                <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
             </Box>
 
             {/* เนื้อหาหลัก */}
@@ -219,7 +241,12 @@ const TrackDocuments = () => {
                                                             {getFileName(doc.file)}
                                                         </Link>
                                                     </TableCell>
-                                                    <TableCell align="left" sx={{ maxWidth: 200, whiteSpace: 'nowrap' }}>{getStatusText(doc.status)}</TableCell>
+                                                    <TableCell align="left" sx={{ maxWidth: 200, whiteSpace: 'nowrap' }}>{
+                                                        (() => {
+                                                            const { label, color } = getStatusText(doc.status);
+                                                            return <Chip label={label} color={color} sx={{ borderRadius: '4px' }} />;
+                                                        })()
+                                                    }</TableCell>
                                                     <TableCell align="left">{doc.recipient}</TableCell>
                                                     <TableCell align="left">
                                                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
@@ -322,7 +349,12 @@ const TrackDocuments = () => {
                                         </Link>
                                     ),
                                 },
-                                { label: 'สถานะ:', value: getStatusText(selectedDocument.status) },
+                                {
+                                    label: 'สถานะ:',
+                                    value: (
+                                        <Chip {...getStatusText(selectedDocument.status)} sx={{ borderRadius: '4px' }} />
+                                    ),
+                                },
                                 { label: 'เลขที่เอกสาร:', value: selectedDocument.document_number },
                                 { label: 'ประเภทเอกสาร:', value: selectedDocument.document_type },
                                 { label: 'หมายเหตุ:', value: selectedDocument.notes },
@@ -357,18 +389,3 @@ const TrackDocuments = () => {
 };
 
 export default TrackDocuments;
-
-// const style = {
-//     position: 'absolute',
-//     top: '50%',
-//     left: '50%',
-//     transform: 'translate(-50%, -50%)',
-//     width: 400,
-//     maxWidth: '90%', // เพิ่มการตั้งค่าสำหรับความกว้างสูงสุด
-//     bgcolor: 'background.paper',
-//     border: '2px solid #000',
-//     boxShadow: 24,
-//     p: 4,
-//     borderRadius: 2, // เพิ่มมุมโค้ง
-//     overflow: 'auto' // เพิ่มการเลื่อนเมื่อเนื้อหามาก
-// };
