@@ -5,6 +5,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import CheckCircle from '@mui/icons-material/CheckCircle';
+import { Chip } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import Layout from '../LayoutAdmin/Layout';
 
 
 const drawerWidth = 240;
@@ -80,7 +83,6 @@ function Documents() {
 
     //         // อัปเดตสถานะเอกสารเป็น 'กำลังดำเนินการ'
     //         const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
-    //             status: 1,           // หรือสถานะที่คุณต้องการตั้ง
     //             received_by: adminId // รหัสของผู้ดูแลระบบที่รับเอกสาร
     //         });
     //         console.log('Update status response:', updateStatusResponse.data); // Log ค่าการตอบกลับจากการอัปเดตสถานะเอกสาร
@@ -172,18 +174,19 @@ function Documents() {
         setPaperCost(cost);
     };
 
-    const getStatusText = (status) => {
-        switch (status) {
+    const getStatusText = (docStatus) => {
+        switch (docStatus) {
             case 0:
-                return 'รอดำเนินการ';
+                return { label: 'รอดำเนินการ', color: 'warning' };
             case 1:
-                return 'กำลังดำเนินการ';
+                return { label: 'กำลังดำเนินการ', color: 'info' };
             case 2:
-                return 'ดำเนินการเรียบร้อย';
+                return { label: 'ดำเนินการเรียบร้อย', color: 'success' };
             default:
-                return 'ไม่ทราบสถานะ';
+                return { label: 'ไม่ทราบสถานะ', color: 'default' };
         }
     };
+
     // ในฟังก์ชัน Documents
     const handleEditClick = (docId) => {
 
@@ -192,225 +195,131 @@ function Documents() {
     };
 
     return (
-        <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-            {/* AppBar */}
-            <AppBar position="fixed" sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px`, bgcolor: '#1976d2' }}>
-                <Toolbar>
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: '#fff' }}>
-                        Admin Dashboard
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {/* Search Box */}
-                        {/* ช่องค้นหา */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2 }}>
-                            <IconButton sx={{ p: '10px' }}>
-                                <Search />
-                            </IconButton>
-                            <InputBase
-                                placeholder="Search…"
-                                value={search}
-                                onChange={handleSearchChange}
-                                sx={{ ml: 1, flex: 1 }}
-                            />
-                        </Box>
-                        {/* Notifications Icon */}
-                        <IconButton sx={{ color: '#fff' }}>
-                            <Badge badgeContent={4} color="error">
-                                <Notifications />
-                            </Badge>
-                        </IconButton>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-            <Drawer
-                sx={{
-                    width: drawerWidth,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        bgcolor: '#1A2035',
-                        color: '#B9BABF',
-                    },
-                }}
-                variant="permanent"
-                anchor="left"
-            >
-                <Toolbar />
-                <Box sx={{ overflow: 'auto' }}>
-                    <List>
-                        <Tooltip title="Home" arrow>
-                            <ListItem button onClick={handleBackToHome}>
-                                <ListItemIcon sx={{ color: '#ddd' }}><HomeIcon /></ListItemIcon>
-                                <ListItemText primary="Home" />
-                            </ListItem>
-                        </Tooltip>
-
-                        <Tooltip title="ผู้ใช้ที่ลงทะเบียน" arrow>
-                            <ListItem button onClick={handleClick}>
-                                <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
-                                <ListItemText primary="ผู้ใช้ที่ลงทะเบียน" />
-                            </ListItem>
-                        </Tooltip>
-
-                        <Collapse in={openUserMenu} timeout="auto" unmountOnExit>
-                            <List component="div" disablePadding>
-                                <ListItem button sx={{ pl: 4 }} onClick={handleAddUser}>
-                                    <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
-                                    <ListItemText primary="เพิ่มผู้ใช้" />
-                                </ListItem>
-                                <ListItem button sx={{ pl: 4 }} onClick={() => navigate('/list')}>
-                                    <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
-                                    <ListItemText primary="รายชื่อผู้ใช้" />
-                                </ListItem>
-                            </List>
-                        </Collapse>
-
-                        <Tooltip title="เอกสารทั้งหมด" arrow>
-                            <ListItem button onClick={handleAllDocuments}>
-                                <ListItemIcon sx={{ color: '#ddd' }}><InsertDriveFile /></ListItemIcon>
-                                <ListItemText primary="เอกสารทั้งหมด" />
-                            </ListItem>
-                        </Tooltip>
-
-                        <Tooltip title="สถิติการรับเอกสาร" arrow>
-                            <ListItem button onClick={handleStatistics}>
-                                <ListItemIcon sx={{ color: '#ddd' }}><BarChart /></ListItemIcon>
-                                <ListItemText primary="สถิติการรับเอกสาร" />
-                            </ListItem>
-                        </Tooltip>
-
-                        <Divider sx={{ my: 2 }} />
-
-                        <ListItem
-                            button
-                            onClick={handleLogout}
-                            sx={{
-                                borderRadius: '4px',
-                                backgroundColor: '#f44336',
-                                color: '#fff',
-                                fontWeight: 'bold',
-                                '&:hover': {
-                                    backgroundColor: '#d32f2f',
-                                },
-                                '&:active': {
-                                    backgroundColor: '#b71c1c',
-                                }
-                            }}
+        <Layout>
+            <Box sx={{ display: 'flex' }}>
+                <CssBaseline />
+                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1'}}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                            เอกสารทั้งหมด
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleAddFile}
+                            sx={{ height: 'fit-content' }}
                         >
-                            <ListItemIcon>
-                                <ExitToApp sx={{ color: '#fff' }} />
-                            </ListItemIcon>
-                            <ListItemText primary="ออกจากระบบ" />
-                        </ListItem>
-                    </List>
-                </Box>
-            </Drawer>
-            {/* Main content */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1' }}>
-                <Typography variant="h4" gutterBottom sx={{ mb: 2, color: '#333' }}>
-                    Admin Document Dashboard
-                </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                        เอกสารทั้งหมด
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleAddFile}
-                        sx={{ height: 'fit-content' }}
-                    >
-                        Add File
-                    </Button>
-                </Box>
+                            + Add File
+                        </Button>
+                    </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2 }}>
-                    <IconButton sx={{ p: '10px' }}>
-                        <Search />
-                    </IconButton>
-                    <InputBase
-                        placeholder="Search…"
-                        value={search}
-                        onChange={handleSearchChange}
-                        sx={{ ml: 1, flex: 1 }}
-                    />
-                </Box>
-                <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
-                    <Tab label="เอกสารทั้งหมด" value="all" />
-                    <Tab label="เอกสารที่ยังไม่เปิดอ่าน" value="unread" />
-                </Tabs>
-                <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ backgroundColor: '#f0f8ff' }}>
-                                <TableCell sx={{ fontWeight: 'bold' }}>ลำดับ.</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>วันที่</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>ชื่อ-สกุล</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>เรื่อง</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>ถึง</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>สถานะ</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>ไฟล์</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {(activeTab === 'all' ? allDocuments : unreadDocuments).map((doc, index) => {
-                                return (
-                                    <TableRow key={doc.document_id}>
-                                        <TableCell>{index + 1}</TableCell>
-                                        <TableCell>{formatDateTime(doc.upload_date)}</TableCell>
-                                        <TableCell>{`${doc.user_fname} ${doc.user_lname}`}</TableCell>
-                                        <TableCell>{doc.subject}</TableCell>
-                                        <TableCell>{doc.to_recipient}</TableCell>
-                                        <TableCell>{getStatusText(doc.status)}</TableCell>
-                                        <TableCell>
-                                            <Button
-                                                variant="contained"
-                                                sx={{ mx: 1, backgroundColor: '#1976d2', color: '#fff' }}
-                                                onClick={() => {
-                                                    console.log('Edit button clicked for document_id:', doc.document_id); // ตรวจสอบค่า document_id ที่ถูกคลิก
-                                                    handleEditClick(doc.document_id);
-                                                }}
-                                            >
-                                                Edit
-                                            </Button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2 }}>
+                        <IconButton sx={{ p: '10px' }}>
+                            <Search />
+                        </IconButton>
+                        <InputBase
+                            placeholder="Search…"
+                            value={search}
+                            onChange={handleSearchChange}
+                            sx={{ ml: 1, flex: 1 }}
+                        />
+                    </Box>
+                    <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
+                        <Tab label="เอกสารที่ยังไม่เปิดอ่าน" value="unread" />
+                        <Tab label="เอกสารทั้งหมด" value="all" />
+                    </Tabs>
+                    <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ backgroundColor: '#f0f8ff' }}>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>ลำดับ.</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>วันที่</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>ชื่อ-สกุล</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>เรื่อง</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>ถึง</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>สถานะ</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
+                                    <TableCell sx={{ fontWeight: 'bold' }}>ไฟล์</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {(activeTab === 'all' ? allDocuments : unreadDocuments).map((doc, index) => {
+                                    return (
+                                        <TableRow key={doc.document_id}>
+                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{formatDateTime(doc.upload_date)}</TableCell>
+                                            <TableCell>{`${doc.user_fname} ${doc.user_lname}`}</TableCell>
+                                            <TableCell>{doc.subject}</TableCell>
+                                            <TableCell>{doc.to_recipient}</TableCell>
+                                            <TableCell>
+                                                {
+                                                    (() => {
+                                                        const { label, color } = getStatusText(doc.status);
+                                                        return <Chip label={label} color={color} sx={{ borderRadius: '4px' }} />;
+                                                    })()
+                                                }
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    variant="contained"
+                                                    sx={{
+                                                        mx: 1,
+                                                        backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
+                                                        color: '#000',
+                                                        '&:hover': {
+                                                            backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
+                                                        },
+                                                        display: 'flex',
+                                                        alignItems: 'center', // จัดแนวให้อยู่กลาง
+                                                    }}
+                                                    onClick={() => {
+                                                        console.log('Edit button clicked for document_id:', doc.document_id);
+                                                        handleEditClick(doc.document_id);
+                                                    }}
+                                                >
+                                                    <EditIcon sx={{ mr: 1 }} /> {/* ไอคอนการแก้ไข */}
+                                                    Edit
+                                                </Button>
 
-                                            {/* <IconButton
+{/* 
+                                                <IconButton
                                                 sx={{ mx: 1, color: '#1976d2' }}
                                                 onClick={() => handleReceiveButtonClick(doc.document_id)}
-                                                disabled={doc.status === 1} // ป้องกันการกดซ้ำถ้าสถานะเป็น 1
-
+                                                disabled={doc.status === 1}
                                             >
                                                 <CheckCircle />
                                             </IconButton> */}
+                                            </TableCell>
 
-
-                                        </TableCell>
-                                        <TableCell>
-                                            <a
-                                                href={`http://localhost:3000/${doc.file}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                onClick={() => {
-                                            
-                                                    handleDocumentRead(doc.document_id); // เรียกฟังก์ชันด้วย document_id
-                                                }}
-                                            >
-                                                เปิดไฟล์ PDF
-                                            </a>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-
-
-                    </Table>
-                </TableContainer>
+                                            <TableCell>
+                                                <Tooltip title="เปิดไฟล์ PDF" arrow>
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        onClick={() => {
+                                                            handleDocumentRead(doc.document_id); // เรียกฟังก์ชันด้วย document_id
+                                                            window.open(`http://localhost:3000/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
+                                                        }}
+                                                        sx={{
+                                                            textTransform: 'none', // ปิดการแปลงข้อความเป็นตัวพิมพ์ใหญ่
+                                                            '&:hover': { // ปรับแต่งสไตล์เมื่อเมาส์อยู่เหนือปุ่ม
+                                                                backgroundColor: '#1976d2', // สีเมื่ออยู่เหนือปุ่ม
+                                                            }
+                                                        }}
+                                                    >
+                                                        เปิดไฟล์ PDF
+                                                    </Button>
+                                                </Tooltip>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
             </Box>
-        </Box>
+        </Layout>
     );
 }
 

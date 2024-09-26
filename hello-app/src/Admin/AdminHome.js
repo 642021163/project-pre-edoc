@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
   Container, Grid, Paper, Typography, Box, Snackbar, TextField, IconButton, AppBar, Toolbar, Menu, MenuItem, Divider,
-  List, ListItem, ListItemIcon, ListItemText, Tooltip, Drawer, CssBaseline,Collapse
+  List, ListItem, ListItemIcon, ListItemText, Tooltip, Drawer, CssBaseline, Collapse
 } from '@mui/material';
 import {
-  InsertDriveFile, Person, ReportProblem, PersonAdd, Home, Search, Notifications, AccountCircle, ExitToApp, Home as HomeIcon, FileUpload ,
-   BarChart,
+  InsertDriveFile, Person, ReportProblem, PersonAdd, Home, Search, Notifications, AccountCircle, ExitToApp, Home as HomeIcon, FileUpload,
+  BarChart,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert'; // สำหรับการแจ้งเตือน
@@ -29,7 +29,7 @@ function AdminHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const location = useLocation(); 
+  const location = useLocation();
   const [openUserMenu, setOpenUserMenu] = useState(false);
 
 
@@ -65,7 +65,7 @@ function AdminHome() {
     setOpenAlert(false);
   };
 
- 
+
 
   const handleAddUser = () => {
     navigate('/newuser');
@@ -82,7 +82,7 @@ function AdminHome() {
     setOpenUserMenu(!openUserMenu);
   };
 
- 
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,9 +96,11 @@ function AdminHome() {
           setUserId(storedUserId);
         }
 
+        // เรียกใช้ฟังก์ชันทั้งหมดเพื่อนำข้อมูล
         await Promise.all([
           fetchUserCount(),
-          fetchDocumentCount()
+          fetchDocumentCount(),
+          fetchUnreadDocumentCount() // เรียกใช้ฟังก์ชันนี้
         ]);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -128,6 +130,16 @@ function AdminHome() {
       setDocumentCount(response.data.count);
     } catch (error) {
       console.error('Error fetching document count:', error);
+    }
+  };
+
+  // ฟังก์ชันสำหรับดึงข้อมูลจำนวนเอกสารที่ยังไม่อ่าน
+  const fetchUnreadDocumentCount = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/unread-document-count');
+      setUnreadDocuments(response.data.count);
+    } catch (error) {
+      console.error('Error fetching unread document count:', error);
     }
   };
 
@@ -277,15 +289,17 @@ function AdminHome() {
       <Box sx={{ flexGrow: 1, ml: '250px', p: 3, bgcolor: '#f0f2f5', mt: 8 }}>
         <Container maxWidth="lg">
           <Grid container spacing={3}>
-            {/* Card 1 */}
+
+
+            {/* Card 3 */}
             <Grid item xs={12} sm={6} md={4}>
-              <Link to="/list" style={{ textDecoration: 'none' }}>
+              <Link to="/unread" style={{ textDecoration: 'none' }}>
                 <Paper
                   elevation={3}
                   sx={{
                     p: 3,
                     textAlign: 'center',
-                    backgroundColor: '#e3f2fd', // Light blue
+                    backgroundColor: '#fff3e0', // Light orange
                     borderRadius: 2,
                     boxShadow: 3
                   }}
@@ -300,14 +314,13 @@ function AdminHome() {
                       mb: 2
                     }}
                   >
-                    <Person fontSize="large" sx={{ mr: 1, color: '#0277bd' }} />
-                    ผู้ใช้ที่ลงทะเบียน
+                    <ReportProblem fontSize="large" sx={{ mr: 1, color: '#ff9800' }} />
+                    เอกสารที่ยังไม่อ่าน
                   </Typography>
-                  <Typography variant="h6" sx={{ color: '#555' }}>{userCount} คน</Typography>
+                  <Typography variant="h6" sx={{ color: '#555' }}>{unreadDocuments} รายการ</Typography>
                 </Paper>
               </Link>
             </Grid>
-
             {/* Card 2 */}
             <Grid item xs={12} sm={6} md={4}>
               <Link to="/doc" style={{ textDecoration: 'none' }}>
@@ -339,35 +352,36 @@ function AdminHome() {
               </Link>
             </Grid>
 
-            {/* Card 3 */}
+            {/* Card 1 */}
             <Grid item xs={12} sm={6} md={4}>
-              <Paper
-                elevation={3}
-                sx={{
-                  p: 3,
-                  textAlign: 'center',
-                  backgroundColor: '#fff3e0', // Light orange
-                  borderRadius: 2,
-                  boxShadow: 3
-                }}
-              >
-                <Typography
-                  variant="h5"
-                  gutterBottom
+              <Link to="/list" style={{ textDecoration: 'none' }}>
+                <Paper
+                  elevation={3}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mb: 2
+                    p: 3,
+                    textAlign: 'center',
+                    backgroundColor: '#e3f2fd', // Light blue
+                    borderRadius: 2,
+                    boxShadow: 3
                   }}
                 >
-                  <ReportProblem fontSize="large" sx={{ mr: 1, color: '#ff9800' }} />
-                  เอกสารที่ยังไม่อ่าน
-                </Typography>
-                <Typography variant="h6" sx={{ color: '#555' }}>{unreadDocuments} รายการ</Typography>
-              </Paper>
+                  <Typography
+                    variant="h5"
+                    gutterBottom
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 2
+                    }}
+                  >
+                    <Person fontSize="large" sx={{ mr: 1, color: '#0277bd' }} />
+                    ผู้ใช้ที่ลงทะเบียน
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#555' }}>{userCount} คน</Typography>
+                </Paper>
+              </Link>
             </Grid>
-
             {/* Card 4 */}
             <Grid item xs={12} sm={6} md={4}>
               <Link to="/rec" style={{ textDecoration: 'none' }}>
@@ -394,7 +408,7 @@ function AdminHome() {
                     <ReportProblem fontSize="large" sx={{ mr: 1, color: '#ab47bc' }} />
                     สถิติการรับเอกสาร
                   </Typography>
-                  <Typography variant="h6" sx={{ color: '#555' }}>{unreadDocuments} รายการ</Typography>
+                  <Typography variant="h6" sx={{ color: '#555' }}> รายการ</Typography>
                 </Paper>
               </Link>
             </Grid>

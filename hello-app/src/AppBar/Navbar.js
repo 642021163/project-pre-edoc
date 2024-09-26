@@ -12,11 +12,10 @@ import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
-import { useNavigate, useLocation } from 'react-router-dom';
+import HomeIcon from '@mui/icons-material/Home';
+import { useNavigate } from 'react-router-dom';
 
 const pages = ['Home'];
-const settings = ['Logout'];
 
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState(null);
@@ -26,7 +25,6 @@ function Navbar() {
   const [user_lname, setUser_lname] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -34,36 +32,35 @@ function Navbar() {
     const storedUser_lname = localStorage.getItem('user_lname');
     const token = localStorage.getItem('token');
 
-    if (storedUsername && token) {
-      setUsername(storedUsername);
-      setUser_fname(storedUser_fname || ''); // ตั้งค่า user_fname
-      setUser_lname(storedUser_lname || ''); // ตั้งค่า user_lname
-      setIsLoggedIn(true);
+    if (token) {
+      const decodedToken = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+
+      if (decodedToken.exp < currentTime) {
+        localStorage.clear();
+        setIsLoggedIn(false);
+        navigate('/loginpage');
+      } else {
+        setUsername(storedUsername);
+        setUser_fname(storedUser_fname || '');
+        setUser_lname(storedUser_lname || '');
+        setIsLoggedIn(true);
+      }
     } else {
       setIsLoggedIn(false);
     }
-  }, []);
+  }, [navigate]);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
-  };
-
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
   };
 
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
   const handleLogout = () => {
-    const confirmLogout = window.confirm('คุณแน่ใจหรือว่าต้องการออกจากระบบ?');
-
-    if (confirmLogout) {
+    if (window.confirm('คุณแน่ใจหรือว่าต้องการออกจากระบบ?')) {
       localStorage.clear();
       setIsLoggedIn(false);
       navigate('/loginpage');
@@ -83,51 +80,32 @@ function Navbar() {
     return color;
   };
 
-  const stringAvatar = (name) => {
-    return {
-      sx: {
-        bgcolor: stringToColor(name),
-      },
-      children: `${name.split(' ')[0][0]}`,
-    };
-  };
+  const stringAvatar = (name) => ({
+    sx: { bgcolor: stringToColor(name) },
+    children: `${name.split(' ')[0][0]}`,
+  });
 
   const handleNavigateHome = () => {
     navigate('/homepage');
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}> {/* สีหลัก */}
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
+              aria-label="menu"
               onClick={handleOpenNavMenu}
               color="inherit"
             >
               <MenuIcon />
             </IconButton>
             <Menu
-              id="menu-appbar"
               anchorEl={anchorElNav}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
-              }}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
-              sx={{
-                display: { xs: 'block', md: 'none' },
-              }}
             >
               {pages.map((page) => (
                 <MenuItem key={page} onClick={() => { handleCloseNavMenu(); handleNavigateHome(); }}>
@@ -137,68 +115,36 @@ function Navbar() {
             </Menu>
           </Box>
 
-          <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
-          <Typography
-            variant="h5"
-            noWrap
-            component="a"
-            href="#"
-            sx={{
-              mr: 2,
-              display: { xs: 'flex', md: 'none' },
-              flexGrow: 1,
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
-              textDecoration: 'none',
-            }}
-          >
-            LOGO
-          </Typography>
-
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-            {pages.map((page) => (
+            {isLoggedIn && (
               <Button
-                key={page}
                 onClick={handleNavigateHome}
-                sx={{ my: 2, color: 'white', display: 'block' }}
+                sx={{ my: 2, color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }} // ใช้สีขาวสำหรับตัวอักษร
               >
-                {page}
+                <HomeIcon sx={{ marginRight: 1 }} />
+                <Typography variant="body1" sx={{ paddingTop: '4px' }}>{pages[0]}</Typography>
               </Button>
-            ))}
+            )}
           </Box>
 
           <Box sx={{ flexGrow: 0 }}>
             {isLoggedIn && (
               <>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography variant="h6" sx={{ marginRight: 2 }}>
-                     {user_fname} {user_lname}
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="h6" sx={{ marginRight: 2, color: '#ffffff' }}>
+                    {user_fname} {user_lname}
                   </Typography>
                   <Tooltip title="เปิดการตั้งค่า">
-                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                    <IconButton onClick={(event) => setAnchorElUser(event.currentTarget)} sx={{ p: 0 }}>
                       <Avatar {...stringAvatar(username)} />
                     </IconButton>
                   </Tooltip>
                 </Box>
 
-
                 <Menu
-                  sx={{ mt: '45px' }}
-                  id="menu-appbar"
                   anchorEl={anchorElUser}
-                  anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
                   open={Boolean(anchorElUser)}
-                  onClose={handleCloseUserMenu}
+                  onClose={() => setAnchorElUser(null)}
                 >
                   <MenuItem>
                     <Typography textAlign="center">{username}</Typography>

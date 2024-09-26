@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CssBaseline, Container, Box, Typography, TextField, Button, RadioGroup, FormControlLabel, Radio } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
 
 // กำหนดสไตล์โลโก้
 const Logo = styled('img')(({ theme }) => ({
@@ -30,7 +29,21 @@ function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate(); // กำหนด useNavigate
   const [loading, setLoading] = useState(false);
- 
+
+  useEffect(() => {
+    // ตรวจสอบ token เมื่อหน้า LoginPage โหลดขึ้นมา
+    const token = localStorage.getItem('token');
+    const storedUserType = localStorage.getItem('userType');
+
+    if (token) {
+      // ถ้ามี token และ userType ให้ redirect ไปยังหน้าที่เหมาะสม
+      if (storedUserType === 'admin') {
+        navigate('/home');
+      } else if (storedUserType === 'user') {
+        navigate('/homepage');
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (event) => {
     setUserType(event.target.value); // เปลี่ยนประเภทของผู้ใช้ที่เลือก
@@ -45,10 +58,10 @@ function LoginPage() {
         password,
         userType,
       });
-  
-      const { token, user_fname, user_lname, prefix, phone_number, affiliation,user_id } = response.data;
+
+      const { token, user_fname, user_lname, prefix, phone_number, affiliation, user_id } = response.data;
       console.log(response.data);
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user_id', user_id);
       localStorage.setItem('username', username);
@@ -58,7 +71,7 @@ function LoginPage() {
       localStorage.setItem('phone_number', phone_number);
       localStorage.setItem('affiliation', affiliation);
       localStorage.setItem('userType', userType);
-  
+
       if (userType === 'admin') {
         navigate('/home');
       } else if (userType === 'user') {
@@ -71,8 +84,6 @@ function LoginPage() {
       setLoading(false);
     }
   };
-  
-  
 
   return (
     <React.Fragment>
@@ -86,7 +97,11 @@ function LoginPage() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          p: 2
+          p: 2,
+          backgroundImage: 'url("/asset/BG5.jpg")', // ใส่รูปภาพพื้นหลัง
+          backgroundSize: 'cover', // ปรับขนาดพื้นหลังให้ครอบคลุมพื้นที่ทั้งหมด
+          backgroundPosition: 'center', // จัดตำแหน่งรูปภาพให้อยู่ตรงกลาง
+          opacity: 0.96,
         }}
       >
         <Box
@@ -99,6 +114,7 @@ function LoginPage() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.99)', // เพิ่มพื้นหลังสีขาวโปร่งใส
           }}
         >
           {/* โลโก้ */}
@@ -118,7 +134,7 @@ function LoginPage() {
           </Typography>
 
           {/* ตัวเลือกประเภทผู้ใช้ */}
-          <Box sx={{ width: '100%', mb: 2 }}>
+          <Box sx={{ width: '100%', mb: 1 }}>
             <Typography variant="body1" sx={{ textAlign: 'center', fontWeight: 'bold', color: '#1976d2' }}>
             </Typography>
             <RadioGroup
@@ -126,7 +142,7 @@ function LoginPage() {
               onChange={handleChange}
               sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}
             >
-               <RadioLabel value="user" control={<Radio />} label="User" />
+              <RadioLabel value="user" control={<Radio />} label="User" />
               <RadioLabel value="admin" control={<Radio />} label="Admin" />
             </RadioGroup>
           </Box>
@@ -165,6 +181,13 @@ function LoginPage() {
           </Box>
         </Box>
       </Container>
+
+      {/* Footer */}
+      <Box sx={{ bgcolor: '#1976d2', color: 'white', p: 2, textAlign: 'center' }}>
+        <Typography variant="body2">
+          © 2024 Faculty of Science and Digital Innovation, Thaksin University
+        </Typography>
+      </Box>
     </React.Fragment>
   );
 }

@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
-import { Container, TextField, Button, MenuItem, Box, Typography, Paper, AppBar, Toolbar, IconButton, Drawer, List, ListItem, ListItemText, Grid, Snackbar, CssBaseline, InputBase, Badge,Tooltip } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import Search from '@mui/icons-material/Search';
-import Notifications from '@mui/icons-material/Notifications';
+import { Container, TextField, Button, MenuItem, Box, Typography, Paper, Toolbar, Grid, Snackbar, CssBaseline } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Home from '@mui/icons-material/Home';
-import PersonAdd from '@mui/icons-material/PersonAdd';
-
-// ความกว้างของ Drawer
-const drawerWidth = 240;
+import Layout from '../LayoutAdmin/Layout';
 
 // ส่วนของ Alert สำหรับ Snackbar
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -34,21 +26,11 @@ function AddUser() {
     // สถานะของข้อผิดพลาด
     const [errors, setErrors] = useState({});
 
-    // สถานะของ Drawer
-    const [drawerOpen, setDrawerOpen] = useState(false);
-
     // สถานะของ Snackbar
     const [openSnackbar, setOpenSnackbar] = useState(false);
 
     // ใช้สำหรับการนำทาง
     const navigate = useNavigate();
-
-    // ฟังก์ชันเพื่อเปิดหรือปิด Drawer
-    const handleDrawerToggle = () => {
-        setDrawerOpen(!drawerOpen);
-    };
-
-
 
     // ฟังก์ชันสำหรับตรวจสอบความถูกต้องของฟอร์ม
     const validateForm = () => {
@@ -98,224 +80,151 @@ function AddUser() {
         setOpenSnackbar(false);
     };
 
-    // ฟังก์ชันจัดการกลับไปที่หน้า Home
-    const handleBackToHome = () => {
-        navigate('/list');
-    };
-
-
     return (
-        <Box sx={{ display: 'flex' }}>
-            <CssBaseline />
-            {/* AppBar */}
-            <AppBar position="fixed" sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px`, bgcolor: '#1976d2' }}>
-                <Toolbar>
-                    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: '#fff' }}>
-                        Admin Dashboard
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {/* Search Box */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2 }}>
-                            <IconButton sx={{ p: '10px' }}>
-                                <Search />
-                            </IconButton>
-                            <InputBase
-                                placeholder="Search…"
-                                sx={{ ml: 1, flex: 1 }}
-                            />
-                        </Box>
-                        {/* Notifications Icon */}
-                        <IconButton sx={{ color: '#fff' }}>
-                            <Badge badgeContent={4} color="error">
-                                <Notifications />
-                            </Badge>
-                        </IconButton>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-
-            {/* Drawer */}
-            <Drawer
-                sx={{
-                    width: drawerWidth,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                        width: drawerWidth,
-                        boxSizing: 'border-box',
-                        bgcolor: '#1A2035',  // สีพื้นหลังของ Drawer (สีเข้ม)
-                        color: '#B9BABF',    // สีของตัวหนังสือ (สีขาว/เทาอ่อน)
-                    },
-                }}
-                variant="permanent"
-                anchor="left"
-            >
-                <Toolbar />
-                <Box sx={{ overflow: 'auto' }}>
-                    <List>
-                        <Tooltip title="Home" arrow>
-                            <ListItem button onClick={handleBackToHome}>
-                                <ListItemIcon sx={{ color: '#ddd' }}> {/* ไอคอนสีเทาอ่อน */}
-                                    <Home />
-                                </ListItemIcon>
-                                <ListItemText primary="Home" />
-                            </ListItem>
-                        </Tooltip>
-                        <Tooltip title="ผู้ใช้ที่ลงทะเบียน" arrow>
-                            <ListItem button onClick={() => navigate('/list')}>
-                                <ListItemIcon sx={{ color: '#ddd' }}> {/* ไอคอนสีเทาอ่อน */}
-                                    <PersonAdd />
-                                </ListItemIcon>
-                                <ListItemText primary="ผู้ใช้ที่ลงทะเบียน" />
-                            </ListItem>
-                        </Tooltip>
-                    </List>
-                </Box>
-            </Drawer>
-
-            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-                <Toolbar />
-                <Container component={Paper} elevation={3} maxWidth="sm" sx={{ padding: 3 }}>
-                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center', color: '#1976d2' }}>
-                        เพิ่มผู้ใช้ใหม่
-                    </Typography>
-                    <form onSubmit={handleSubmit}>
-                        <Grid container spacing={2} sx={{ mb: 2 }}>
-                            <Grid item xs={3}>
+        <Layout>
+            <Box sx={{ display: 'flex' }}>
+                <CssBaseline />
+                <Box component="main" sx={{ flexGrow: 1, p: 1 }}>
+                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>เพิ่มผู้ใช้ใหม่</Typography>
+                    <Toolbar />
+                    <Container component={Paper} elevation={3} maxWidth="sm" sx={{ padding: 3 }}>
+                        <form onSubmit={handleSubmit}>
+                            <Grid container spacing={2} sx={{ mb: 2 }}>
+                                <Grid item xs={3}>
+                                    <TextField
+                                        select
+                                        label="คำนำหน้า"
+                                        name="prefix"
+                                        value={formData.prefix}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        required
+                                        error={Boolean(errors.prefix)}
+                                        helperText={errors.prefix}
+                                    >
+                                        <MenuItem value="Mr.">นาย</MenuItem>
+                                        <MenuItem value="Ms.">นาง</MenuItem>
+                                        <MenuItem value="Ms.">นางสาว</MenuItem>
+                                        <MenuItem value="Mrs.">ผศ.ดร.</MenuItem>
+                                        <MenuItem value="Mrs.">ดร.</MenuItem>
+                                    </TextField>
+                                </Grid>
+                                <Grid item xs={4}>
+                                    <TextField
+                                        label="ชื่อจริง"
+                                        name="user_fname"
+                                        value={formData.user_fname}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        required
+                                        error={Boolean(errors.user_fname)}
+                                        helperText={errors.user_fname}
+                                    />
+                                </Grid>
+                                <Grid item xs={5}>
+                                    <TextField
+                                        label="นามสกุล"
+                                        name="user_lname"
+                                        value={formData.user_lname}
+                                        onChange={handleChange}
+                                        fullWidth
+                                        required
+                                        error={Boolean(errors.user_lname)}
+                                        helperText={errors.user_lname}
+                                    />
+                                </Grid>
+                            </Grid>
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    label="username"
+                                    name="username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.username)}
+                                    helperText={errors.username}
+                                />
+                            </Box>
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    label="password"
+                                    name="password"
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.password)}
+                                    helperText={errors.password}
+                                />
+                            </Box>
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    label="หมายเลขโทรศัพท์"
+                                    name="phone_number"
+                                    value={formData.phone_number}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.phone_number)}
+                                    helperText={errors.phone_number}
+                                />
+                            </Box>
+                            <Box sx={{ mb: 2 }}>
+                                <TextField
+                                    label="สังกัด"
+                                    name="affiliation"
+                                    value={formData.affiliation}
+                                    onChange={handleChange}
+                                    fullWidth
+                                    required
+                                    error={Boolean(errors.affiliation)}
+                                    helperText={errors.affiliation}
+                                />
+                            </Box>
+                            <Box sx={{ mb: 2 }}>
                                 <TextField
                                     select
-                                    label="คำนำหน้า"
-                                    name="prefix"
-                                    value={formData.prefix}
+                                    label="บทบาท"
+                                    name="role"
+                                    value={formData.role}
                                     onChange={handleChange}
                                     fullWidth
                                     required
-                                    error={Boolean(errors.prefix)}
-                                    helperText={errors.prefix}
+                                    error={Boolean(errors.role)}
+                                    helperText={errors.role}
                                 >
-                                    <MenuItem value="Mr.">นาย</MenuItem>
-                                    <MenuItem value="Ms.">นาง</MenuItem>
-                                    <MenuItem value="Ms.">นางสาว</MenuItem>
-                                    <MenuItem value="Mrs.">ผศ.ดร.</MenuItem>
-                                    <MenuItem value="Mrs.">ดร.</MenuItem>
+                                    <MenuItem value="admin">Admin</MenuItem>
+                                    <MenuItem value="user">User</MenuItem>
                                 </TextField>
-                            </Grid>
-                            <Grid item xs={4}>
-                                <TextField
-                                    label="ชื่อจริง"
-                                    name="user_fname"
-                                    value={formData.user_fname}
-                                    onChange={handleChange}
-                                    fullWidth
-                                    required
-                                    error={Boolean(errors.user_fname)}
-                                    helperText={errors.user_fname}
-                                />
-                            </Grid>
-                            <Grid item xs={5}>
-                                <TextField
-                                    label="นามสกุล"
-                                    name="user_lname"
-                                    value={formData.user_lname}
-                                    onChange={handleChange}
-                                    fullWidth
-                                    required
-                                    error={Boolean(errors.user_lname)}
-                                    helperText={errors.user_lname}
-                                />
-                            </Grid>
-                        </Grid>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                label="username"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                                error={Boolean(errors.username)}
-                                helperText={errors.username}
-                            />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                label="password"
-                                name="password"
-                                type="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                                error={Boolean(errors.password)}
-                                helperText={errors.password}
-                            />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                label="หมายเลขโทรศัพท์"
-                                name="phone_number"
-                                value={formData.phone_number}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                                error={Boolean(errors.phone_number)}
-                                helperText={errors.phone_number}
-                            />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                label="สังกัด"
-                                name="affiliation"
-                                value={formData.affiliation}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                                error={Boolean(errors.affiliation)}
-                                helperText={errors.affiliation}
-                            />
-                        </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <TextField
-                                select
-                                label="บทบาท"
-                                name="role"
-                                value={formData.role}
-                                onChange={handleChange}
-                                fullWidth
-                                required
-                                error={Boolean(errors.role)}
-                                helperText={errors.role}
-                            >
-                                <MenuItem value="admin">Admin</MenuItem>
-                                <MenuItem value="user">User</MenuItem>
-                            </TextField>
-                        </Box>
-                        <Box sx={{ textAlign: 'center' }}>
-                            <Button type="submit" variant="contained" color="primary">
-                                ADD USER
-                            </Button>
-                        </Box>
-                    </form>
-                </Container>
+                            </Box>
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Button type="submit" variant="contained" color="primary">
+                                    ADD USER
+                                </Button>
+                            </Box>
+                        </form>
+                    </Container>
+                </Box>
+
+                <Snackbar
+                    open={openSnackbar}
+                    autoHideDuration={6000}
+                    onClose={handleSnackbarClose}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 0,
+                        textAlign: 'center',
+                        transform: 'translateX(-50%)'
+                    }}
+                >
+                    <Alert onClose={handleSnackbarClose} severity="success">
+                        เพิ่มผู้ใช้สำเร็จ!
+                    </Alert>
+                </Snackbar>
             </Box>
-
-            <Snackbar
-                open={openSnackbar}
-                autoHideDuration={6000}
-                onClose={handleSnackbarClose}
-                sx={{
-                    position: 'fixed',
-                    bottom: 0,
-                    textAlign:'center',
-                    transform: 'translateX(-50%)'
-                }}
-            >
-                <Alert onClose={handleSnackbarClose} severity="success">
-                    เพิ่มผู้ใช้สำเร็จ!
-                </Alert>
-            </Snackbar>
-
-
-        </Box>
+        </Layout>
     );
 }
 

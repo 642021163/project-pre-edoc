@@ -21,7 +21,7 @@ const EditDocument = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
-    
+
 
     useEffect(() => {
         const fetchDocument = async () => {
@@ -48,7 +48,7 @@ const EditDocument = () => {
 
     // ฟังก์ชันสำหรับจัดการไฟล์ที่เลือก
     const handleFileChange = (e) => {
-        setFileName(e.target.files[0]);
+        setFileName(e.target.files[0].name);
     };
 
     // ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขไปยังเซิร์ฟเวอร์
@@ -182,21 +182,33 @@ const EditDocument = () => {
                 )}
 
                 {/* ปุ่มสำหรับอัปโหลดไฟล์ใหม่ */}
-                <Box sx={{ mt: 3 }}>
-                    <Button variant="contained" component="label">
+                <Box sx={{ width: '100%', mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mt: 3 }}>
+                    <Button variant="contained" component="label" startIcon={<PictureAsPdfIcon />} >
                         อัปโหลดไฟล์ใหม่
                         <input type="file" hidden onChange={handleFileChange} />
                     </Button>
                     {fileName && (
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                            ไฟล์ที่เลือก: {fileName}
-                        </Typography>
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: 1,
+                                backgroundColor: '#f5f5f5',
+                                display: 'flex',
+                                alignItems: 'center',
+                                borderRadius: 1,
+                            }}
+                        >
+                            <PictureAsPdfIcon sx={{ color: '#d32f2f', mr: 1 }} />
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                                ไฟล์ที่เลือก: {fileName}
+                            </Typography>
+                        </Paper>
                     )}
                 </Box>
 
                 {/* ปุ่มบันทึก */}
-                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <Box sx={{ mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                         <Button
                             variant="contained"
                             endIcon={<SendIcon />}
@@ -205,17 +217,16 @@ const EditDocument = () => {
                         >
                             บันทึก
                         </Button>
-                    </Box>
-                    <Box sx={{ mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                         <Button
                             variant="contained"
                             sx={{ width: '150px', height: '50px', fontSize: '16px' }}
-                            onClick={handleCancel} // เพิ่ม onClick เพื่อนำทางเมื่อคลิก
+                            onClick={handleCancel}
                         >
                             ยกเลิก
                         </Button>
                     </Box>
                 </Box>
+
             </Box>
 
             {/* Dialog เมื่อสำเร็จ */}

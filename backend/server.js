@@ -36,7 +36,7 @@ db.connect((err) => {
 
 
 
-//Api Register ฝั่ง user
+//Apiหน้า RegisterFrom ฝั่ง user
 app.post('/users', async (req, res) => {
     try {
         console.log('Received request to create user account with data:', req.body);
@@ -67,193 +67,22 @@ app.post('/users', async (req, res) => {
 });
 
 
+//Api หน้า LoginFrom ฝั่ง User
 
-// ตั้งค่าการจัดเก็บไฟล์ ฝั่ง user
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'uploads');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true }); // สร้างโฟลเดอร์ถ้ายังไม่มี
-        }
-        cb(null, uploadDir); // ระบุที่จัดเก็บไฟล์
-    },
-    filename: (req, file, cb) => {
-        const originalName = file.originalname; // ใช้ชื่อไฟล์เดิม
-        console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
+// สร้าง middleware เพื่อตรวจสอบ JWT และยืนยันการเข้าถึง
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1];
 
-        // ตรวจสอบการทับซ้อนของชื่อไฟล์
-        let filePath = path.join(__dirname, 'uploads', originalName);
-        if (fs.existsSync(filePath)) {
-            // ถ้ามีไฟล์ที่มีชื่อเดียวกันอยู่แล้ว, ให้เพิ่มหมายเลขในชื่อไฟล์
-            const nameWithoutExt = path.basename(originalName, path.extname(originalName));
-            const ext = path.extname(originalName);
-            let i = 1;
-            while (fs.existsSync(filePath)) {
-                filePath = path.join(__dirname, 'uploads', `${nameWithoutExt}(${i})${ext}`);
-                i++;
-            }
-            console.log("Generated filename with number:", path.basename(filePath));
-            cb(null, path.basename(filePath));
-        } else {
-            // ถ้าไม่มีการทับซ้อน, ใช้ชื่อไฟล์เดิม
-            console.log("Generated filename:", originalName);
-            cb(null, originalName);
-        }
-    }
-});
+    if (!token) return res.status(401).json({ message: 'Access token required' });
 
-// ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
-const upload = multer({ storage: storage }); // สร้าง instance ของ multer
+    jwt.verify(token, secretKey, (err, user) => {
+        if (err) return res.status(403).json({ message: 'Invalid token' });
 
-app.post('/documents', upload.single('file'), (req, res) => {
-    console.log("Received request to create document with data:", req.body);
-    console.log("Received file:", req.file);
-
-    // ตรวจสอบค่าที่รับมาจาก req.body
-    console.log('user_fname:', req.body.user_fname);
-    console.log('user_id:', req.body.user_id);
-
-    const filePath = req.file ? path.join('uploads', req.file.filename) : null;
-
-    // สร้าง SQL สำหรับการแทรกข้อมูลลงในฐานข้อมูล
-    const sql = "INSERT INTO documents (upload_date, user_id,subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-    const values = [
-        req.body.upload_date,
-        req.body.user_id,
-        req.body.subject,
-        req.body.to_recipient,
-        req.body.document_type,
-        filePath,
-        req.body.notes,
-        0, // status
-        0, // is_read
-        0, // received_by
-        req.body.user_fname, // ชื่อผู้ใช้ที่ส่งฟอร์ม
-        req.body.user_lname  // นามสกุลผู้ใช้ที่ส่งฟอร์ม
-    ];
-
-    // ส่งคำสั่ง SQL ไปยังฐานข้อมูล
-    db.query(sql, values, (err, data) => {
-        if (err) {
-            console.error('Database Error:', err.code, err.message, err.sql);
-            return res.status(500).json({ message: "Error inserting data", error: err.message });
-        }
-        console.log('Document created successfully with ID:', data.insertId);
-        return res.status(201).json({ message: 'Document created successfully', data: data });
+        req.user = user;
+        next();
     });
-});
+};
 
-
-
-
-// เส้นทางสำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
-app.get('/documents', (req, res) => {
-    const sql = `
-        SELECT document_id, upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
-        FROM documents
-    `;
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Database Error:', err.code, err.message, err.sql);
-            return res.status(500).json({ message: "Error fetching documents", error: err.message });
-        }
-        console.log('Documents fetched successfully:', results);
-        return res.status(200).json(results);
-    });
-});
-
-// เส้นทางสำหรับดึงข้อมูลเอกสารตาม ID ฝั่ง user
-app.get('/documents/:id', (req, res) => {
-    const documentId = req.params.id; // ดึง ID จากพารามิเตอร์ URL
-    if (!documentId) {
-        return res.status(400).json({ message: 'Document ID is required' });
-    }
-    const sql = `
-        SELECT document_id, upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
-        FROM documents
-        WHERE user_id = ?
-    `;
-    db.query(sql, [documentId], (err, results) => {
-        if (err) {
-            console.error('Database Error:', err.code, err.message, err.sql);
-            return res.status(500).json({ message: "Error fetching document", error: err.message });
-        }
-        if (results.length === 0) {
-            return res.status(404).json({ message: 'Document not found' });
-        }
-        console.log('Document fetched successfully:', results[0]);
-        return res.status(200).json(results[0]);
-    });
-});
-// เพิ่ม middleware สำหรับ error handling
-app.use((err, req, res, next) => {
-    console.error('Unexpected error occurred:', err);
-    res.status(500).json({ message: 'An unexpected error occurred', error: err.message });
-});
-
-
-// API สำหรับแก้ไขเอกสารตาม ID
-app.put('/useredit/document/:id', upload.single('file'), (req, res) => {
-    const docId = req.params.id;
-    const { upload_date, subject, to_recipient, document_type, notes } = req.body;
-    const newFileName = req.file ? req.file.filename : null; // ชื่อไฟล์ใหม่ถ้ามีการอัปโหลด
-
-    const updateDocument = `
-        UPDATE documents
-        SET upload_date = ?, subject = ?, to_recipient = ?, document_type = ?, notes = ? ${newFileName ? ', file = ?' : ''}
-        WHERE document_id = ?`;
-
-    const params = newFileName 
-        ? [upload_date, subject, to_recipient, document_type, notes, newFileName, docId] 
-        : [upload_date, subject, to_recipient, document_type, notes, docId];
-
-    db.query(updateDocument, params, (err, result) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ message: 'Error updating document', error: err.message });
-        }
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Document not found' });
-        }
-        res.status(200).json({ message: 'Document updated successfully' });
-    });
-});
-
-
-
-
-// app.get('/user/:id', (req, res) => {
-//     const documentId = req.params.id; // ดึง ID จากพารามิเตอร์ URL
-//     if (!documentId) {
-//         return res.status(400).json({ message: 'Document ID is required' });
-//     }
-//     const sql = `
-//         SELECT *
-//         FROM user
-//         WHERE user_id = ?
-//     `;
-//     db.query(sql, [documentId], (err, results) => {
-//         if (err) {
-//             console.error('Database Error:', err.code, err.message, err.sql);
-//             return res.status(500).json({ message: "Error fetching document", error: err.message });
-//         }
-//         if (results.length === 0) {
-//             return res.status(404).json({ message: 'Document not found' });
-//         }
-//         console.log('Document fetched successfully:', results[0]);
-//         return res.status(200).json(results[0]);
-//     });
-// });
-
-
-// เพิ่ม middleware สำหรับ error handling
-app.use((err, req, res, next) => {
-    console.error('Unexpected error occurred:', err);
-    res.status(500).json({ message: 'An unexpected error occurred', error: err.message });
-});
-
-// api สำหรับ Login
 async function comparePassword(plainPassword, hashedPassword) { // ฟังก์ชันเปรียบเทียบรหัสผ่าน
     return await bcrypt.compare(plainPassword, hashedPassword);
 }
@@ -287,6 +116,7 @@ async function findUserByUsernameAndType(username, userType, correlationId) { //
     });
 }
 
+// api สำหรับ Login
 app.post('/login', async (req, res) => {
     const correlationId = uuidv4(); // สร้าง correlationId ใหม่สำหรับคำขอแต่ละครั้ง
 
@@ -334,19 +164,7 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// สร้าง middleware เพื่อตรวจสอบ JWT และยืนยันการเข้าถึง
-const authenticateToken = (req, res, next) => {
-    const token = req.headers['authorization']?.split(' ')[1];
 
-    if (!token) return res.status(401).json({ message: 'Access token required' });
-
-    jwt.verify(token, secretKey, (err, user) => {
-        if (err) return res.status(403).json({ message: 'Invalid token' });
-
-        req.user = user;
-        next();
-    });
-};
 const authorizeAdmin = (req, res, next) => {
     if (req.user.userType !== 'admin') {
         return res.status(403).json({ message: 'Forbidden: Admins only' });
@@ -359,6 +177,164 @@ app.get('/admin-only-route', authenticateToken, authorizeAdmin, (req, res) => {
 });
 
 
+
+//Api หน้า FileUpload ฝั่ง User
+
+// ตั้งค่าการจัดเก็บไฟล์ ฝั่ง user
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true }); // สร้างโฟลเดอร์ถ้ายังไม่มี
+        }
+        cb(null, uploadDir); // ระบุที่จัดเก็บไฟล์
+    },
+    filename: (req, file, cb) => {
+        const originalName = file.originalname; // ใช้ชื่อไฟล์เดิม
+        console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
+
+        // ตรวจสอบการทับซ้อนของชื่อไฟล์
+        let filePath = path.join(__dirname, 'uploads', originalName);
+        if (fs.existsSync(filePath)) {
+            // ถ้ามีไฟล์ที่มีชื่อเดียวกันอยู่แล้ว, ให้เพิ่มหมายเลขในชื่อไฟล์
+            const nameWithoutExt = path.basename(originalName, path.extname(originalName));
+            const ext = path.extname(originalName);
+            let i = 1;
+            while (fs.existsSync(filePath)) {
+                filePath = path.join(__dirname, 'uploads', `${nameWithoutExt}(${i})${ext}`);
+                i++;
+            }
+            console.log("Generated filename with number:", path.basename(filePath));
+            cb(null, path.basename(filePath));
+        } else {
+            // ถ้าไม่มีการทับซ้อน, ใช้ชื่อไฟล์เดิม
+            console.log("Generated filename:", originalName);
+            cb(null, originalName);
+        }
+    }
+});
+
+// ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
+const upload = multer({ storage: storage }); // สร้าง instance ของ multer
+
+// Api สำหรับอัปโหลดเอกสารลงตารางเส้น post
+app.post('/documents', upload.single('file'), (req, res) => {
+    const filePath = req.file ? path.join('uploads', req.file.filename) : null;
+    const sql = "INSERT INTO documents (upload_date, user_id,subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const values = [
+        req.body.upload_date,
+        req.body.user_id,
+        req.body.subject,
+        req.body.to_recipient,
+        req.body.document_type,
+        filePath,
+        req.body.notes,
+        0, // status
+        0, // is_read
+        0, // received_by
+        req.body.user_fname,
+        req.body.user_lname
+    ];
+
+    // ส่งคำสั่ง SQL ไปยังฐานข้อมูล
+    db.query(sql, values, (err, data) => {
+        if (err) {
+            console.error('Database Error:', err.code, err.message, err.sql);
+            return res.status(500).json({ message: "Error inserting data", error: err.message });
+        }
+        console.log('Document created successfully with ID:', data.insertId);
+        return res.status(201).json({ message: 'Document created successfully', data: data });
+    });
+});
+
+// Api หน้า TrackDocuments ฝั่ง User
+// สำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
+app.get('/documents', authenticateToken, (req, res) => {
+    const userId = req.user.userId; // ดึง userId จาก token
+
+    const sql = `
+    SELECT document_id, upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
+    FROM documents
+    WHERE user_id = ?  
+    `;
+
+    db.query(sql, [userId], (err, results) => { // ส่ง userId เป็น parameter
+        if (err) {
+            console.error('Database Error:', err.code, err.message, err.sql);
+            return res.status(500).json({ message: "Error fetching documents", error: err.message });
+        }
+        console.log('Documents fetched successfully:', results);
+        return res.status(200).json(results);
+    });
+});
+
+// เส้นทางสำหรับดึงข้อมูลเอกสารตาม ID ฝั่ง user
+app.get('/documents/:id', (req, res) => {
+    const documentId = req.params.id; // ดึง ID จากพารามิเตอร์ URL
+    if (!documentId) {
+        return res.status(400).json({ message: 'Document ID is required' });
+    }
+    const sql = `
+        SELECT document_id, upload_date, subject, to_recipient, file, status, document_number, document_type, notes, recipient
+        FROM documents
+        WHERE user_id = ?
+    `;
+    db.query(sql, [documentId], (err, results) => {
+        if (err) {
+            console.error('Database Error:', err.code, err.message, err.sql);
+            return res.status(500).json({ message: "Error fetching document", error: err.message });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ message: 'Document not found' });
+        }
+        console.log('Document fetched successfully:', results[0]);
+        return res.status(200).json(results[0]);
+    });
+});
+// เพิ่ม middleware สำหรับ error handling
+app.use((err, req, res, next) => {
+    console.error('Unexpected error occurred:', err);
+    res.status(500).json({ message: 'An unexpected error occurred', error: err.message });
+});
+
+// API สำหรับแก้ไขเอกสารตาม ID
+app.put('/useredit/document/:id', upload.single('file'), (req, res) => {
+    const docId = req.params.id;
+    const { upload_date, subject, to_recipient, document_type, notes } = req.body;
+    const newFileName = req.file ? req.file.filename : null; // ชื่อไฟล์ใหม่ถ้ามีการอัปโหลด
+
+    const updateDocument = `
+        UPDATE documents
+        SET upload_date = ?, subject = ?, to_recipient = ?, document_type = ?, notes = ? ${newFileName ? ', file = ?' : ''}
+        WHERE document_id = ?`;
+
+    const params = newFileName
+        ? [upload_date, subject, to_recipient, document_type, notes, newFileName, docId]
+        : [upload_date, subject, to_recipient, document_type, notes, docId];
+
+    db.query(updateDocument, params, (err, result) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ message: 'Error updating document', error: err.message });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Document not found' });
+        }
+        res.status(200).json({ message: 'Document updated successfully' });
+    });
+});
+
+// เพิ่ม middleware สำหรับ error handling
+app.use((err, req, res, next) => {
+    console.error('Unexpected error occurred:', err);
+    res.status(500).json({ message: 'An unexpected error occurred', error: err.message });
+});
+
+
+
+
+//Api หน้า UserProfile ฝั่ง User
 // ดึงข้อมูลผู้ใช้ตาม ID ฝั่ง user
 app.get('/users/:id', (req, res) => {
     const userId = req.params.id;
@@ -405,6 +381,8 @@ app.put('/users/:id', (req, res) => {
     });
 });
 
+
+//Api หน้า AdminHome ฝั่ง Admin
 // API สำหรับดึงจำนวนผู้ใช้จากตาราง users
 app.get('/user-count', (req, res) => {
     const query = 'SELECT COUNT(*) AS count FROM users'; // ใช้ตาราง users
@@ -431,15 +409,27 @@ app.get('/api/document-count', (req, res) => {
     });
 });
 
+// API สำหรับดึงจำนวนเอกสารที่ยังไม่อ่านจากตาราง documents
+app.get('/api/unread-document-count', (req, res) => {
+    const query = 'SELECT COUNT(*) AS count FROM documents WHERE is_read = 0'; // เฉพาะเอกสารที่ยังไม่อ่าน
 
+    db.query(query, (err, result) => {
+        if (err) {
+            console.error('Error fetching unread document count:', err);
+            return res.status(500).json({ error: 'Failed to fetch unread document count' });
+        }
+        res.json({ count: result[0].count }); // ส่งจำนวนเอกสารที่ยังไม่อ่านกลับไปยัง client
+    });
+});
+
+
+//Api หน้า Documents ฝั่ง Admin
 // เส้นทางสำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง admin
 app.get('/admin/documents', (req, res) => {
     const sql = `
        SELECT document_id, upload_date, subject, to_recipient, document_type, file, notes, status, is_read, user_fname, user_lname
         FROM documents;
-
     `;
-
     db.query(sql, (err, results) => {
         if (err) {
             console.error('Database Error:', err.code, err.message, err.sql);
@@ -451,9 +441,8 @@ app.get('/admin/documents', (req, res) => {
 });
 
 
-// // API เส้น Documents 
-// // API สำหรับดึงจำนวนเอกสารจากตาราง Documents ฝั่ง Addmin
 
+// // API สำหรับดึงจำนวนเอกสารจากตาราง Documents ฝั่ง Addmin
 app.get('/document/unread', (req, res) => {
     const sql = "SELECT * FROM documents WHERE is_read = 0";
 
@@ -470,7 +459,6 @@ app.get('/document/unread', (req, res) => {
 });
 
 
-
 app.put('/document/:id/read', (req, res) => {
     const { id } = req.params;
     const sql = 'UPDATE documents SET is_read = 1 WHERE document_id = ?'; // เปลี่ยนจาก 'status' เป็น 'is_read'
@@ -485,7 +473,7 @@ app.put('/document/:id/read', (req, res) => {
 });
 
 
-//Api เส้น UserList
+//Api หน้า UserList ฝั่ง Admin
 // เส้นทางสำหรับดึงข้อมูลผู้ใช้ทั้งหมดฝั่ง Addmin
 app.get('/api/users', (req, res) => {
     const sql = `
@@ -673,24 +661,38 @@ app.put('/user/:id', (req, res) => {
 });
 
 
-//  API สำหรับดูสถิติการรับเอกสารฝั่ง admin และสำหรับอัปเดตสถานะเอกสาร
+// API สำหรับอัปเดตผู้รับเอกสาร (received_by) ฝั่ง Admin
 app.put('/document/:id/status', (req, res) => {
-    const { status, received_by } = req.body;
-    const documentId = req.params.id;
+    const { received_by } = req.body; // รับค่า received_by จาก body
+    const documentId = req.params.id; // รับ document ID จาก URL
 
-    const sql = 'UPDATE documents SET status = ?, received_by = ? WHERE document_id = ?';
-    db.query(sql, [status, received_by, documentId], (err, result) => {
+    // ตรวจสอบค่าที่รับ
+    if (typeof received_by === 'undefined') {
+        return res.status(400).send('Missing parameters');
+    }
+
+    // SQL สำหรับอัปเดตเฉพาะ received_by
+    const sql = 'UPDATE documents SET received_by = ? WHERE document_id = ?';
+    db.query(sql, [received_by, documentId], (err, result) => {
         if (err) {
-            console.error('Error updating document status:', err);
-            return res.status(500).send('Error updating document status');
+            console.error('Error updating document received_by:', err);
+            return res.status(500).send('Error updating document received_by');
         }
-        res.send('Document status updated successfully');
+        res.send('Document received_by updated successfully');
     });
 });
 
+
+
 // Endpoint สำหรับบันทึกข้อมูลการรับเอกสาร
 app.post('/document-stats', (req, res) => {
+    console.log('Received data for document receipt:', req.body);
     const { documentId, adminId, dateReceived, paperCost } = req.body;
+
+    // ตรวจสอบค่าที่รับ
+    if (!documentId || !adminId || !dateReceived || !paperCost) {
+        return res.status(400).send('Missing parameters');
+    }
 
     const sql = 'INSERT INTO document_receipts (document_id, user_id, date_received, paper_cost) VALUES (?, ?, ?, ?)';
     db.query(sql, [documentId, adminId, dateReceived, paperCost], (err, result) => {
