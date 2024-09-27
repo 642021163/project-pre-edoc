@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Link, Button, Tooltip, List, ListItem, Collapse, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Link, Button, Tooltip, List, ListItem, Collapse, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -8,6 +8,8 @@ import Pagination from '@mui/material/Pagination';
 import { format } from 'date-fns';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Chip } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import Swal from 'sweetalert2';
 
 
 
@@ -26,7 +28,7 @@ const getFileName = (filePath) => {
 const TrackDocuments = () => {
     // สถานะสำหรับจัดการเอกสาร
     const [documents, setDocuments] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [open, setOpen] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState(null);
@@ -65,18 +67,36 @@ const TrackDocuments = () => {
             return;
         }
 
-        const confirmDelete = window.confirm(`คุณแน่ใจว่าต้องการลบเอกสารที่มี ID: ${docId} หรือไม่?`);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `คุณแน่ใจว่าต้องการลบเอกสารที่มี ID: ${docId} หรือไม่?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await axios.delete(`http://localhost:3000/document/${docId}`);
+                    console.log(`Document with ID ${docId} deleted successfully.`);
 
-        if (confirmDelete) {
-            try {
-                await axios.delete(`http://localhost:3000/document/${docId}`);
-                console.log(`Document with ID ${docId} deleted successfully.`);
-                // รีเฟรชรายการเอกสารหลังจากลบสำเร็จ
-                fetchDocuments();
-            } catch (error) {
-                console.error('Error deleting document:', error);
+                    // แสดงข้อความเมื่อทำการลบสำเร็จ
+                    Swal.fire(
+                        'Deleted!',
+                        `เอกสารที่มี ID ${docId} ถูกลบเรียบร้อยแล้ว.`,
+                        'success'
+                    );
+
+                    // รีเฟรชรายการเอกสารหลังจากลบสำเร็จ
+                    fetchDocuments();
+                } catch (error) {
+                    console.error('Error deleting document:', error);
+                    Swal.fire('Error', 'เกิดข้อผิดพลาดในการลบเอกสาร', 'error');
+                }
             }
-        }
+        });
     };
 
     useEffect(() => {
@@ -96,13 +116,13 @@ const TrackDocuments = () => {
     };
 
     const handleEditClick = (docId) => {
-
-
-        navigate(`/user-edit/${docId}`);
+        setLoading(true); // เริ่มการโหลด
+        setTimeout(() => {
+            navigate(`/user-edit/${docId}`);// เปลี่ยนหน้าไปยัง path ที่ระบุ
+            setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+        }, 400); // หน่วงเวลา 400ms
     };
 
-    // การแสดงข้อความขณะโหลด
-    if (loading) return <Typography>กำลังโหลด...</Typography>;
 
     // การแสดงข้อความเมื่อเกิดข้อผิดพลาด
     if (error) return (
@@ -125,19 +145,58 @@ const TrackDocuments = () => {
         }
     };
 
+    // ฟังก์ชันเพื่อแปลง ID เป็นชื่อ
+    const getAdminNameById = (recipient) => {
+        switch (recipient) {
+            case 1:
+                return 'อรวรรณ หนูนุ่น';
+            case 2:
+                return 'สุภา นวลจันทร์';
+            case 3:
+                return 'เซเวอร์รหัส สเนป';
+            default:
+                return 'รอผู้รับ';
+        }
+    };
+
+
+
     // รายการเมนูที่แสดงในแถบเมนู
     const menuItems = [
         { text: 'ติดตามเอกสาร', link: '/track', icon: <InsertDriveFile /> },
         { text: 'ส่งเอกสาร', link: '/fileupload', icon: <FileUpload /> },
         { text: 'ข้อมูลผู้ใช้', link: `/profile/`, icon: <AccountCircle /> },
     ];
-
+    const handleMenuClick = (link) => {
+        setLoading(true);
+        setTimeout(() => {
+            navigate(link);
+            setLoading(false);
+        }, 400); // หน่วงเวลา 400ms
+    };
     const toggleMenu = () => {
         setMenuOpen((prev) => !prev); // เปลี่ยนสถานะของเมนู
     };
 
     return (
         <Box sx={{ display: 'flex', height: '100vh' }}>
+            {/* สถานะการโหลด */}
+            {loading && (
+                <Box style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    zIndex: 9999
+                }}>
+                    <CircularProgress />
+                </Box>
+            )}
             {/* ส่วนหลักของ Menu ฝั่งซ้าย */}
             <Box sx={{
                 width: menuOpen ? 250 : 60, // ขนาดของเมนูตามสถานะ
@@ -168,14 +227,15 @@ const TrackDocuments = () => {
                         {menuItems.map((item) => (
                             <Tooltip title={item.text} key={item.text} arrow>
                                 <ListItem
-                                    component="a"
-                                    href={item.link}
+                                    component="div" // ใช้ component เป็น div เพื่อให้สามารถควบคุม onClick ได้
+                                    onClick={() => handleMenuClick(item.link)} // เรียกฟังก์ชันเมื่อคลิก
                                     sx={{
                                         borderRadius: '4px',
                                         mb: 1,
                                         backgroundColor: location.pathname === item.link ? '#bbdefb' : 'transparent',
                                         '&:hover': { backgroundColor: '#b3e5fc' },
-                                        color: '#212121'
+                                        color: '#212121',
+                                        cursor: 'pointer' // เปลี่ยนให้มีลูกศรเมื่อชี้
                                     }}
                                 >
                                     <ListItemIcon sx={{ color: 'inherit' }}>
@@ -187,6 +247,7 @@ const TrackDocuments = () => {
                         ))}
                     </List>
                 </Collapse>
+
                 <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
             </Box>
 
@@ -247,23 +308,40 @@ const TrackDocuments = () => {
                                                             return <Chip label={label} color={color} sx={{ borderRadius: '4px' }} />;
                                                         })()
                                                     }</TableCell>
-                                                    <TableCell align="left">{doc.recipient}</TableCell>
+                                                    <TableCell align="left">{getAdminNameById(doc.recipient)}</TableCell>
                                                     <TableCell align="left">
                                                         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                                            <Button variant="outlined" sx={{ mx: 0.5 }}
-                                                                onClick={() => {
-                                                                    handleEditClick(doc.document_id);
-                                                                }}>
+                                                            <Button
+                                                                variant="contained" // เปลี่ยนเป็น variant "contained" เพื่อให้ปุ่มดูเด่นขึ้น
+                                                                startIcon={<EditIcon />}
+                                                                color="primary" // เปลี่ยนสีเป็น primary
+                                                                sx={{
+                                                                    mx: 0.5,
+                                                                    '&:hover': {
+                                                                        backgroundColor: '#1976d2', // เปลี่ยนสีเมื่อ Hover
+                                                                        boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)', // เพิ่มเงาเมื่อ Hover
+                                                                    },
+                                                                    transition: '0.3s', // เพิ่มการเคลื่อนไหว
+                                                                }}
+                                                                onClick={() => handleEditClick(doc.document_id)}
+                                                            >
                                                                 Edit
                                                             </Button>
                                                             <Button
                                                                 variant="outlined"
                                                                 startIcon={<DeleteIcon />}
                                                                 color="error"
-                                                                sx={{ mx: 0.5 }}
-                                                                onClick={() => handleDelete(doc.document_id)} // ตรวจสอบค่า doc.document_id
+                                                                sx={{
+                                                                    mx: 0.5,
+                                                                    '&:hover': {
+                                                                        backgroundColor: '#f44336', // เปลี่ยนสีเมื่อ Hover
+                                                                        color: '#fff', // เปลี่ยนสีข้อความเมื่อ Hover
+                                                                    },
+                                                                    transition: '0.3s',
+                                                                }}
+                                                                onClick={() => handleDelete(doc.document_id)}
                                                             >
-                                                                Del
+                                                                Delete
                                                             </Button>
                                                         </Box>
                                                     </TableCell>
@@ -359,7 +437,7 @@ const TrackDocuments = () => {
                                 { label: 'ประเภทเอกสาร:', value: selectedDocument.document_type },
                                 { label: 'หมายเหตุ:', value: selectedDocument.notes },
                                 { label: 'ผู้ส่ง:', value: senderName },
-                                { label: 'ผู้รับเอกสาร:', value: selectedDocument.recipient },
+                                { label: 'ผู้รับเอกสาร:', value: getAdminNameById(selectedDocument.recipient) },
                             ].map((item, index) => (
                                 <Grid item xs={12} key={index}>
                                     <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', borderBottom: '1px solid #e0e0e0', pb: 1 }}>

@@ -218,10 +218,9 @@ const storage = multer.diskStorage({
 // ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
 const upload = multer({ storage: storage }); // สร้าง instance ของ multer
 
-// Api สำหรับอัปโหลดเอกสารลงตารางเส้น post
-app.post('/documents', upload.single('file'), (req, res) => {
+app.post('/documents', upload.single('file'), async (req, res) => {
     const filePath = req.file ? path.join('uploads', req.file.filename) : null;
-    const sql = "INSERT INTO documents (upload_date, user_id,subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const sql = "INSERT INTO documents (upload_date, user_id, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
         req.body.upload_date,
         req.body.user_id,
@@ -243,10 +242,22 @@ app.post('/documents', upload.single('file'), (req, res) => {
             console.error('Database Error:', err.code, err.message, err.sql);
             return res.status(500).json({ message: "Error inserting data", error: err.message });
         }
-        console.log('Document created successfully with ID:', data.insertId);
-        return res.status(201).json({ message: 'Document created successfully', data: data });
+
+        // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
+        const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending
+        db.query(countSql, (err, countData) => {
+            if (err) {
+                console.error('Database Error:', err.code, err.message, err.sql);
+                return res.status(500).json({ message: "Error counting new documents", error: err.message });
+            }
+
+            const newDocumentCount = countData[0].newDocumentCount; // จำนวนเอกสารใหม่
+            console.log('Document created successfully with ID:', data.insertId);
+            return res.status(201).json({ message: 'Document created successfully', newDocumentCount: newDocumentCount });
+        });
     });
 });
+
 
 // Api หน้า TrackDocuments ฝั่ง User
 // สำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
@@ -684,6 +695,7 @@ app.put('/document/:id/status', (req, res) => {
 
 
 
+
 // Endpoint สำหรับบันทึกข้อมูลการรับเอกสาร
 app.post('/document-stats', (req, res) => {
     console.log('Received data for document receipt:', req.body);
@@ -694,6 +706,7 @@ app.post('/document-stats', (req, res) => {
         return res.status(400).send('Missing parameters');
     }
 
+    // SQL สำหรับการบันทึกข้อมูลการรับเอกสาร
     const sql = 'INSERT INTO document_receipts (document_id, user_id, date_received, paper_cost) VALUES (?, ?, ?, ?)';
     db.query(sql, [documentId, adminId, dateReceived, paperCost], (err, result) => {
         if (err) {
@@ -703,6 +716,7 @@ app.post('/document-stats', (req, res) => {
         res.send('Document receipt recorded successfully');
     });
 });
+
 
 
 // Endpoint สำหรับดึงข้อมูลทั้งหมดจากตาราง document_receipts
@@ -772,6 +786,18 @@ app.get('/api/admins', (req, res) => {
     });
 });
 
+//API หน้า NewDocument.js
+// API สำหรับดึงจำนวนเอกสารใหม่
+app.get('/api/new-documents', (req, res) => {
+    const sql = "SELECT * FROM documents WHERE is_read = 0"; // ค้นหาเอกสารที่ยังไม่ถูกอ่าน
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error('Database Error:', err.code, err.message);
+            return res.status(500).json({ message: "Error fetching data", error: err.message });
+        }
+        return res.status(200).json(results); // ส่งคืนเอกสารใหม่
+    });
+});
 
 
 

@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, AppBar, Toolbar, Typography, Tabs, Tab, Table, TableBody, TableCell, Paper, TableContainer, TableHead, TableRow, Box, Menu, Collapse, MenuItem, CssBaseline, IconButton, Divider, InputBase, Badge, List, ListItem, ListItemIcon, ListItemText, Button, Tooltip } from '@mui/material';
-import { Search, Notifications, Home as HomeIcon, PersonAdd, Edit, Delete, InsertDriveFile, BarChart, ExitToApp, } from '@mui/icons-material';
+import { Typography, Tabs, Tab, Table, TableBody, TableCell, Paper, CircularProgress, TableContainer, TableHead, TableRow, Box, Pagination, CssBaseline, IconButton, InputBase, Button, Tooltip } from '@mui/material';
+import { Search, } from '@mui/icons-material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import CheckCircle from '@mui/icons-material/CheckCircle';
 import { Chip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import Layout from '../LayoutAdmin/Layout';
+import Swal from 'sweetalert2';
 
-
-const drawerWidth = 240;
-// การจัดรูปแบบวันที่และเวลา
 const formatDateTime = (dateTime) => format(parseISO(dateTime), 'yyyy-MM-dd HH:mm:ss');
 
 function Documents() {
@@ -21,12 +18,76 @@ function Documents() {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [paperCost, setPaperCost] = useState(0.00); // กำหนดค่าเริ่มต้น paperCost
-    const [anchorEl, setAnchorEl] = React.useState(null);
-    const [openUserMenu, setOpenUserMenu] = useState(false);
-
-
-
     const adminId = localStorage.getItem('user_id');
+    const [receivedDocuments, setReceivedDocuments] = useState(new Set());
+    const [isReceived, setIsReceived] = useState(false);
+    const [document, setDocument] = useState({ status: 0 });
+    const rowsPerPage = 10;
+    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(false);
+
+
+
+    // ฟังก์ชันกรองเอกสารตามการค้นหา
+    const filteredDocuments = (activeTab === 'all' ? allDocuments : unreadDocuments).filter(doc =>
+        doc.subject.toLowerCase().includes(search.toLowerCase()) || // ชื่อเรื่อง
+        `${doc.user_fname} ${doc.user_lname}`.toLowerCase().includes(search.toLowerCase()) // ชื่อผู้ส่ง
+    );
+
+    // ฟังก์ชันสำหรับไฮไลท์คำค้นหา
+    const highlightSearchTerm = (text) => {
+        if (!search) return text; // หากไม่มีการค้นหาให้แสดงข้อความปกติ
+        const regex = new RegExp(`(${search})`, 'gi'); // สร้าง regex สำหรับคำค้นหา
+        return text.split(regex).map((part, index) =>
+            regex.test(part) ? <span key={index} style={{ backgroundColor: '#ffeb3b' }}>{part}</span> : part
+        );
+    };
+    const preventNavigation = (event) => {
+        if (isReceived && document.status === 1) { // ตรวจสอบว่ามีการรับเอกสารแล้วและสถานะเป็น 'กำลังดำเนินการ'
+            event.preventDefault();
+            event.returnValue = ''; // ต้องตั้งค่านี้เพื่อแสดงการเตือน
+        }
+    };
+
+    const removeNavigationWarning = () => {
+        window.removeEventListener('beforeunload', preventNavigation);
+    };
+
+    // ฟังก์ชันสำหรับการเพิ่ม event beforeunload เพื่อเตือนก่อนออกจากหน้า
+    const addNavigationWarning = () => {
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    };
+
+    // ฟังก์ชันจัดการการแจ้งเตือนเมื่อออกจากหน้า
+    const handleBeforeUnload = (e) => {
+        const confirmationMessage = 'คุณยังไม่ได้บันทึกการเปลี่ยนแปลง หากคุณออกจากหน้านี้ ข้อมูลที่คุณทำจะสูญหาย';
+        e.returnValue = confirmationMessage; // สำหรับเบราว์เซอร์เก่า
+        return confirmationMessage;
+    };
+
+
+
+
+
+    // ฟังก์ชันจัดเรียงเอกสาร
+    const sortedDocuments = filteredDocuments.sort((a, b) => {
+        const statusOrder = {
+            0: 1, // รอดำเนินการ
+            1: 2, // กำลังดำเนินการ
+            2: 3, // ดำเนินการเรียบร้อย
+        };
+        const statusA = statusOrder[a.status];
+        const statusB = statusOrder[b.status];
+
+        if (statusA === statusB) {
+            return new Date(b.upload_date) - new Date(a.upload_date); // เรียงตามวันที่ (ใหม่สุดไปเก่าที่สุด)
+        }
+        return statusA - statusB; // เรียงตามสถานะ
+    });
+
+    // คำนวณเอกสารที่จะแสดงตามหน้า
+    const startIndex = (page - 1) * rowsPerPage;
+    const displayedDocuments = sortedDocuments.slice(startIndex, startIndex + rowsPerPage);
 
     useEffect(() => {
         if (activeTab === 'all') {
@@ -34,13 +95,24 @@ function Documents() {
         } else {
             fetchUnreadDocuments();
         }
-    }, [activeTab]); // กำหนดให้ useEffect ทำงานเมื่อ activeTab เปลี่ยนแปลง
+    }, [activeTab]);
+
+    useEffect(() => {
+        // เพิ่ม event listener
+        window.addEventListener('beforeunload', preventNavigation);
+
+        // ลบ event listener เมื่อ component จะ unmount
+        return () => {
+            window.removeEventListener('beforeunload', preventNavigation);
+        };
+    }, [isReceived, document.status]);
 
 
     const fetchAllDocuments = async () => {
         try {
             const response = await axios.get('http://localhost:3000/admin/documents');
             setAllDocuments(response.data);
+            setIsReceived(response.data.some(doc => receivedDocuments.has(doc.id) && doc.status === 1));
         } catch (error) {
             console.error('Error fetching all documents:', error);
         }
@@ -77,107 +149,98 @@ function Documents() {
     };
 
 
+    const handleDocumentReceive = async (docId) => {
+        try {
+            // อัปเดตสถานะเอกสารเป็น 'กำลังดำเนินการ'
+            const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
+                received_by: adminId
+            });
 
-    // const handleDocumentReceive = async (docId) => {
-    //     try {
+            setIsReceived(true);
+            setDocument(prev => ({ ...prev, status: 1 }));
 
-    //         // อัปเดตสถานะเอกสารเป็น 'กำลังดำเนินการ'
-    //         const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
-    //             received_by: adminId // รหัสของผู้ดูแลระบบที่รับเอกสาร
-    //         });
-    //         console.log('Update status response:', updateStatusResponse.data); // Log ค่าการตอบกลับจากการอัปเดตสถานะเอกสาร
+            // บันทึกข้อมูลการรับเอกสาร
+            const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
+                documentId: docId,
+                adminId: adminId,
+                dateReceived: new Date().toISOString().split('T')[0],
+                paperCost: 19
+            });
+            console.log('Receipt response:', receiptResponse.data);
 
-    //         // บันทึกข้อมูลการรับเอกสาร
-    //         const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
-    //             documentId: docId,
-    //             adminId: adminId,
-    //             dateReceived: new Date().toISOString().split('T')[0], // ใช้วันที่ปัจจุบัน
-    //             paperCost: paperCost // ค่ากระดาษหรือข้อมูลที่คุณต้องการบันทึก
-    //         });
-    //         console.log('Receipt response:', receiptResponse.data); // Log ค่าการตอบกลับจากการบันทึกข้อมูลการรับเอกสาร
+            // อัปเดตสถานะเอกสารใน state ว่าได้รับการบันทึกแล้ว
+            setReceivedDocuments((prev) => new Set(prev).add(docId));
 
-    //         // รีเฟรชข้อมูลเอกสาร
-    //         if (activeTab === 'all') {
-    //             console.log('Fetching all documents...');
-    //             fetchAllDocuments();
-    //         } else {
-    //             console.log('Fetching unread documents...');
-    //             fetchUnreadDocuments();
-    //         }
-    //     } catch (error) {
-    //         console.error('Error handling document receive:', error); // Log ข้อผิดพลาด
-    //     }
-    // };
+            // แสดงข้อความยืนยันว่าเอกสารถูกบันทึกแล้ว
+            Swal.fire({
+                title: 'สำเร็จ!',
+                text: 'รับเอกสารเรียบร้อยแล้ว',
+                icon: 'success',
+                confirmButtonText: 'ตกลง'
+            });
 
+            // รีเฟรชข้อมูลเอกสาร
+            if (activeTab === 'all') {
+                console.log('Fetching all documents...');
+                fetchAllDocuments();
+            } else {
+                console.log('Fetching unread documents...');
+                fetchUnreadDocuments();
+            }
 
-    // // ฟังก์ชันจัดการปุ่มรับเอกสาร
-    // const handleReceiveButtonClick = (docId) => {
-    //     console.log('Document ID clicked:', docId); // Log ค่า docId ที่ถูกกด
+        } catch (error) {
+            console.error('Error handling document receive:', error);
 
-    //     // ตรวจสอบสถานะเอกสารก่อนการเรียกใช้งาน
-    //     const document = (activeTab === 'all' ? allDocuments : unreadDocuments).find(doc => doc.document_id === docId);
+            // แสดงข้อความผิดพลาด
+            Swal.fire({
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถรับเอกสารได้',
+                icon: 'error',
+                confirmButtonText: 'ตกลง'
+            });
+        }
 
+    };
 
-    //     if (document && document.status !== 1) { // ตรวจสอบสถานะเอกสาร
-    //         console.log('Document status is not 1, proceeding with receive...'); // Log เมื่อตรวจสอบสถานะแล้ว
-    //         handleDocumentReceive(docId, 1, adminId, paperCost);
-    //     } else {
-    //         console.log('Document status is 1 or document not found, skipping receive.');
-    //     }
-    // };
+    const handleReceiveButtonClick = (docId) => {
+        // ถามยืนยันก่อนรับเอกสาร
+        Swal.fire({
+            title: 'คุณแน่ใจหรือไม่?',
+            text: 'คุณต้องการรับเอกสารนี้ใช่ไหม?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'ใช่, รับเอกสาร',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+
+            if (result.isConfirmed) {
+                // เรียกฟังก์ชันเพื่อรับเอกสาร
+                handleDocumentReceive(docId);
+                // เพิ่มการเตือนเมื่อยังไม่ได้เปลี่ยนสถานะ
+                window.addEventListener('beforeunload', preventNavigation);
+            }
+        });
+    };
 
 
     const handleSearchChange = (event) => {
         setSearch(event.target.value);
     };
 
-    const handleBackToHome = () => {
-        navigate('/home');
-    };
-
-
-    const handleClick = () => {
-        setOpenUserMenu(!openUserMenu);
-    };
-
-    const handleClose = () => {
-        setAnchorEl(null);
-    };
-
-
-    const handleAddUser = () => {
-        navigate('/newuser');
-        handleClose();
-    };
-
-    const handleAllDocuments = () => {
-        navigate('/doc');
-    };
-
-    const handleStatistics = () => {
-        navigate('/rec');
-    };
-
-    const handleLogout = () => {
-        const confirmLogout = window.confirm("คุณแน่ใจว่าต้องการออกจากระบบไหม?");
-        if (confirmLogout) {
-            localStorage.clear();
-            navigate('/loginpage');
-        }
-    };
-
     const handleAddFile = () => {
-        navigate('/addfile');
-    };
-
-    const handleSetPaperCost = (cost) => {
-        setPaperCost(cost);
+        setLoading(true); // เริ่มการโหลด
+        setTimeout(() => {
+            navigate('/addfile'); // เปลี่ยนหน้าไปยัง path ที่ระบุ
+            setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+        }, 400); // หน่วงเวลา 400ms
     };
 
     const getStatusText = (docStatus) => {
         switch (docStatus) {
             case 0:
-                return { label: 'รอดำเนินการ', color: 'warning' };
+                return { label: 'รอดำเนินการ', color: 'error' };
             case 1:
                 return { label: 'กำลังดำเนินการ', color: 'info' };
             case 2:
@@ -190,15 +253,37 @@ function Documents() {
     // ในฟังก์ชัน Documents
     const handleEditClick = (docId) => {
 
-
-        navigate(`/edit/${docId}`);
+        setLoading(true); // เริ่มการโหลด
+        setTimeout(() => {
+            navigate(`/edit/${docId}`);
+            setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+        }, 400); // หน่วงเวลา 400ms
     };
+
 
     return (
         <Layout>
             <Box sx={{ display: 'flex' }}>
                 <CssBaseline />
-                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1'}}>
+                {/* สถานะการโหลด */}
+                {loading && (
+                    <Box style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        zIndex: 9999
+                    }}>
+                        <CircularProgress />
+                    </Box>
+                )}
+                <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1' }}>
+
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                             เอกสารทั้งหมด
@@ -230,7 +315,7 @@ function Documents() {
                     </Tabs>
                     <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
                         <Table>
-                            <TableHead>
+                            <TableHead sx={{ backgroundColor: '#1976d2' }}>
                                 <TableRow sx={{ backgroundColor: '#f0f8ff' }}>
                                     <TableCell sx={{ fontWeight: 'bold' }}>ลำดับ.</TableCell>
                                     <TableCell sx={{ fontWeight: 'bold' }}>วันที่</TableCell>
@@ -243,14 +328,50 @@ function Documents() {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {(activeTab === 'all' ? allDocuments : unreadDocuments).map((doc, index) => {
+                                {displayedDocuments.map((doc, index) => {
                                     return (
                                         <TableRow key={doc.document_id}>
                                             <TableCell>{index + 1}</TableCell>
                                             <TableCell>{formatDateTime(doc.upload_date)}</TableCell>
-                                            <TableCell>{`${doc.user_fname} ${doc.user_lname}`}</TableCell>
-                                            <TableCell>{doc.subject}</TableCell>
-                                            <TableCell>{doc.to_recipient}</TableCell>
+                                            <TableCell>
+                                                <Tooltip title={`${doc.user_fname} ${doc.user_lname}`} arrow>
+                                                    <Typography variant="body1" noWrap>
+                                                        {highlightSearchTerm(`${doc.user_fname} ${doc.user_lname}`)}
+                                                    </Typography>
+                                                </Tooltip>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Tooltip title={doc.subject} arrow>
+                                                    <Typography
+                                                        variant="body1"
+
+                                                        sx={{
+                                                            maxWidth: '190px', // ปรับความกว้างสูงสุดตามที่ต้องการ
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                        }}
+                                                    >
+                                                        {highlightSearchTerm(doc.subject)}
+                                                    </Typography>
+                                                </Tooltip>
+                                            </TableCell>
+
+                                            <TableCell>
+                                                <Tooltip title={doc.to_recipient} arrow>
+                                                    <Typography
+                                                        variant="body1"
+                                                        noWrap
+                                                        sx={{
+                                                            maxWidth: '100px', // ปรับความกว้างสูงสุดตามที่ต้องการ
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                        }}
+                                                    >
+                                                        {doc.to_recipient}
+                                                    </Typography>
+                                                </Tooltip>
+                                            </TableCell>
+
                                             <TableCell>
                                                 {
                                                     (() => {
@@ -259,37 +380,51 @@ function Documents() {
                                                     })()
                                                 }
                                             </TableCell>
-                                            <TableCell>
-                                                <Button
-                                                    variant="contained"
-                                                    sx={{
-                                                        mx: 1,
-                                                        backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
-                                                        color: '#000',
-                                                        '&:hover': {
-                                                            backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
-                                                        },
-                                                        display: 'flex',
-                                                        alignItems: 'center', // จัดแนวให้อยู่กลาง
-                                                    }}
-                                                    onClick={() => {
-                                                        console.log('Edit button clicked for document_id:', doc.document_id);
-                                                        handleEditClick(doc.document_id);
-                                                    }}
-                                                >
-                                                    <EditIcon sx={{ mr: 1 }} /> {/* ไอคอนการแก้ไข */}
-                                                    Edit
-                                                </Button>
+                                            <TableCell sx={{ width: '130px' }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
-{/* 
-                                                <IconButton
-                                                sx={{ mx: 1, color: '#1976d2' }}
-                                                onClick={() => handleReceiveButtonClick(doc.document_id)}
-                                                disabled={doc.status === 1}
-                                            >
-                                                <CheckCircle />
-                                            </IconButton> */}
+                                                    <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>
+                                                        <Button variant="contained"
+                                                            sx={{
+                                                                mx: 1,
+                                                                backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
+                                                                color: '#000',
+                                                                '&:hover': {
+                                                                    backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
+                                                                },
+                                                                display: 'flex',
+                                                                alignItems: 'center', // จัดแนวให้อยู่กลาง
+                                                            }}
+                                                            onClick={() => {
+                                                                console.log('Edit button clicked for document_id:', doc.document_id);
+                                                                handleEditClick(doc.document_id);
+                                                            }}>
+                                                            <EditIcon /> {/* ไอคอนการแก้ไข */}
+                                                            Edit
+                                                        </Button>
+                                                    </Tooltip>
+                                                    <Tooltip title="สำหรับรับเอกสาร" arrow>
+                                                        <Button
+                                                            variant="contained"
+                                                            color={doc.status === 1 || doc.status === 2 ? "success" : "primary"}
+                                                            onClick={() => handleReceiveButtonClick(doc.document_id)}
+                                                            disabled={receivedDocuments.has(doc.document_id) || doc.status === 1 || doc.status === 2} // ปิดปุ่มเมื่อเอกสารถูกกดรับแล้ว หรือสถานะเป็น "กำลังดำเนินการ" หรือ "ดำเนินการเสร็จแล้ว"
+
+                                                        >
+                                                            {doc.status === 1 || doc.status === 2 || receivedDocuments.has(doc.document_id) ? 'สำเร็จ' : 'รับ'}
+                                                        </Button>
+                                                    </Tooltip>
+                                                </Box>
+
+                                                {/* <IconButton
+                                                    sx={{ mx: 1, color: '#1976d2' }}
+                                                    onClick={() => handleReceiveButtonClick(doc.document_id)}
+                                                    disabled={doc.status === 1}
+                                                >
+                                                    <CheckCircle />
+                                                </IconButton> */}
                                             </TableCell>
+
 
                                             <TableCell>
                                                 <Tooltip title="เปิดไฟล์ PDF" arrow>
@@ -307,7 +442,7 @@ function Documents() {
                                                             }
                                                         }}
                                                     >
-                                                        เปิดไฟล์ PDF
+                                                        PDF
                                                     </Button>
                                                 </Tooltip>
                                             </TableCell>
@@ -317,6 +452,15 @@ function Documents() {
                             </TableBody>
                         </Table>
                     </TableContainer>
+
+                    <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                        <Pagination
+                            count={Math.ceil(sortedDocuments.length / rowsPerPage)} // คำนวณจำนวนหน้า
+                            page={page}
+                            shape="rounded"
+                            onChange={(event, value) => setPage(value)} // เปลี่ยนหน้าเมื่อคลิก
+                        />
+                    </Box>
                 </Box>
             </Box>
         </Layout>

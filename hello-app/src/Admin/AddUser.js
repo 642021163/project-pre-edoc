@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Container, TextField, Button, MenuItem, Box, Typography, Paper, Toolbar, Grid, Snackbar, CssBaseline } from '@mui/material';
-import MuiAlert from '@mui/material/Alert';
+import { Container, TextField, Button, MenuItem, Box, Typography, Paper, Toolbar, Grid, Snackbar, CssBaseline, DialogActions } from '@mui/material';
+// import MuiAlert from '@mui/material/Alert';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Layout from '../LayoutAdmin/Layout';
+import Swal from 'sweetalert2';
 
-// ส่วนของ Alert สำหรับ Snackbar
-const Alert = React.forwardRef(function Alert(props, ref) {
-    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-});
+// // ส่วนของ Alert สำหรับ Snackbar
+// const Alert = React.forwardRef(function Alert(props, ref) {
+//     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+// });
 
 function AddUser() {
     // สถานะของฟอร์มข้อมูล
@@ -50,17 +51,32 @@ function AddUser() {
 
     // ฟังก์ชันจัดการการส่งฟอร์ม
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e.preventDefault();      
 
         try {
             const response = await axios.post('http://localhost:3000/users', formData);
             console.log('เพิ่มผู้ใช้สำเร็จ:', response.data);
-            setOpenSnackbar(true); // เปิด Snackbar เมื่อเพิ่มผู้ใช้สำเร็จ
-            setTimeout(() => {
-                navigate('/list'); // เปลี่ยนเส้นทางไปยังหน้ารายชื่อผู้ใช้หลังจาก 2 วินาที
-            }, 2000);
+
+            // ใช้ SweetAlert แสดงแจ้งเตือนความสำเร็จ
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'เพิ่มผู้ใช้สำเร็จ',
+                timer: 2000, // กำหนดเวลาแสดง SweetAlert 2 วินาที
+                showConfirmButton: false // ไม่ต้องแสดงปุ่ม Confirm
+            }).then(() => {
+                navigate('/list'); // นำผู้ใช้ไปยังหน้ารายชื่อผู้ใช้
+            });
+
         } catch (error) {
             console.error('เกิดข้อผิดพลาดในการเพิ่มผู้ใช้:', error);
+
+            // แสดง SweetAlert ข้อผิดพลาด
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'เกิดข้อผิดพลาดในการเพิ่มผู้ใช้',
+            });
         }
     };
 
@@ -79,6 +95,11 @@ function AddUser() {
         }
         setOpenSnackbar(false);
     };
+
+    const handleCancel = () => {
+        navigate('/list');
+    };
+
 
     return (
         <Layout>
@@ -199,16 +220,24 @@ function AddUser() {
                                     <MenuItem value="user">User</MenuItem>
                                 </TextField>
                             </Box>
-                            <Box sx={{ textAlign: 'center' }}>
+
+                            <DialogActions style={{ justifyContent: 'center' }}>
                                 <Button type="submit" variant="contained" color="primary">
-                                    ADD USER
+                                    เพิ่มผู้ใช้
                                 </Button>
-                            </Box>
+                                <Button
+                                    color="error"
+                                    variant="outlined"
+                                    onClick={handleCancel}
+                                >
+                                    ยกเลิก
+                                </Button>
+                            </DialogActions>
                         </form>
                     </Container>
                 </Box>
 
-                <Snackbar
+                {/* <Snackbar
                     open={openSnackbar}
                     autoHideDuration={6000}
                     onClose={handleSnackbarClose}
@@ -222,7 +251,7 @@ function AddUser() {
                     <Alert onClose={handleSnackbarClose} severity="success">
                         เพิ่มผู้ใช้สำเร็จ!
                     </Alert>
-                </Snackbar>
+                </Snackbar> */}
             </Box>
         </Layout>
     );

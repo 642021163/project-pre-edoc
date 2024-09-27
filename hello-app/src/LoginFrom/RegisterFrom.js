@@ -176,10 +176,13 @@ function RegisterFrom() {
                                         onChange={handleChange}
                                         label="Prefix"
                                     >
-                                        <MenuItem value="Mr">นาย</MenuItem>
-                                        <MenuItem value="Ms">นางสาว</MenuItem>
-                                        <MenuItem value="Mrs">ผศ.ดร</MenuItem>
-                                        <MenuItem value="Dr">ดร.</MenuItem>
+                                        <MenuItem value="นาย">นาย</MenuItem>
+                                        <MenuItem value="นาง">นาง</MenuItem>
+                                        <MenuItem value="นางสาว">นางสาว</MenuItem>
+                                        <MenuItem value="ผศ.ดร">ผศ.ดร</MenuItem>
+                                        <MenuItem value="อาจารย์">อาจารย์</MenuItem>
+                                        <MenuItem value="ศาสตราจารย์.ดร">ศาสตราจารย์.ดร</MenuItem>
+                                        <MenuItem value="ดร.">ดร.</MenuItem>
                                     </Select>
                                     <FormHelperText>{errors.prefix}</FormHelperText>
                                 </FormControl>
@@ -280,6 +283,7 @@ function RegisterFrom() {
 
 
                                     <MenuItem value="user">User</MenuItem>
+                                    <MenuItem value="admin">Admin</MenuItem>
                                     
                                 </Select>
                                 <FormHelperText>{errors.role}</FormHelperText>

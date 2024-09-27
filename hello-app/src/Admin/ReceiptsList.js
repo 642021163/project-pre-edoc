@@ -7,7 +7,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../LayoutAdmin/Layout';
-
+import { Pie } from 'react-chartjs-2';
+import PieChart from '../Charts/PieChart';
 
 function ReceiptsList() {
     const [receipts, setReceipts] = useState([]);
@@ -16,6 +17,11 @@ function ReceiptsList() {
     const [allReceipts, setAllReceipts] = useState([]);
     const [open, setOpen] = useState(false);
     const navigate = useNavigate();
+    const totalReceipts = receipts.length; // จำนวนเอกสารทั้งหมด
+    const paperCostTotal = receipts.reduce((total, receipt) => total + receipt.paper_cost, 0); // รวมค่าใช้จ่ายในการประหยัดกระดาษ
+    const [adminData, setAdminData] = useState([]);
+
+
 
     const handleDrawerToggle = () => {
         setOpen(!open);
@@ -26,9 +32,7 @@ function ReceiptsList() {
             try {
                 const response = await axios.get('http://localhost:3000/api/admins');
                 setAdmins(response.data);
-                if (response.data.length > 0) {
-                    setSelectedAdmin(response.data[0].user_id);
-                }
+
             } catch (error) {
                 console.error('Error fetching admins:', error);
             }
@@ -48,11 +52,37 @@ function ReceiptsList() {
     }, []);
 
     useEffect(() => {
-        if (selectedAdmin) {
+        if (selectedAdmin === 'all') {
+            const adminCounts = receipts.reduce((acc, receipt) => {
+                const adminId = receipt.user_id; // ไอดี Admin
+                acc[adminId] = (acc[adminId] || { count: 0, paper_cost: 0 });
+                acc[adminId].count += 1; // นับจำนวนเอกสาร
+                acc[adminId].paper_cost += receipt.paper_cost; // รวมค่าใช้จ่ายในการประหยัดกระดาษ
+                return acc;
+            }, {});
+
+            // แปลงข้อมูลให้ตรงกับโครงสร้างที่เราต้องการแสดง
+            const adminDataArray = admins.map(admin => ({
+                user_id: admin.user_id,
+                user_fname: admin.user_fname,
+                user_lname: admin.user_lname,
+                count: adminCounts[admin.user_id]?.count || 0,
+                paper_cost: adminCounts[admin.user_id]?.paper_cost || 0,
+            }));
+
+            setAdminData(adminDataArray); // ตั้งค่า adminData สำหรับแสดงในตาราง
+
+        } else {
             const fetchDocumentReceipts = async () => {
                 try {
                     const response = await axios.get(`http://localhost:3000/document-receipts/${selectedAdmin}`);
-                    setReceipts(response.data);
+                    setReceipts(response.data); // ตั้งค่าผลลัพธ์ที่ได้จากการเลือกแอดมิน
+                    // สร้างข้อมูลสำหรับกราฟ
+                    const dataForChart = response.data.reduce((acc, receipt) => {
+                        acc.push({ label: receipt.document_id, value: receipt.paper_cost });
+                        return acc;
+                    }, []);
+                    setAdminData(dataForChart); // ตั้งค่าข้อมูลกราฟ
                 } catch (error) {
                     console.error('Error fetching document receipts:', error);
                 }
@@ -60,15 +90,31 @@ function ReceiptsList() {
 
             fetchDocumentReceipts();
         }
-    }, [selectedAdmin]);
+    }, [selectedAdmin, receipts, admins]);
 
 
 
+
+    const adminCounts = receipts.reduce((acc, receipt) => {
+        const adminId = receipt.user_id; // ไอดี Admin
+        acc[adminId] = (acc[adminId] || 0) + 1; // เพิ่มจำนวนเอกสารที่แอดมินคนนี้รับ
+        return acc;
+    }, {});
+
+    // ประกาศ chartData ที่นี่
+    const chartData = {
+        labels: adminData.map(item => item.label), // ชื่อเอกสารที่ได้รับ
+        datasets: [{
+            label: 'จำนวนเงินประหยัดกระดาษ',
+            data: adminData.map(item => item.value), // จำนวนเงินประหยัดกระดาษตามเอกสาร
+            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // กำหนดสีของกราฟ
+        }]
+    };
     return (
         <Layout> {/* เรียกใช้ Layout ที่ห่อไว้ */}
             <Box sx={{ display: 'flex' }}>
-                <Box component="main" sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3,bgcolor: '#eaeff1'}}>
-                <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold',textAlign: 'left', color: '#1976d2' }}>สถิติการรับเอกสาร</Typography>
+                <Box component="main" sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1' }}>
+                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>สถิติการรับเอกสาร</Typography>
                     <Toolbar />
                     <Container>
                         <Grid container spacing={3}>
@@ -90,11 +136,12 @@ function ReceiptsList() {
                                 <FormControl fullWidth variant="outlined">
                                     <InputLabel>Admin</InputLabel>
                                     <Select
-                                        value={selectedAdmin}
+                                        value={selectedAdmin} // ใช้ selectedAdmin เป็น value
                                         onChange={(e) => setSelectedAdmin(e.target.value)}
                                         label="Admin"
                                     >
-                                        <MenuItem value="">Select Admin</MenuItem>
+                                        <MenuItem value=""></MenuItem> {/* ตัวเลือก "ไม่มีแอดมิน" เมื่อไม่เลือก */}
+                                        <MenuItem value="all">ทั้งหมด</MenuItem> {/* ตัวเลือก "ทั้งหมด" */}
                                         {admins.length > 0 ? (
                                             admins.map(admin => (
                                                 <MenuItem key={admin.user_id} value={admin.user_id}>
@@ -109,39 +156,99 @@ function ReceiptsList() {
                             </Grid>
 
                         </Grid>
-                        <TableContainer component={Paper} sx={{ mt: 4 }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>ลำดับ</TableCell>
-                                        <TableCell> ID เอกสาร</TableCell>
-                                        <TableCell> ไอดี Admin</TableCell>
-                                        <TableCell>วันที่รับเอกสาร</TableCell>
-                                        <TableCell>จำนวนเงินประหยัดกระดาษ</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {receipts.length > 0 ? (
-                                        receipts.map((receipt) => (
-                                            <TableRow key={receipt.receipt_id}>
-                                                <TableCell>{receipt.receipt_id}</TableCell>
-                                                <TableCell>{receipt.document_id}</TableCell>
-                                                <TableCell>{receipt.user_id}</TableCell>
-                                                <TableCell>{new Date(receipt.date_received).toLocaleDateString()}</TableCell>
-                                                <TableCell>{receipt.paper_cost}</TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={5}>No receipts available</TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                        {/* เงื่อนไขสำหรับแสดงตาราง */}
+                        {selectedAdmin && (
+                            <>
+
+                                {/* ตารางสำหรับแสดงข้อมูลเอกสารเมื่อเลือกแอดมินรายบุคคล */}
+                                {selectedAdmin !== '' && selectedAdmin !== 'all' && (
+                                    <TableContainer component={Paper} sx={{ mt: 4 }}>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>ลำดับ</TableCell>
+                                                    <TableCell>ID เอกสาร</TableCell>
+                                                    <TableCell>ไอดี Admin</TableCell>
+                                                    <TableCell>วันที่รับเอกสาร</TableCell>
+                                                    <TableCell>จำนวนเงินประหยัดกระดาษ</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {receipts.length > 0 ? (
+                                                    receipts.map((receipt, index) => (
+                                                        <TableRow key={receipt.receipt_id}>
+                                                            <TableCell>{index + 1}</TableCell>
+                                                            <TableCell>{receipt.document_id}</TableCell>
+                                                            <TableCell>{receipt.user_id}</TableCell>
+                                                            <TableCell>{new Date(receipt.date_received).toLocaleDateString()}</TableCell>
+                                                            <TableCell>{receipt.paper_cost}</TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                ) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={5}>No receipts available</TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+
+                                {/* ตารางผลรวมด้านล่าง */}
+                                {selectedAdmin !== 'all' && ( // เพิ่มเงื่อนไขที่นี่เพื่อให้ไม่แสดงตารางผลรวมเมื่อเลือก "ทั้งหมด"
+                                    <TableContainer component={Paper} sx={{ mt: 4 }}>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>จำนวนเอกสารทั้งหมด</TableCell>
+                                                    <TableCell>{totalReceipts}</TableCell>
+                                                </TableRow>
+                                                <TableRow>
+                                                    <TableCell>รวมเงินประหยัดกระดาษ</TableCell>
+                                                    <TableCell>{paperCostTotal}</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+
+                                {/* ตารางสำหรับแสดงข้อมูลแอดมินเมื่อเลือก "ทั้งหมด" */}
+                                {selectedAdmin === 'all' && (
+                                    <TableContainer component={Paper} sx={{ mt: 4 }}>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell>ชื่อแอดมิน</TableCell>
+                                                    <TableCell>จำนวนเอกสาร</TableCell>
+                                                    <TableCell>รวมเงินประหยัดกระดาษ</TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {adminData.map(admin => (
+                                                    <TableRow key={admin.user_id}>
+                                                        <TableCell>{`${admin.user_fname} ${admin.user_lname}`}</TableCell>
+                                                        <TableCell>{admin.count}</TableCell>
+                                                        <TableCell>{admin.paper_cost}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+
+                            </>
+                        )}
+
+
+                        {selectedAdmin !== 'all' && selectedAdmin && (
+                            <Box sx={{ width: 500, height: 500, textAlign: 'center', justifyContent: 'center', mt: 4 }}>
+                                <Pie data={chartData} />
+                            </Box>
+                        )}
                     </Container>
                 </Box>
             </Box>
+
         </Layout>
     );
 }

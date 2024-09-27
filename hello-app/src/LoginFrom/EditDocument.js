@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { Box, Button, TextField, Typography, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SendIcon from '@mui/icons-material/Send';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import Swal from 'sweetalert2';
 
 
 const EditDocument = () => {
@@ -18,8 +18,6 @@ const EditDocument = () => {
     });
     const [fileName, setFileName] = useState('');
     const [existingFileName, setExistingFileName] = useState('');
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [successMessage, setSuccessMessage] = useState('');
     const navigate = useNavigate();
 
 
@@ -71,18 +69,28 @@ const EditDocument = () => {
             });
 
             if (response.status === 200) {
-                setSuccessMessage('เอกสารถูกอัปเดตเรียบร้อยแล้ว');
-                setDialogOpen(true);
+                // ใช้ SweetAlert2 สำหรับแจ้งเตือนความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: 'เอกสารถูกอัปเดตเรียบร้อยแล้ว!',
+                }).then(() => {
+                    // นำทางกลับไปยังหน้าติดตามเอกสาร
+                    navigate('/track');
+                });
             }
         } catch (error) {
             console.error("Error updating document:", error);
+
+            // ใช้ SweetAlert2 สำหรับแจ้งเตือนข้อผิดพลาด
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด!',
+                text: 'ไม่สามารถอัปเดตเอกสารได้!',
+            });
         }
     };
-    // ปิด Dialog สำเร็จ
-    const handleDialogClose = () => {
-        setDialogOpen(false);
-        navigate('/track');
-    };
+
     const handleCancel = () => {
         navigate('/track');
     };
@@ -228,29 +236,6 @@ const EditDocument = () => {
                 </Box>
 
             </Box>
-
-            {/* Dialog เมื่อสำเร็จ */}
-            <Dialog
-                open={dialogOpen}
-                onClose={handleDialogClose}
-                maxWidth="xs"
-                fullWidth
-            >
-                <DialogTitle>
-                    <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
-                        <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
-                        สำเร็จ
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">
-                        {successMessage}
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDialogClose}>ตกลง</Button>
-                </DialogActions>
-            </Dialog>
         </Box>
     );
 };
