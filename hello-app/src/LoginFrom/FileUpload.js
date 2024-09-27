@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'react-toastify/dist/ReactToastify.css'; // นำเข้า CSS สำหรับการแสดง Toast
-
 // MUI Components
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, List, ListItem, ListItemIcon, ListItemText, Divider, Dialog, DialogActions, DialogContent, DialogTitle, Paper } from '@mui/material'; // นำเข้า MUI Components
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, List, ListItem, ListItemIcon, CircularProgress, ListItemText, Divider, Dialog, DialogActions, DialogContent, DialogTitle, Paper } from '@mui/material'; // นำเข้า MUI Components
 
 // MUI Icons
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
@@ -11,7 +10,7 @@ import { AccountCircle, ExitToApp, InsertDriveFile, Description } from '@mui/ico
 import MenuIcon from '@mui/icons-material/Menu'; // ไอคอนเมนู
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'; // ไอคอน PDF
 import SendIcon from '@mui/icons-material/Send'; // นำเข้าไอคอน Send
-
+import Swal from 'sweetalert2';
 
 // React Router
 import { useNavigate, useLocation } from 'react-router-dom'; // สำหรับการนำทางและการเข้าถึง location
@@ -37,6 +36,7 @@ function FileUpload() {
   const [user_fname, setUser_fname] = useState('');
   const [user_lname, setUser_lname] = useState('');
   const [fileName, setFileName] = useState(''); // เพิ่มการประกาศ fileName
+  const [loading, setLoading] = useState(false);
 
 
 
@@ -109,7 +109,8 @@ function FileUpload() {
   const handleDialogClose = () => {
     setDialogOpen(false);
   };
-  // ฟังก์ชันเมื่อผู้ใช้กดส่งฟอร์ม
+
+
   const handleSubmit = async e => {
     e.preventDefault();
 
@@ -126,9 +127,11 @@ function FileUpload() {
         formData.append('user_fname', user_fname); // เพิ่มชื่อ
         formData.append('user_lname', user_lname); // เพิ่มนามสกุล
         console.log(formData.values)
+
         for (let pair of formData.entries()) {
           console.log(`${pair[0]}: ${pair[1]}`);
         }
+
         if (values.file) {
           formData.append('file', values.file);
         }
@@ -139,17 +142,30 @@ function FileUpload() {
           }
         });
 
-
         console.log('Upload successful', response);
+
+        // แสดง SweetAlert เมื่ออัปโหลดสำเร็จ
+        Swal.fire({
+          icon: 'success',
+          title: 'สำเร็จ!',
+          text: 'อัปโหลดเอกสารสำเร็จ!',
+        });
+
+        resetForm();
+
       } catch (error) {
         console.error("Error during upload", error);
+
+        // แสดง SweetAlert เมื่อมีข้อผิดพลาด
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด!',
+          text: 'การอัปโหลดเอกสารไม่สำเร็จ!',
+        });
       }
-      // ตั้งข้อความสำเร็จและเปิด Dialog
-      setSuccessMessage('อัปโหลดเอกสารสำเร็จ');
-      setDialogOpen(true);
-      resetForm();
     }
   };
+
 
 
 
@@ -184,7 +200,13 @@ function FileUpload() {
     { text: 'ส่งเอกสาร', link: '/fileupload', icon: <Description /> },
     { text: 'ข้อมูลผู้ใช้', link: `/profile/`, icon: <AccountCircle /> },
   ];
-
+  const handleMenuClick = (link) => {
+    setLoading(true);
+    setTimeout(() => {
+      navigate(link);
+      setLoading(false);
+    }, 400); // หน่วงเวลา 400ms
+  };
   return (
     <Box sx={{ flexGrow: 1, height: '100vh', display: 'flex' }}>
 
@@ -207,9 +229,9 @@ function FileUpload() {
         <List>
           {menuItems.map((item) => (
             <ListItem
-              component="a"
-              href={item.link}
+              component="div" // ใช้ component เป็น div เพื่อให้สามารถควบคุม onClick ได้
               key={item.text}
+              onClick={() => handleMenuClick(item.link)} // เรียกฟังก์ชันเมื่อคลิก
               sx={{
                 borderRadius: '4px',
                 mb: 1,
@@ -248,8 +270,8 @@ function FileUpload() {
                 width: 'auto', // Adjust width to content
               }}
             >
-              <Typography variant="h7" gutterBottom>
-                เจ้าของเรื่อง : {user_fname} {user_lname}
+              <Typography variant="h6" gutterBottom>
+                สวัสดีคุณ,  {user_fname} {user_lname}
               </Typography>
             </Box>
 
@@ -382,12 +404,12 @@ function FileUpload() {
           </Button>
         </Box>
       </Box>
-      <Dialog
+      {/* <Dialog
         open={dialogOpen}
         onClose={handleDialogClose}
         maxWidth="xs"
         fullWidth
-      >
+       >
         <DialogTitle>
           <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
             <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
@@ -404,7 +426,7 @@ function FileUpload() {
             ปิด
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
     </Box>
   );

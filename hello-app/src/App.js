@@ -27,7 +27,9 @@ import EditUser from './Admin/EditUser';
 import Addfile from './Admin/AddFile';
 import EditDocument from './LoginFrom/EditDocument';
 import UnreadDocuments from './Admin/UnreadDocuments';
-
+import DashboardLayoutBasic from './LayoutAdmin/DashboardLayoutBasic';
+import PaperSavingsCalculator from './Admin/PaperSavingsCalculator';
+import NewDocuments from './Admin/NewDocuments';
 
 function App() {
   return (
@@ -50,7 +52,10 @@ function AppContent() {
                       location.pathname.startsWith('/newuser') ||
                       location.pathname.startsWith('/editu') ||
                       location.pathname.startsWith('/addfile') ||
-                      location.pathname.startsWith('/unread') ;
+                      location.pathname.startsWith('/dashboard') ||
+                      location.pathname.startsWith('/unread') ||
+                      location.pathname.startsWith('/paper') ||
+                      location.pathname.startsWith('/newdoc') ;
 
   return (
     <>
@@ -86,6 +91,10 @@ function AppContent() {
         <Route path='/addfile' element={<Addfile />} />
         <Route path='/user-edit/:id' element={<EditDocument />} />
         <Route path='/unread' element={<UnreadDocuments />} />
+        <Route path='/dashboard' element={<DashboardLayoutBasic />} />
+        <Route path='/paper' element={<PaperSavingsCalculator />} />
+        <Route path='/newdoc' element={<NewDocuments />} />
+        
 
 
 

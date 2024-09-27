@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Link, List, ListItem, ListItemIcon, ListItemText, Divider, Tooltip, Collapse } from '@mui/material';
+import { Box, Typography, Link, List, ListItem, ListItemIcon, ListItemText, Divider, Tooltip, Collapse, CircularProgress } from '@mui/material';
 import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -23,6 +23,7 @@ function HomePage() {
     const [menuOpen, setMenuOpen] = useState(true); // สถานะการเปิด/ปิดเมนู
     const navigate = useNavigate();
     const location = useLocation();
+    const [loading, setLoading] = useState(false);
 
     const toggleMenu = () => {
         setMenuOpen(!menuOpen); // เปลี่ยนสถานะการเปิด/ปิดเมนูเมื่อคลิกไอคอน
@@ -50,6 +51,14 @@ function HomePage() {
         { text: 'ข้อมูลผู้ใช้', link: `/profile/${userId}`, icon: <AccountCircle /> },
     ];
 
+    const handleMenuClick = (link) => {
+        setLoading(true);
+        setTimeout(() => {
+            navigate(link);
+            setLoading(false);
+        }, 400); // หน่วงเวลา 400ms
+    };
+
     return (
         <Box>
             {location.pathname === '/homepage' && (
@@ -59,6 +68,23 @@ function HomePage() {
                 </>
             )}
             <Box sx={{ flexGrow: 1, height: '100vh', display: 'flex' }}>
+                {/* สถานะการโหลด */}
+                {loading && (
+                    <Box style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100vw',
+                        height: '100vh',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                        zIndex: 9999
+                    }}>
+                        <CircularProgress />
+                    </Box>
+                )}
                 {/* ส่วนหลักของ Menu ฝั่งซ้าย */}
                 <Box sx={{
                     width: menuOpen ? 250 : 60, // ขนาดของเมนูตามสถานะ
@@ -89,25 +115,27 @@ function HomePage() {
                             {menuItems.map((item) => (
                                 <Tooltip title={item.text} key={item.text} arrow>
                                     <ListItem
-                                        component="a"
-                                        href={item.link}
+                                        component="div"
+                                        onClick={() => handleMenuClick(item.link)}
                                         sx={{
                                             borderRadius: '4px',
                                             mb: 1,
                                             backgroundColor: location.pathname === item.link ? '#bbdefb' : 'transparent',
                                             '&:hover': { backgroundColor: '#b3e5fc' },
-                                            color: '#212121'
+                                            color: '#212121',
+                                            cursor: 'pointer'
                                         }}
                                     >
                                         <ListItemIcon sx={{ color: 'inherit' }}>
                                             {item.icon}
                                         </ListItemIcon>
-                                        {menuOpen && <ListItemText primary={item.text} />} {/* แสดงชื่อเมนูเฉพาะเมื่อเมนูเปิด */}
+                                        {menuOpen && <ListItemText primary={item.text} />}
                                     </ListItem>
                                 </Tooltip>
                             ))}
                         </List>
                     </Collapse>
+
                     <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
                 </Box>
                 <Box sx={{ flex: 1, p: 2 }}>

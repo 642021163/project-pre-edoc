@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import {
     Box, CssBaseline, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select,
-    MenuItem, Dialog, DialogActions, DialogContent, DialogTitle,  CircularProgress
+    MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, CircularProgress
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
 import { format, parseISO } from 'date-fns';
 import Layout from '../LayoutAdmin/Layout';
+import Swal from 'sweetalert2';
 
 
-
+// การจัดรูปแบบวันที่และเวลา
+const formatDateTime = (dateTime) => format(parseISO(dateTime), 'yyyy-MM-dd HH:mm:ss');
 
 function Addfile() {
     const navigate = useNavigate();
@@ -73,13 +74,10 @@ function Addfile() {
             setError('กรุณาเลือกไฟล์');
             setLoading(false);
             return;
-
         }
         if (document.file) {
             formData.append('file', document.file); // เพิ่มไฟล์ใน FormData ถ้ามีการเลือกไฟล์
         }
-
-
 
         try {
             const response = await axios.post('http://localhost:3000/documents', formData, {
@@ -88,8 +86,18 @@ function Addfile() {
                 }
             });
             console.log('Response:', response.data); // ดูข้อมูลที่ตอบกลับจากเซิร์ฟเวอร์
-            setSuccessMessage('บันทึกข้อมูลเรียบร้อยแล้ว');
-            setDialogOpen(true);
+
+            // ใช้ SweetAlert แสดงแจ้งเตือนความสำเร็จ
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+            }).then(() => {
+                // หลังจากปิด SweetAlert นำผู้ใช้กลับไปที่หน้าติดตามเอกสาร
+                navigate('/doc');
+            });
+
+            // รีเซ็ตฟอร์ม
             setDocument({
                 upload_date: '',
                 subject: '',
@@ -100,21 +108,20 @@ function Addfile() {
             });
         } catch (error) {
             console.error('เกิดข้อผิดพลาดในการเพิ่มเอกสาร:', error.response?.data || error.message);
-            setError('เกิดข้อผิดพลาดในการเพิ่มเอกสาร');
+
+            // แสดงแจ้งเตือนข้อผิดพลาดด้วย SweetAlert
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'เกิดข้อผิดพลาดในการเพิ่มเอกสาร',
+            });
         } finally {
-            setLoading(false);
+            setLoading(false); // ปิดสถานะการโหลด
         }
-
     };
 
-    // ปิด Dialog
-    const handleDialogClose = () => {
-        setDialogOpen(false);
-        navigate('/doc'); // นำทางไปยังหน้า document list หลังจากปิด Dialog
-    };
-
-    const handleBackToHome = () => {
-        navigate('/home'); // นำทางไปที่หน้าโฮม
+    const handleCancel = () => {
+        navigate('/doc');
     };
 
     return (
@@ -122,7 +129,7 @@ function Addfile() {
             <Box sx={{ display: 'flex' }}>
                 <CssBaseline />
                 <Box component="main" sx={{ flexGrow: 1, p: 1 }}>
-                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold',textAlign: 'left', color: '#1976d2' }}>เพิ่มเอกสาร</Typography>
+                    <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>เพิ่มเอกสาร</Typography>
                     <Paper
                         sx={{
                             padding: 3,
@@ -243,7 +250,7 @@ function Addfile() {
                                 </Grid>
                             </Box>
 
-                            <Box>
+                            <DialogActions style={{ justifyContent: 'center' }}>
                                 <Button
                                     type="submit"
                                     variant="contained"
@@ -253,36 +260,18 @@ function Addfile() {
                                 >
                                     {loading ? 'กำลังบันทึก...' : 'บันทึกเอกสาร'}
                                 </Button>
-                            </Box>
+                                <Button
+                                    color="error"
+                                    variant="outlined"
+                                    onClick={handleCancel}
+                                >
+                                    ยกเลิก
+                                </Button>
+                            </DialogActions>
                         </form>
 
                     </Paper>
                 </Box>
-
-                {/* Dialog สำหรับแสดงข้อความสำเร็จ */}
-                <Dialog
-                    open={dialogOpen}
-                    onClose={handleDialogClose}
-                    maxWidth="xs"
-                    fullWidth
-                >
-                    <DialogTitle>
-                        <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
-                            <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
-                            สำเร็จ
-                        </Typography>
-                    </DialogTitle>
-                    <DialogContent>
-                        <Typography variant="body1">
-                            {successMessage}
-                        </Typography>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleDialogClose} color="primary">
-                            ปิด
-                        </Button>
-                    </DialogActions>
-                </Dialog>
             </Box>
         </Layout>
     );

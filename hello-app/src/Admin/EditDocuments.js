@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, CssBaseline, Typography, Paper, Button, Grid, TextField, FormControl,
-  InputLabel, Select, MenuItem, Dialog, DialogActions, DialogContent, DialogTitle,
+  InputLabel, Select, MenuItem,  DialogActions,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { format, parseISO } from 'date-fns';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
 import Layout from '../LayoutAdmin/Layout';
+import Swal from 'sweetalert2';
 
 // การจัดรูปแบบวันที่และเวลา
 const formatDateTime = (dateTime) => format(parseISO(dateTime), 'yyyy-MM-dd HH:mm:ss');
-
 function EditDocuments() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -29,8 +28,6 @@ function EditDocuments() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false); // สถานะเปิด/ปิด Dialog
-  const [successMessage, setSuccessMessage] = useState(''); // สถานะข้อความสำเร็จ
   const [recipients, setRecipients] = useState([]);
   const [documentId, setDocumentId] = useState('');
   const [adminId, setAdminId] = useState('');
@@ -38,6 +35,21 @@ function EditDocuments() {
   const [paperCost, setPaperCost] = useState('');
   const [isReceived, setIsReceived] = useState(false);
   const [docId, setDocId] = useState(id);
+  const [activeTab, setActiveTab] = useState('all'); // ตัวอย่างการใช้ useState
+  const [allDocuments, setAllDocuments] = useState([]); // ค่าพื้นฐาน
+  const [unreadDocuments, setUnreadDocuments] = useState([]);
+  const [documents, setDocuments] = useState([]);
+
+  const [pdfPages, setPdfPages] = useState(''); // สถานะสำหรับเก็บจำนวนหน้าของ PDF
+  const [savings, setSavings] = useState(null); // สถานะสำหรับเก็บผลลัพธ์การประหยัดกระดาษ
+
+  // ฟังก์ชันคำนวณการประหยัดกระดาษ
+  const calculateSavings = () => {
+    const costPerPage = 0.5; // ตัวอย่างค่าใช้จ่ายต่อหน้า (ปรับแต่งตามความต้องการ)
+    const totalSavings = pdfPages * costPerPage; // คำนวณการประหยัด
+    setSavings(totalSavings); // เก็บผลลัพธ์การประหยัด
+  };
+
 
 
   const statusOptions = [
@@ -52,6 +64,50 @@ function EditDocuments() {
   ]);
 
 
+  // ฟังก์ชันสำหรับการเพิ่ม event beforeunload เพื่อเตือนก่อนออกจากหน้า
+  const addNavigationWarning = () => {
+    window.addEventListener('beforeunload', handleBeforeUnload);
+  };
+
+  // ฟังก์ชันสำหรับการลบ event beforeunload
+  const removeNavigationWarning = () => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  };
+
+  // ฟังก์ชันจัดการการแจ้งเตือนเมื่อออกจากหน้า
+  const handleBeforeUnload = (e) => {
+    const confirmationMessage = 'คุณยังไม่ได้บันทึกการเปลี่ยนแปลง หากคุณออกจากหน้านี้ ข้อมูลที่คุณทำจะสูญหาย';
+    e.returnValue = confirmationMessage; // สำหรับเบราว์เซอร์เก่า
+    return confirmationMessage;
+  };
+
+  useEffect(() => {
+    // เพิ่ม event `beforeunload` เมื่อเริ่มแก้ไขเอกสาร
+    addNavigationWarning();
+
+    return () => {
+      // ลบ event `beforeunload` เมื่อออกจากหน้า
+      removeNavigationWarning();
+    };
+  }, []);
+
+  const handleStatusChange = async (docId) => {
+    try {
+      await axios.put(`http://localhost:3000/document/${docId}/status`, { status: document.status });
+
+      // ลบการแจ้งเตือนเมื่อเปลี่ยนสถานะเอกสารสำเร็จ
+      removeNavigationWarning();
+
+      Swal.fire({
+        icon: 'success',
+        title: 'สถานะเอกสารถูกอัปเดต',
+        text: 'สถานะของเอกสารได้รับการเปลี่ยนเรียบร้อยแล้ว'
+      });
+
+    } catch (error) {
+      console.error('Error updating document status:', error);
+    }
+  };
 
   // ดึงข้อมูลผู้ใช้จากเซิร์ฟเวอร์
   useEffect(() => {
@@ -93,6 +149,10 @@ function EditDocuments() {
       ...prev,
       [name]: value
     }));
+    // เช็คว่าถ้าเป็นการเปลี่ยนแปลงสถานะให้เรียก handleStatusChange
+    if (name === 'status') {
+      handleStatusChange(id); // เรียกใช้ handleStatusChange
+    }
   };
 
 
@@ -102,56 +162,88 @@ function EditDocuments() {
     try {
       await axios.put(`http://localhost:3000/documents/${id}`, document);
       console.log('Document updated successfully.');
-      // ตั้งค่าข้อความแจ้งเตือนเมื่อบันทึกสำเร็จ
 
-      setSuccessMessage('บันทึกข้อมูลเรียบร้อยแล้ว');
-      setDialogOpen(true);
-    } catch (error) {
-      console.error('เกิดข้อผิดพลาดในการอัปเดตเอกสาร:', error.response?.data || error.message);
-      setError('เกิดข้อผิดพลาดในการอัปเดตเอกสาร');
-    }
-  };
-  const handleDocumentReceive = async (docId) => {
-    try {
-      // ตรวจสอบว่า adminId มีค่าเป็นหมายเลขที่ถูกต้อง
-      if (!adminId || isNaN(adminId)) {
-        console.error('Invalid adminId:', adminId);
-        return; // ออกจากฟังก์ชันถ้า adminId ไม่ถูกต้อง
-      }
+      removeNavigationWarning(); // ลบการแจ้งเตือนเมื่อบันทึกข้อมูลสำเร็จ
 
-      // อัปเดตสถานะเอกสาร
-      const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
-        received_by: adminId // รหัสของผู้ดูแลระบบที่รับเอกสาร
+      // แจ้งเตือนเมื่อบันทึกสำเร็จด้วย SweetAlert2
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+      }).then(() => {
+        // นำผู้ใช้กลับไปที่หน้าติดตามเอกสารหลังจากปิด SweetAlert
+        navigate('/doc');
       });
 
-      // บันทึกข้อมูลการรับเอกสาร
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการอัปเดตเอกสาร:', error.response?.data || error.message);
+
+      // แจ้งเตือนเมื่อเกิดข้อผิดพลาดด้วย SweetAlert2
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'เกิดข้อผิดพลาดในการอัปเดตเอกสาร',
+      });
+    }
+  };
+
+  const handleDocumentReceive = async (docId) => {
+    try {
+      // อัปเดตสถานะเอกสารเป็น 'กำลังดำเนินการ'
+      const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
+        received_by: adminId
+      });
+      console.log('Update status response:', updateStatusResponse.data);
+
+      // บันทึกข้อมูลการรับเอกสารพร้อมค่าประหยัด
       const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
         documentId: docId,
         adminId: adminId,
-        dateReceived: new Date().toISOString().split('T')[0], // ใช้วันที่ปัจจุบัน
-        paperCost: paperCost // ค่ากระดาษหรือข้อมูลที่คุณต้องการบันทึก
+        dateReceived: new Date().toISOString().split('T')[0],
+        paperCost: savings // ใช้ค่าการประหยัดที่คำนวณได้
       });
-      console.log('Receipt response:', receiptResponse.data); // Log ค่าการตอบกลับจากการบันทึกข้อมูลการรับเอกสาร
+      console.log('Receipt response:', receiptResponse.data);
 
     } catch (error) {
-      console.error('Error handling document receive:', error); // Log ข้อผิดพลาด
+      console.error('Error handling document receive:', error);
     }
   };
 
-  // ฟังก์ชันจัดการปุ่มรับเอกสาร
+
   const handleReceiveButtonClick = (docId) => {
-    console.log('Document ID clicked:', docId); // Log ค่า docId ที่ถูกกด
-    console.log('Admin ID:', adminId,"Unfind"); // ตรวจสอบค่าก่อนที่จะใช้
+    console.log('Document ID clicked:', docId);
 
     // ตรวจสอบสถานะเอกสารก่อนการเรียกใช้งาน
-    handleDocumentReceive(docId);
+    const document = documents.find(doc => doc.document_id === docId);
+
+    if (document && document.status !== 1) {
+      console.log('Document status is not 1, proceeding with receive...');
+      handleDocumentReceive(docId);
+    } else {
+      console.log('Document status is 1 or document not found, skipping receive.');
+    }
   };
 
-  // ปิด Dialog
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    navigate('/doc'); // นำทางไปยังหน้า homepage หลังจากปิด Dialog
+  const handleSavePaperCost = async () => {
+    try {
+      await axios.post('http://localhost:3000/document-stats', {
+        paperCost: savings // ค่าการประหยัดกระดาษที่คำนวณได้
+      });
+      Swal.fire({
+        icon: 'success',
+        title: 'บันทึกสำเร็จ',
+        text: 'ค่าประหยัดกระดาษถูกบันทึกเรียบร้อยแล้ว'
+      });
+    } catch (error) {
+      console.error('Error saving paper cost:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: 'ไม่สามารถบันทึกค่าประหยัดกระดาษได้'
+      });
+    }
   };
+
 
 
   const handleCancel = () => {
@@ -186,7 +278,31 @@ function EditDocuments() {
                       InputLabelProps={{ shrink: true }}
                     />
                   </Grid>
+                  {/* Row 2 */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="ถึง"
+                      name="to_recipient"
+                      value={document.to_recipient}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
 
+                  {/* Row 3 */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="เรื่อง"
+                      name="subject"
+                      value={document.subject}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
+
+                  {/* Row 4 */}
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
                       <InputLabel>ผู้รับเอกสาร</InputLabel>
@@ -210,17 +326,53 @@ function EditDocuments() {
                     </FormControl>
                   </Grid>
 
+
+                  {/* Row 5*/}
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth>
+                      <InputLabel>ประเภทเอกสาร</InputLabel>
+                      <Select
+                        label="Document Type"
+                        name="document_type"
+                        value={document.document_type}
+                        onChange={handleChange}
+                        required
+                      >
+                        {document_typeOptions.map(option => (
+                          <MenuItem key={option.value} value={option.value}>
+                            {option.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  {/* Row 6 */}
                   <Grid item xs={12} md={6}>
                     <TextField
-                      label="เรื่อง"
-                      name="subject"
-                      value={document.subject}
+                      label="เลขที่เอกสาร"
+                      name="document_number"
+                      value={document.document_number}
                       onChange={handleChange}
                       fullWidth
                       required
                     />
                   </Grid>
 
+
+                  {/* Row 7 */}
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth>
+                      <TextField
+                        label="หมายเหตุ"
+                        name="notes"
+                        value={document.notes}
+                        onChange={handleChange}
+                        fullWidth
+                        multiline
+                        rows={4}
+                      />
+                    </FormControl>
+                  </Grid>
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
                       <InputLabel>สถานะ</InputLabel>
@@ -240,72 +392,58 @@ function EditDocuments() {
                     </FormControl>
                   </Grid>
 
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      label="ถึง"
-                      name="to_recipient"
-                      value={document.to_recipient}
-                      onChange={handleChange}
-                      fullWidth
-                      required
-                    />
-                  </Grid>
-
-                  {/* Row 3 */}
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      label="เลขที่เอกสาร"
-                      name="document_number"
-                      value={document.document_number}
-                      onChange={handleChange}
-                      fullWidth
-                      required
-                    />
-                  </Grid>
-
-                  {/* Row 4 */}
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <InputLabel>ประเภทเอกสาร</InputLabel>
-                      <Select
-                        label="Document Type"
-                        name="document_type"
-                        value={document.document_type}
-                        onChange={handleChange}
-                        required
-                      >
-                        {document_typeOptions.map(option => (
-                          <MenuItem key={option.value} value={option.value}>
-                            {option.label}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  {/* Row 5 */}
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
+                  {/* เงื่อนไขในการแสดง TextField และ Button */}
+                  {document.status === 2 && (
+                    <Grid item xs={12} md={6}>
                       <TextField
-                        label="หมายเหตุ"
-                        name="notes"
-                        value={document.notes}
-                        onChange={handleChange}
+                        label="จำนวนหน้าของ PDF"
+                        type="number"
+                        value={pdfPages}
+                        onChange={(e) => setPdfPages(e.target.value)}
                         fullWidth
-                        multiline
-                        rows={4}
                       />
-                    </FormControl>
-                  </Grid>
+                      <Box sx={{ p: 1 }}>
+                        <Button variant="contained" color="primary" onClick={calculateSavings}>
+                          คำนวณการประหยัด
+                        </Button>
+                        {savings > 0 && (
+                          <Typography variant="subtitle1" sx={{ mt: 2 }}>
+                            ประหยัดค่ากระดาษ: {savings} บาท
+                          </Typography>
+                        )}
+                        <Button variant="contained" color="secondary" onClick={handleSavePaperCost}>
+                          บันทึกค่าประหยัดกระดาษ
+                        </Button>
+                      </Box>
+                    </Grid>
+                  )}
 
-                  <Button
+                  {/* <Button
                     variant="contained"
                     color={isReceived ? "success" : "primary"}
-                    onClick={() => handleReceiveButtonClick(docId)}
+                    // onClick={() => handleReceiveDocument(docId)}
                     disabled={isReceived}
                   >
                     {isReceived ? 'เอกสารได้รับการบันทึกแล้ว' : 'รับเอกสาร'}
-                  </Button>
+                  </Button> */}
+                  {/* 
+                  <Box>
+                    {console.log(documents, 'documents')} 
+                    {documents.map((doc) => {
+                      const isDocReceived = doc.isReceived || false; 
+                      return (
+                        <Button
+                          key={doc.document_id}
+                          variant="contained"
+                          color={isDocReceived ? "success" : "primary"}
+                          onClick={() => handleReceiveButtonClick(doc.document_id)}
+                          disabled={isDocReceived}
+                        >
+                          {isDocReceived ? 'เอกสารได้รับการบันทึกแล้ว' : 'รับเอกสาร'}
+                        </Button>
+                      );
+                    })}
+                  </Box> */}
 
                 </Grid>
               </Box>
@@ -319,7 +457,7 @@ function EditDocuments() {
                   บันทึก
                 </Button>
                 <Button
-                  color="secondary"
+                  color="error"
                   variant="outlined"
                   onClick={handleCancel}
                 >
@@ -328,30 +466,6 @@ function EditDocuments() {
               </DialogActions>
             </form>
           </Paper>
-          {/* Dialog สำหรับแสดงข้อความสำเร็จ */}
-          <Dialog
-            open={dialogOpen}
-            onClose={handleDialogClose}
-            maxWidth="xs"
-            fullWidth
-          >
-            <DialogTitle>
-              <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
-                <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
-                สำเร็จ
-              </Typography>
-            </DialogTitle>
-            <DialogContent>
-              <Typography variant="body1">
-                {successMessage}
-              </Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleDialogClose} color="primary">
-                ปิด
-              </Button>
-            </DialogActions>
-          </Dialog>
         </Box>
       </Box>
     </Layout>

@@ -7,7 +7,7 @@ import {
 import { Search, Notifications, Home, PersonAdd } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
+import Swal from 'sweetalert2';
 
 const drawerWidth = 240; // หรือค่าที่คุณต้องการ
 
@@ -26,7 +26,6 @@ function EditUser() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false); // สถานะเปิด/ปิด Dialog
-  const [successMessage, setSuccessMessage] = useState(''); // สถานะข้อความสำเร็จ
   const [resetPassword, setResetPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showResetForm, setShowResetForm] = useState(false);
@@ -74,12 +73,30 @@ function EditUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/users/${id}`, user);
-      setSuccessMessage('บันทึกข้อมูลเรียบร้อยแล้ว');
-      setDialogOpen(true);
+      const response = await axios.put(`http://localhost:3000/users/${id}`, user);
+      console.log('อัปเดตผู้ใช้สำเร็จ:', response.data);
+
+      // ใช้ SweetAlert แสดงแจ้งเตือนความสำเร็จ
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
+        timer: 2000, // กำหนดเวลาแสดง SweetAlert 2 วินาที
+        showConfirmButton: false // ไม่ต้องแสดงปุ่ม Confirm
+      }).then(() => {
+        // คุณสามารถเพิ่มการนำทางไปยังหน้าที่คุณต้องการหลังจากแสดง SweetAlert เสร็จ
+        navigate('/list'); // เปลี่ยนเส้นทางไปยังหน้ารายชื่อผู้ใช้
+      });
+
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตผู้ใช้:', error.response?.data || error.message);
-      setError('เกิดข้อผิดพลาดในการอัปเดตผู้ใช้');
+
+      // แสดง SweetAlert ข้อผิดพลาด
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'เกิดข้อผิดพลาดในการอัปเดตผู้ใช้',
+      });
     }
   };
 
@@ -87,41 +104,50 @@ function EditUser() {
   // ฟังก์ชันสำหรับรีเซ็ตรหัสผ่าน
   const handleResetPassword = async () => {
     if (resetPassword !== confirmPassword) {
-      alert('Passwords do not match');
+      // แสดงข้อความแจ้งเตือนว่ารหัสผ่านไม่ตรงกัน
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: 'รหัสผ่านไม่ตรงกัน',
+      });
       return;
     }
-  
+
     try {
       // ส่งคำขอไปที่ API
       const response = await axios.put(`http://localhost:3000/api/reset-password`, {
         userId: id, // ใช้ `id` ที่มาจาก useParams
         newPassword: resetPassword
       });
-  
+
       // แสดงข้อความเมื่อการรีเซ็ตรหัสผ่านสำเร็จ
-      alert('Password updated successfully');
-  
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'อัปเดตรหัสผ่านเรียบร้อยแล้ว',
+      });
+
       // รีเซ็ตค่าของฟิลด์รหัสผ่าน
       setResetPassword('');
       setConfirmPassword('');
     } catch (error) {
       console.error('Error resetting password:', error);
-      alert('Failed to update password');
+      // แสดงข้อความเมื่อการอัปเดตไม่สำเร็จ
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'ไม่สามารถอัปเดตรหัสผ่านได้',
+      });
     }
-  };
-  
-
-
-
-  // ปิด Dialog
-  const handleDialogClose = () => {
-    setDialogOpen(false);
-    navigate('/list'); // นำทางไปยังหน้า user-list หลังจากปิด Dialog
   };
 
   const handleBackToHome = () => {
     navigate('/home'); // นำทางไปที่หน้าโฮม
   };
+  const handleCancel = () => {
+    navigate('/list');
+  };
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -286,14 +312,14 @@ function EditUser() {
                 variant="contained"
                 style={{ marginRight: '8px' }} // เพิ่มระยะห่าง
               >
-                Save
+                บันทึก
               </Button>
               <Button
+                color="error"
                 variant="outlined"
-                color="secondary"
-                onClick={() => navigate('/list')}
+                onClick={handleCancel}
               >
-                Cancel
+                ยกเลิก
               </Button>
             </DialogActions>
           </form>
@@ -326,39 +352,17 @@ function EditUser() {
               onClick={handleResetPassword}
               sx={{ mr: 2 }}
             >
-              Reset
+              รีเซ็ต
             </Button>
             <Button
+              color="error"
               variant="outlined"
-              color="secondary"
-              onClick={() => {
-                setResetPassword('');
-                setConfirmPassword('');
-              }}
+              onClick={handleCancel}
             >
-              Cancel
+              ยกเลิก
             </Button>
           </Box>
         </Paper>
-        {/* Dialog */}
-        <Dialog
-          open={dialogOpen}
-          onClose={handleDialogClose}
-          aria-labelledby="success-dialog-title"
-          aria-describedby="success-dialog-description"
-        >
-          <DialogTitle id="success-dialog-title">Success</DialogTitle>
-          <DialogContent>
-            <Typography variant="h6" component="div" align="center">
-              <CheckCircleIcon color="success" /> {successMessage}
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleDialogClose} color="primary">
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </Box>
   );
