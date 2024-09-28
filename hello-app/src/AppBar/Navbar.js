@@ -14,6 +14,8 @@ import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate } from 'react-router-dom';
+import CircularProgress from '@mui/material/CircularProgress';
+
 
 const pages = ['Home'];
 
@@ -25,6 +27,7 @@ function Navbar() {
   const [user_lname, setUser_lname] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -62,8 +65,11 @@ function Navbar() {
   const handleLogout = () => {
     if (window.confirm('คุณแน่ใจหรือว่าต้องการออกจากระบบ?')) {
       localStorage.clear();
-      setIsLoggedIn(false);
-      navigate('/loginpage');
+      setLoading(true); // เริ่มการโหลด
+      setTimeout(() => {
+        navigate('/loginpage');
+        setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+      }, 400); // หน่วงเวลา 400ms
     }
   };
 
@@ -91,6 +97,26 @@ function Navbar() {
 
   return (
     <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}> {/* สีหลัก */}
+      {loading && (
+        <Box style={{
+          position: 'fixed',
+          top: '50%', // ย้ายขึ้นกลางจอ
+          left: '50%', // ย้ายไปกลางจอ
+          transform: 'translate(-50%, -50%)', // ปรับตำแหน่งให้ตรงกลาง
+          width: '300px', // ความกว้างของกรอบ
+          padding: '20px', // การเว้นระยะภายในกรอบ
+          backgroundColor: 'rgba(255, 255, 255, 0.9)', // เปลี่ยนสีพื้นหลัง
+          borderRadius: '8px', // มุมโค้ง
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // เงาเพื่อให้ดูเด่นขึ้น
+          zIndex: 9999
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress />
+            <Typography sx={{ mt: 2 }}>กำลังออกจากระบบ...</Typography>
+          </Box>
+        </Box>
+      )}
+
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>

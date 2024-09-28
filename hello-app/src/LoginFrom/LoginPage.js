@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CssBaseline, Container, Box, Typography, TextField, Button, RadioGroup, FormControlLabel, Radio } from '@mui/material';
+import { CssBaseline, Container, Box, Typography, TextField, Button, RadioGroup, FormControlLabel, Radio, CircularProgress } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -51,8 +51,11 @@ function LoginPage() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    setLoading(true);
+    setLoading(true); // เริ่มแสดง CircularProgress
     try {
+      // ใช้ setTimeout เพื่อเลียนแบบการหน่วงเวลา 2 วินาที
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // หน่วงเวลา 2 วินาที
+
       const response = await axios.post('http://localhost:3000/login', {
         username,
         password,
@@ -60,8 +63,8 @@ function LoginPage() {
       });
 
       const { token, user_fname, user_lname, prefix, phone_number, affiliation, user_id } = response.data;
-      console.log(response.data);
 
+      // บันทึกข้อมูลลงใน localStorage
       localStorage.setItem('token', token);
       localStorage.setItem('user_id', user_id);
       localStorage.setItem('username', username);
@@ -72,6 +75,7 @@ function LoginPage() {
       localStorage.setItem('affiliation', affiliation);
       localStorage.setItem('userType', userType);
 
+      // เปลี่ยนเส้นทางหลังจากเข้าสู่ระบบสำเร็จ
       if (userType === 'admin') {
         navigate('/home');
       } else if (userType === 'user') {
@@ -79,7 +83,7 @@ function LoginPage() {
       }
     } catch (err) {
       console.error('Login Error:', err.response ? err.response.data : err.message);
-      setError(err.response ? err.response.data.message : 'Login failed');
+      setError(err.response ? err.response.data.message : 'Login failed'); // แสดงข้อความผิดพลาด
     } finally {
       setLoading(false);
     }
@@ -88,6 +92,27 @@ function LoginPage() {
   return (
     <React.Fragment>
       <CssBaseline />
+      {loading && (
+        <Box style={{
+          position: 'fixed',
+          top: '50%', // ย้ายขึ้นกลางจอ
+          left: '50%', // ย้ายไปกลางจอ
+          transform: 'translate(-50%, -50%)', // ปรับตำแหน่งให้ตรงกลาง
+          width: '300px', // ความกว้างของกรอบ
+          padding: '20px', // การเว้นระยะภายในกรอบ
+          backgroundColor: 'rgba(255, 255, 255, 0.9)', // เปลี่ยนสีพื้นหลัง
+          borderRadius: '8px', // มุมโค้ง
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // เงาเพื่อให้ดูเด่นขึ้น
+          zIndex: 9999
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress />
+            <Typography sx={{ mt: 2 }}>กำลังเข้าสู่ระบบ...</Typography>
+          </Box>
+        </Box>
+      )}
+
+
       <Container
         maxWidth={false} // ปิดการกำหนด maxWidth
         sx={{

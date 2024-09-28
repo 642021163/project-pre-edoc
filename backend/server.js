@@ -129,14 +129,14 @@ app.post('/login', async (req, res) => {
 
         if (!user) {
             logger.warn('Invalid username or userType', { correlationId, username, userType });
-            return res.status(401).json({ message: 'Invalid username or userType' });
+            return res.status(401).json({ message: 'กรุณาเลือกประเภทผู้ใช้งาน' });
         }
 
         const isPasswordValid = await comparePassword(password, user.password);
 
         if (!isPasswordValid) {
             logger.warn('Invalid password attempt', { correlationId, username });
-            return res.status(401).json({ message: 'Invalid password' });
+            return res.status(401).json({ message: 'รหัสผ่านหรือชื่อผู้ใช้ไม่ถูกต้อง' });
         }
 
         const token = jwt.sign({ userId: user.user_id, userType: user.role }, secretKey, { expiresIn: '1h' });
