@@ -10,6 +10,8 @@ const secretKey = 'your_secret_key';
 const saltRounds = 10; // จำนวนรอบของ salt สำหรับ bcrypt
 const winston = require('winston'); // เพิ่มไลบรารีสำหรับการล็อก
 const { v4: uuidv4 } = require('uuid');
+const { header, data } = require("framer-motion/client");
+const axios = require('axios');
 
 // ประกาศและกำหนดค่า `port` ที่นี่
 const port = 3000;
@@ -218,6 +220,41 @@ const storage = multer.diskStorage({
 // ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
 const upload = multer({ storage: storage }); // สร้าง instance ของ multer
 
+
+// ฟังก์ชันส่งการแจ้งเตือน LINE
+const sendLineNotification = async (token, message) => {
+    try {
+        const response = await axios({
+            method: 'POST',
+            url: 'https://notify-api.line.me/api/notify',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Authorization': `Bearer ${token}`,
+            },
+            data: `message=${encodeURIComponent(message)}`,
+        });
+        console.log("Notify response", response.data); // ตรวจสอบการตอบกลับ
+    } catch (error) {
+        const errorMessage = error.response ? error.response.data : error.message;
+        console.error('Error sending notification:', errorMessage); // แสดงข้อความข้อผิดพลาด
+    }
+};
+
+
+
+// สร้าง API Endpoint สำหรับการส่งการแจ้งเตือน
+app.post('/send-notification', async (req, res) => {
+    const { token, message } = req.body;
+
+    try {
+        await sendLineNotification(token, message);
+        return res.status(200).json({ message: 'Notification sent successfully' });
+    } catch (error) {
+        console.error('Error sending notification:', error);
+        return res.status(500).json({ message: 'Failed to send notification', error: error.message });
+    }
+});
+
 app.post('/documents', upload.single('file'), async (req, res) => {
     const filePath = req.file ? path.join('uploads', req.file.filename) : null;
     const sql = "INSERT INTO documents (upload_date, user_id, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -237,11 +274,17 @@ app.post('/documents', upload.single('file'), async (req, res) => {
     ];
 
     // ส่งคำสั่ง SQL ไปยังฐานข้อมูล
-    db.query(sql, values, (err, data) => {
+    db.query(sql, values, async (err, data) => {
         if (err) {
             console.error('Database Error:', err.code, err.message, err.sql);
             return res.status(500).json({ message: "Error inserting data", error: err.message });
         }
+
+        // ส่งการแจ้งเตือน LINE เมื่อมีการเพิ่มเอกสารใหม่
+        const token = 'YOUR_LINE_NOTIFY_TOKEN'; // เปลี่ยนเป็น Token ของคุณ
+        const message = `เอกสารใหม่ถูกส่งโดย ${req.body.user_fname} ${req.body.user_lname} มีหัวข้อ: ${req.body.subject}`;
+        await sendLineNotification(token, message);
+       
 
         // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
         const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending
@@ -257,7 +300,6 @@ app.post('/documents', upload.single('file'), async (req, res) => {
         });
     });
 });
-
 
 // Api หน้า TrackDocuments ฝั่ง User
 // สำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user

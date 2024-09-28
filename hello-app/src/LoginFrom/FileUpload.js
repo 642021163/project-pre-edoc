@@ -32,6 +32,7 @@ function FileUpload() {
   const [fileName, setFileName] = useState(''); // เพิ่มการประกาศ fileName
   const [loading, setLoading] = useState(false);
 
+  const token = 't0FBAxsgfRvhtRlYrKNezvKy4SjrJmmtnFk4aaRSk2b'; // ใส่ Token ของคุณที่นี่
 
 
   const handleInput = e => {
@@ -116,10 +117,6 @@ function FileUpload() {
         formData.append('user_fname', user_fname);
         formData.append('user_lname', user_lname);
 
-        for (let pair of formData.entries()) {
-          console.log(`${pair[0]}: ${pair[1]}`);
-        }
-
         if (values.file) {
           formData.append('file', values.file);
         }
@@ -129,7 +126,17 @@ function FileUpload() {
             'Content-Type': 'multipart/form-data'
           }
         });
-        // แสดง SweetAlert เมื่ออัปโหลดสำเร็จ
+        console.log("Upload Successfully", response);
+
+        // ส่งการแจ้งเตือน LINE ผ่าน API
+        const notificationResponse = await axios.post('http://localhost:3000/send-notification', {
+          token: 't0FBAxsgfRvhtRlYrKNezvKy4SjrJmmtnFk4aaRSk2b', // เปลี่ยนเป็น Token ของคุณ
+          message: `ถูกส่งโดย ${user_fname} ${user_lname} เรื่อง: ${values.subject}`
+        });
+     
+
+        console.log("Notification response:", notificationResponse);
+
         Swal.fire({
           icon: 'success',
           title: 'สำเร็จ!',
@@ -150,6 +157,7 @@ function FileUpload() {
       }
     }
   };
+
 
   const resetForm = () => {
     // รีเซ็ตค่าใน state
