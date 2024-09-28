@@ -1,19 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import 'react-toastify/dist/ReactToastify.css'; // นำเข้า CSS สำหรับการแสดง Toast
-// MUI Components
-import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, List, ListItem, ListItemIcon, CircularProgress, ListItemText, Divider, Dialog, DialogActions, DialogContent, DialogTitle, Paper } from '@mui/material'; // นำเข้า MUI Components
-
-// MUI Icons
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
-import { AccountCircle, ExitToApp, InsertDriveFile, Description } from '@mui/icons-material'; // ไอคอนอื่นๆ
-import MenuIcon from '@mui/icons-material/Menu'; // ไอคอนเมนู
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'; // ไอคอน PDF
-import SendIcon from '@mui/icons-material/Send'; // นำเข้าไอคอน Send
+import 'react-toastify/dist/ReactToastify.css';
+import { Box, Button, FormControl, InputLabel, MenuItem, Select, TextField, Typography, List, ListItem, ListItemIcon, CircularProgress, ListItemText, Divider, Dialog, DialogActions, DialogContent, DialogTitle, Paper } from '@mui/material';
+import { AccountCircle, ExitToApp, InsertDriveFile, Description } from '@mui/icons-material';
+import MenuIcon from '@mui/icons-material/Menu';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import SendIcon from '@mui/icons-material/Send';
 import Swal from 'sweetalert2';
-
-// React Router
-import { useNavigate, useLocation } from 'react-router-dom'; // สำหรับการนำทางและการเข้าถึง location
+import { useNavigate, useLocation } from 'react-router-dom';
 
 
 function FileUpload() {
@@ -72,12 +66,8 @@ function FileUpload() {
     const storedUser_fname = localStorage.getItem('user_fname');
     const storedUser_lname = localStorage.getItem('user_lname');
 
-    console.log('Stored user_fname:', storedUser_fname); // ตรวจสอบค่า
-    console.log('Stored user_lname:', storedUser_lname); // ตรวจสอบค่า
-
     setUser_fname(storedUser_fname || '');
     setUser_lname(storedUser_lname || '');
-    console.log(storedUser_fname, "Not null");
 
     const handleBeforeUnload = (event) => {
       if (isFormDirty) { // ตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลง
@@ -116,7 +106,6 @@ function FileUpload() {
 
     if (validate()) {
       try {
-        console.log('Submitting form...');
         const formData = new FormData();
         formData.append('upload_date', values.upload_date);
         formData.append('subject', values.subject);
@@ -124,9 +113,8 @@ function FileUpload() {
         formData.append('to_recipient', values.to_recipient);
         formData.append('document_type', values.document_type);
         formData.append('notes', values.notes);
-        formData.append('user_fname', user_fname); // เพิ่มชื่อ
-        formData.append('user_lname', user_lname); // เพิ่มนามสกุล
-        console.log(formData.values)
+        formData.append('user_fname', user_fname);
+        formData.append('user_lname', user_lname);
 
         for (let pair of formData.entries()) {
           console.log(`${pair[0]}: ${pair[1]}`);
@@ -141,9 +129,6 @@ function FileUpload() {
             'Content-Type': 'multipart/form-data'
           }
         });
-
-        console.log('Upload successful', response);
-
         // แสดง SweetAlert เมื่ออัปโหลดสำเร็จ
         Swal.fire({
           icon: 'success',
@@ -166,9 +151,6 @@ function FileUpload() {
     }
   };
 
-
-
-
   const resetForm = () => {
     // รีเซ็ตค่าใน state
     setValues({
@@ -176,17 +158,14 @@ function FileUpload() {
       subject: "",
       to_recipient: "",
       document_type: "",
-      file: null, // รีเซ็ตค่าไฟล์
+      file: null,
       notes: ""
     });
 
-    // รีเซ็ตค่าใน <input type="file">
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
-      fileInput.value = ""; // ล้างค่าใน input file
+      fileInput.value = "";
     }
-
-    // รีเซ็ตชื่อไฟล์ที่แสดง
     setFileName("");
   };
 
@@ -404,30 +383,6 @@ function FileUpload() {
           </Button>
         </Box>
       </Box>
-      {/* <Dialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        maxWidth="xs"
-        fullWidth
-       >
-        <DialogTitle>
-          <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
-            <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
-            สำเร็จ
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">
-            {successMessage}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDialogClose} color="primary">
-            ปิด
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
     </Box>
   );
 }
