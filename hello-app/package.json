@@ -28,6 +28,7 @@
     "react-scripts": "^5.0.1",
     "react-toastify": "^10.0.5",
     "regenerator-transform": "^0.15.2",
+    "sweetalert2": "^11.14.1",
     "web-vitals": "^2.1.0"
   },
   "scripts": {
