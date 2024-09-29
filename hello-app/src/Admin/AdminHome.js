@@ -63,7 +63,7 @@ function AdminHome() {
   // ฟังก์ชันสำหรับดึงข้อมูลจำนวนผู้ใช้
   const fetchUserCount = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/user-count');
+      const response = await axios.get('http://localhost:https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/user-count');
       setUserCount(response.data.count);
     } catch (error) {
       console.error('Error fetching user count:', error);
@@ -73,7 +73,7 @@ function AdminHome() {
   // ฟังก์ชันสำหรับดึงข้อมูลจำนวนเอกสาร
   const fetchDocumentCount = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/document-count');
+      const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/api/document-count');
       setDocumentCount(response.data.count);
     } catch (error) {
       console.error('Error fetching document count:', error);
@@ -83,7 +83,7 @@ function AdminHome() {
   // ฟังก์ชันสำหรับดึงข้อมูลจำนวนเอกสารที่ยังไม่อ่าน
   const fetchUnreadDocumentCount = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/unread-document-count');
+      const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/api/unread-document-count');
       setUnreadDocuments(response.data.count);
     } catch (error) {
       console.error('Error fetching unread document count:', error);

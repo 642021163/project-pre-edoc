@@ -50,7 +50,7 @@ const TrackDocuments = () => {
     const fetchDocuments = async () => {
         try {
             const token = localStorage.getItem('token'); // สมมุติว่าเก็บ token ไว้ใน localStorage
-            const response = await axios.get('http://localhost:3000/documents', {
+            const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const sortedDocuments = response.data.sort((a, b) => new Date(b.upload_date) - new Date(a.upload_date));
@@ -79,7 +79,7 @@ const TrackDocuments = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    await axios.delete(`http://localhost:3000/document/${docId}`);
+                    await axios.delete(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${docId}`);
                     console.log(`Document with ID ${docId} deleted successfully.`);
 
                     // แสดงข้อความเมื่อทำการลบสำเร็จ
@@ -296,7 +296,7 @@ const TrackDocuments = () => {
                                                     <TableCell align="left">{doc.subject}</TableCell>
                                                     <TableCell align="left">
                                                         <Link
-                                                            href={`http://localhost:3000/${doc.file}`}
+                                                            href={`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/${doc.file}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             sx={{ color: '#1976d2', textDecoration: 'none' }}
@@ -420,7 +420,7 @@ const TrackDocuments = () => {
                                     label: 'ชื่อไฟล์:',
                                     value: (
                                         <Link
-                                            href={`http://localhost:3000/${selectedDocument.file}`}
+                                            href={`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/${selectedDocument.file}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             sx={{ color: '#1976d2', textDecoration: 'none' }}

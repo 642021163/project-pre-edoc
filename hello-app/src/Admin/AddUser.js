@@ -54,7 +54,7 @@ function AddUser() {
         e.preventDefault();      
 
         try {
-            const response = await axios.post('http://localhost:3000/users', formData);
+            const response = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/users', formData);
             console.log('เพิ่มผู้ใช้สำเร็จ:', response.data);
 
             // ใช้ SweetAlert แสดงแจ้งเตือนความสำเร็จ

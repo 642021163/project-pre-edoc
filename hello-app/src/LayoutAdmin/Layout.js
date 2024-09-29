@@ -43,7 +43,7 @@ const Layout = ({ children }) => {
   }
   const fetchNewDocumentsCount = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/new-documents');
+      const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/api/new-documents');
       setNotificationCount(response.data.length);
       setNotifications(response.data);
     } catch (error) {

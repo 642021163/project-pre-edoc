@@ -110,7 +110,7 @@ function Documents() {
 
     const fetchAllDocuments = async () => {
         try {
-            const response = await axios.get('http://localhost:3000/admin/documents');
+            const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/admin/documents');
             setAllDocuments(response.data);
             setIsReceived(response.data.some(doc => receivedDocuments.has(doc.id) && doc.status === 1));
         } catch (error) {
@@ -121,7 +121,7 @@ function Documents() {
     //ดึงเอกสาร Document
     const fetchUnreadDocuments = async () => {
         try {
-            const response = await axios.get('http://localhost:3000/document/unread');
+            const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/unread');
             setUnreadDocuments(response.data);
         } catch (error) {
             console.error('Error fetching unread documents:', error);
@@ -136,7 +136,7 @@ function Documents() {
             return;
         }
         try {
-            await axios.put(`http://localhost:3000/document/${docId}/read`);
+            await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${docId}/read`);
 
             if (activeTab === 'all') {
                 fetchAllDocuments();
@@ -152,7 +152,7 @@ function Documents() {
     const handleDocumentReceive = async (docId) => {
         try {
             // อัปเดตสถานะเอกสารเป็น 'กำลังดำเนินการ'
-            const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
+            const updateStatusResponse = await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${docId}/status`, {
                 received_by: adminId
             });
 
@@ -160,7 +160,7 @@ function Documents() {
             setDocument(prev => ({ ...prev, status: 1 }));
 
             // บันทึกข้อมูลการรับเอกสาร
-            const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
+            const receiptResponse = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document-stats', {
                 documentId: docId,
                 adminId: adminId,
                 dateReceived: new Date().toISOString().split('T')[0],
@@ -433,7 +433,7 @@ function Documents() {
                                                         color="primary"
                                                         onClick={() => {
                                                             handleDocumentRead(doc.document_id); // เรียกฟังก์ชันด้วย document_id
-                                                            window.open(`http://localhost:3000/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
+                                                            window.open(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
                                                         }}
                                                         sx={{
                                                             textTransform: 'none', // ปิดการแปลงข้อความเป็นตัวพิมพ์ใหญ่

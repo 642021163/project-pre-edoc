@@ -30,7 +30,7 @@ function ReceiptsList() {
     useEffect(() => {
         const fetchAdmins = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/admins');
+                const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/api/admins');
                 setAdmins(response.data);
 
             } catch (error) {
@@ -40,7 +40,7 @@ function ReceiptsList() {
 
         const fetchAllReceipts = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/document-receipts');
+                const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document-receipts');
                 setAllReceipts(response.data);
             } catch (error) {
                 console.error('Error fetching all document receipts:', error);
@@ -75,7 +75,7 @@ function ReceiptsList() {
         } else {
             const fetchDocumentReceipts = async () => {
                 try {
-                    const response = await axios.get(`http://localhost:3000/document-receipts/${selectedAdmin}`);
+                    const response = await axios.get(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document-receipts/${selectedAdmin}`);
                     setReceipts(response.data); // ตั้งค่าผลลัพธ์ที่ได้จากการเลือกแอดมิน
                     // สร้างข้อมูลสำหรับกราฟ
                     const dataForChart = response.data.reduce((acc, receipt) => {

@@ -11,7 +11,7 @@ function UserAccounts() {
     useEffect(() => {
         const fetchUserCount = async () => {
             try {
-              const response = await fetch('http://localhost:3000/user-count'); // ตรวจสอบ URL
+              const response = await fetch('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/user-count'); // ตรวจสอบ URL
               if (!response.ok) {
                 throw new Error(`Network response was not ok: ${response.statusText}`);
               }

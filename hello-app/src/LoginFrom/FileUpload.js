@@ -121,7 +121,7 @@ function FileUpload() {
           formData.append('file', values.file);
         }
 
-        const response = await axios.post('http://localhost:3000/documents', formData, {
+        const response = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
@@ -129,7 +129,7 @@ function FileUpload() {
         console.log("Upload Successfully", response);
 
         // ส่งการแจ้งเตือน LINE ผ่าน API
-        const notificationResponse = await axios.post('http://localhost:3000/send-notification', {
+        const notificationResponse = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/send-notification', {
           token: 't0FBAxsgfRvhtRlYrKNezvKy4SjrJmmtnFk4aaRSk2b', // เปลี่ยนเป็น Token ของคุณ
           message: `ถูกส่งโดย ${user_fname} ${user_lname} เรื่อง: ${values.subject}`
         });

@@ -12,7 +12,7 @@ function EditDocument() {
   useEffect(() => {
     const fetchDocument = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/documents/${id}`);
+        const response = await axios.get(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents/${id}`);
         setDocument(response.data);
       } catch (error) {
         console.error('Error fetching document:', error);
@@ -37,7 +37,7 @@ function EditDocument() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/documents/${id}`, document);
+      await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents/${id}`, document);
       navigate('/home');
     } catch (error) {
       console.error('Error updating document:', error);

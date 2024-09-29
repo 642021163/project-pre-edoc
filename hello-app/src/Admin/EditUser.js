@@ -40,7 +40,7 @@ function EditUser() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/user/${id}`);
+        const response = await axios.get(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/user/${id}`);
         setUser(response.data);
       } catch (error) {
         console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error.response?.data || error.message);
@@ -73,7 +73,7 @@ function EditUser() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`http://localhost:3000/users/${id}`, user);
+      const response = await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/users/${id}`, user);
       console.log('อัปเดตผู้ใช้สำเร็จ:', response.data);
 
       // ใช้ SweetAlert แสดงแจ้งเตือนความสำเร็จ
@@ -115,7 +115,7 @@ function EditUser() {
 
     try {
       // ส่งคำขอไปที่ API
-      const response = await axios.put(`http://localhost:3000/api/reset-password`, {
+      const response = await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/api/reset-password`, {
         userId: id, // ใช้ `id` ที่มาจาก useParams
         newPassword: resetPassword
       });

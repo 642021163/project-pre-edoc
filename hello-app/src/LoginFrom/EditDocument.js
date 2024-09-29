@@ -24,7 +24,7 @@ const EditDocument = () => {
     useEffect(() => {
         const fetchDocument = async () => {
             try {
-                const response = await axios.get(`http://localhost:3000/document/${id}`);
+                const response = await axios.get(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${id}`);
                 const data = response.data;
 
                 // แปลงค่า upload_date ให้ตรงตามรูปแบบ
@@ -62,7 +62,7 @@ const EditDocument = () => {
                 formData.append('file', fileName);
             }
 
-            const response = await axios.put(`http://localhost:3000/useredit/document/${id}`, formData, {
+            const response = await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/useredit/document/${id}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

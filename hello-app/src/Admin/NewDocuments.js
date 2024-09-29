@@ -9,7 +9,7 @@
 
 //     const fetchNewDocuments = async () => {
 //         try {
-//             const response = await axios.get('http://localhost:3000/api/new-documents'); // ปรับ URL ตามที่คุณตั้งค่า
+//             const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.comapi/new-documents'); // ปรับ URL ตามที่คุณตั้งค่า
 //             setNewDocuments(response.data);
 //         } catch (error) {
 //             console.error('Error fetching new documents:', error);
