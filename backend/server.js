@@ -5,9 +5,9 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const secretKey = 'your_secret_key';
-const saltRounds = 10; // จำนวนรอบของ salt สำหรับ bcrypt
+const bcrypt = require('bcryptjs');
+const secretKey = process.env.JWT_SECRET; // ใช้ secretKey จาก environment variable
+const saltRounds = parseInt(process.env.SALT_ROUNDS, 10); // จำนวนรอบของ salt สำหรับ bcrypt
 const winston = require('winston'); // เพิ่มไลบรารีสำหรับการล็อก
 const { v4: uuidv4 } = require('uuid');
 const { header, data } = require("framer-motion/client");
@@ -21,10 +21,10 @@ app.use(cors());
 app.use(express.json());
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "080945",
-    database: "register",
+    host: "z37udk8g6jiaqcbx.cbetxkdyhwsb.us-east-1.rds.amazonaws.com",
+    user: "pxyfihpbcw06p2mg",
+    password: "gc10fjxo8gspefx5",
+    database: "wrlffdkv9mnt66px",
     port: 3306
 });
 
@@ -36,6 +36,32 @@ db.connect((err) => {
     }
 });
 
+
+
+// // ประกาศและกำหนดค่า port ที่นี่
+// const port = process.env.PORT || 3000;
+
+// const app = express();
+// app.use(cors());
+// app.use(express.json());
+
+
+// const pool = mysql.createPool({
+//     host: process.env.DB_HOST, // ใช้ค่าจากตัวแปรสิ่งแวดล้อม
+//     user: process.env.DB_USER,
+//     password: process.env.DB_PASSWORD,
+//     database: process.env.DB_NAME,
+//     port: 3306 // ปกติจะใช้พอร์ต 3306 สำหรับ MySQL
+// });
+
+// pool.getConnection((err, connection) => {
+//     if (err) {
+//         console.error('Error connecting to the database: ', err);
+//         return;
+//     }
+//     console.log('Connected to the database!');
+//     connection.release(); // คืนการเชื่อมต่อให้กับ pool
+// });
 
 
 //Apiหน้า RegisterFrom ฝั่ง user
@@ -284,7 +310,7 @@ app.post('/documents', upload.single('file'), async (req, res) => {
         const token = 'YOUR_LINE_NOTIFY_TOKEN'; // เปลี่ยนเป็น Token ของคุณ
         const message = `เอกสารใหม่ถูกส่งโดย ${req.body.user_fname} ${req.body.user_lname} มีหัวข้อ: ${req.body.subject}`;
         await sendLineNotification(token, message);
-       
+
 
         // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
         const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending

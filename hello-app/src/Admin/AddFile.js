@@ -80,7 +80,7 @@ function Addfile() {
         }
 
         try {
-            const response = await axios.post('http://localhost:3000/documents', formData, {
+            const response = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

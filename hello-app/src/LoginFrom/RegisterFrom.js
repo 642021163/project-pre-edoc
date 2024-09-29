@@ -83,7 +83,7 @@ function RegisterFrom() {
         }
 
         try {
-            const response = await axios.post('http://localhost:3000/users', formValues); // เปลี่ยน URL เป็นที่อยู่ API ของคุณ
+            const response = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/users', formValues); // เปลี่ยน URL เป็นที่อยู่ API ของคุณ
             
             console.log('Registration successful:', response.data);
         } catch (error) {

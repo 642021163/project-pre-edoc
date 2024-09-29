@@ -21,7 +21,7 @@ function UnreadDocuments() {
     // ดึงเอกสาร Document ที่ยังไม่อ่าน
     const fetchUnreadDocuments = async () => {
         try {
-            const response = await axios.get('http://localhost:3000/document/unread');
+            const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/unread');
             setUnreadDocuments(response.data);
         } catch (error) {
             console.error('Error fetching unread documents:', error);
@@ -34,7 +34,7 @@ function UnreadDocuments() {
             return;
         }
         try {
-            await axios.put(`http://localhost:3000/document/${docId}/read`);
+            await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${docId}/read`);
             fetchUnreadDocuments(); // รีเฟรชข้อมูลเอกสารที่ยังไม่อ่าน
         } catch (error) {
             console.error('Error updating document status:', error);
@@ -138,7 +138,7 @@ function UnreadDocuments() {
                                                             color="primary"
                                                             onClick={() => {
                                                                 handleDocumentRead(doc.document_id); // เรียกฟังก์ชันด้วย document_id
-                                                                window.open(`http://localhost:3000/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
+                                                                window.open(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
                                                             }}
                                                             sx={{
                                                                 textTransform: 'none', // ปิดการแปลงข้อความเป็นตัวพิมพ์ใหญ่

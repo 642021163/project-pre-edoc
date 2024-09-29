@@ -56,7 +56,7 @@ function LoginPage() {
       // ใช้ setTimeout เพื่อเลียนแบบการหน่วงเวลา 2 วินาที
       await new Promise((resolve) => setTimeout(resolve, 1000)); // หน่วงเวลา 2 วินาที
 
-      const response = await axios.post('http://localhost:3000/login', {
+      const response = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/login', {
         username,
         password,
         userType,

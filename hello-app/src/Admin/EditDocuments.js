@@ -93,7 +93,7 @@ function EditDocuments() {
 
   const handleStatusChange = async (docId) => {
     try {
-      await axios.put(`http://localhost:3000/document/${docId}/status`, { status: document.status });
+      await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${docId}/status`, { status: document.status });
 
       // ลบการแจ้งเตือนเมื่อเปลี่ยนสถานะเอกสารสำเร็จ
       removeNavigationWarning();
@@ -113,7 +113,7 @@ function EditDocuments() {
   useEffect(() => {
     const fetchDocument = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/document/${id}`);
+        const response = await axios.get(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${id}`);
         setDocument(response.data);
       } catch (error) {
         console.error('เกิดข้อผิดพลาดในการดึงข้อมูลเอกสาร:', error.response?.data || error.message);
@@ -124,7 +124,7 @@ function EditDocuments() {
     };
     const fetchAdmins = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/admins');
+        const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/api/admins');
         setRecipients(response.data);
       } catch (error) {
         console.error('Error fetching admins:', error);
@@ -160,7 +160,7 @@ function EditDocuments() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/documents/${id}`, document);
+      await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents/${id}`, document);
       console.log('Document updated successfully.');
 
       removeNavigationWarning(); // ลบการแจ้งเตือนเมื่อบันทึกข้อมูลสำเร็จ
@@ -190,13 +190,13 @@ function EditDocuments() {
   const handleDocumentReceive = async (docId) => {
     try {
       // อัปเดตสถานะเอกสารเป็น 'กำลังดำเนินการ'
-      const updateStatusResponse = await axios.put(`http://localhost:3000/document/${docId}/status`, {
+      const updateStatusResponse = await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document/${docId}/status`, {
         received_by: adminId
       });
       console.log('Update status response:', updateStatusResponse.data);
 
       // บันทึกข้อมูลการรับเอกสารพร้อมค่าประหยัด
-      const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
+      const receiptResponse = await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document-stats', {
         documentId: docId,
         adminId: adminId,
         dateReceived: new Date().toISOString().split('T')[0],
@@ -226,7 +226,7 @@ function EditDocuments() {
 
   const handleSavePaperCost = async () => {
     try {
-      await axios.post('http://localhost:3000/document-stats', {
+      await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/document-stats', {
         paperCost: savings // ค่าการประหยัดกระดาษที่คำนวณได้
       });
       Swal.fire({

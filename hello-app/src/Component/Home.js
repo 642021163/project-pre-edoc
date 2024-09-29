@@ -14,7 +14,7 @@ function Home() {
   const [selectedDocument, setSelectedDocument] = useState(null);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/documents')
+    axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents')
       .then(response => {
         setUserData(response.data);
         setLoading(false);
@@ -46,9 +46,9 @@ function Home() {
     e.preventDefault();
     try {
       console.log('Sending data to server:', selectedDocument); // ตรวจสอบข้อมูลที่ส่งไป
-      await axios.put(`http://localhost:3000/documents/${selectedDocument.id}`, selectedDocument);
+      await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents/${selectedDocument.id}`, selectedDocument);
       setEditMode(false);
-      const response = await axios.get('http://localhost:3000/documents');
+      const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents');
       setUserData(response.data);
     } catch (error) {
       console.error('Error updating document:', error);
@@ -59,10 +59,10 @@ function Home() {
   const handleDelete = async (documentId) => {
     try {
       // ส่งคำขอลบไปยังเซิร์ฟเวอร์
-      await axios.delete(`http://localhost:3000/documents/${documentId}`);
+      await axios.delete(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents/${documentId}`);
 
       // รีเฟรชข้อมูลหลังจากลบสำเร็จ
-      const response = await axios.get('http://localhost:3000/documents');
+      const response = await axios.get('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents');
       setUserData(response.data);
     } catch (error) {
       console.error('Error deleting document:', error);
@@ -106,7 +106,7 @@ function Home() {
                     <td>{user.to_recipient}</td>
                     <td>
                       {user.file_url ? (
-                        <a href={`http://localhost:3000/uploads/${user.file_url}`} download>
+                        <a href={`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/uploads/${user.file_url}`} download>
                           View File
                         </a>
                       ) : 'No File'}

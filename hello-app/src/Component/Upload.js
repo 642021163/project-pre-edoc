@@ -49,7 +49,7 @@ function Upload() {
                     formData.append('file_url', values.file_url); // ส่งไฟล์ที่เลือกมา
                 }
 
-                await axios.post('http://localhost:3000/documents', formData, {
+                await axios.post('https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/documents', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data'
                     }

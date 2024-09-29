@@ -25,7 +25,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/users/${id}`);
+        const response = await axios.get(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/users/${id}`);
         setUser(response.data);
       } catch (error) {
         console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error.response?.data || error.message);
@@ -51,7 +51,7 @@ const UserProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/users/${id}`, user);
+      await axios.put(`https://test-db-app-mysql-4cc2e0748b1a.herokuapp.com/users/${id}`, user);
       setSuccessMessage('บันทึกข้อมูลเรียบร้อยแล้ว');
       setDialogOpen(true);
     } catch (error) {
