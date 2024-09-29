@@ -227,17 +227,19 @@ const TrackDocuments = () => {
                         {menuItems.map((item) => (
                             <Tooltip title={item.text} key={item.text} arrow>
                                 <ListItem
-                                    component="div" // ใช้ component เป็น div เพื่อให้สามารถควบคุม onClick ได้
-                                    onClick={() => handleMenuClick(item.link)} // เรียกฟังก์ชันเมื่อคลิก
+                                    component="div"
+                                    onClick={() => handleMenuClick(item.link)}
                                     sx={{
-                                        borderRadius: '4px',
+                                        borderRadius: '8px',
                                         mb: 1,
-                                        backgroundColor: location.pathname === item.link ? '#bbdefb' : 'transparent',
-                                        '&:hover': { backgroundColor: '#b3e5fc' },
+                                        backgroundColor: location.pathname === item.link ? '#64b5f6' : 'transparent',
+                                        '&:hover': { backgroundColor: '#90caf9', transform: 'scale(1.05)' }, // เพิ่มการย่อขยาย
                                         color: '#212121',
-                                        cursor: 'pointer' // เปลี่ยนให้มีลูกศรเมื่อชี้
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease' // ทำให้การเปลี่ยนสถานะนุ่มนวล
                                     }}
                                 >
+
                                     <ListItemIcon sx={{ color: 'inherit' }}>
                                         {item.icon}
                                     </ListItemIcon>

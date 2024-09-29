@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@mui/x-data-grid": "^7.18.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
     "chart.js": "^4.4.4",

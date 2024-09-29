@@ -8,8 +8,14 @@ import { styled } from '@mui/material/styles';
 
 // กำหนดสไตล์โลโก้
 const Logo = styled('img')(({ theme }) => ({
-  height: '60px', // ปรับขนาดโลโก้ตามต้องการ
-  marginRight: theme.spacing(0), // เพิ่มระยะห่างระหว่างโลโก้กับข้อความ
+  height: '60px', // ขนาดเริ่มต้น
+  [theme.breakpoints.down('md')]: {
+    height: '50px', // ปรับขนาดสำหรับหน้าจอขนาดกลางและเล็ก
+  },
+  [theme.breakpoints.down('sm')]: {
+    height: '40px', // ปรับขนาดสำหรับหน้าจอขนาดเล็ก
+  },
+  marginRight: theme.spacing(2),
 }));
 
 function Appbar() {
@@ -19,22 +25,36 @@ function Appbar() {
         <Toolbar
           disableGutters
           sx={{
-            minHeight: '250px', // ปรับความสูงให้เหมาะสม
-            padding: '20px', // เพิ่ม padding เพื่อให้พื้นที่ดูดีขึ้น
+            minHeight: '250px',
+            padding: '20px',
+            [theme => theme.breakpoints.down('md')]: {
+              minHeight: '200px', // ปรับความสูงสำหรับหน้าจอขนาดกลาง
+            },
+            [theme => theme.breakpoints.down('sm')]: {
+              minHeight: '150px', // ปรับความสูงสำหรับหน้าจอขนาดเล็ก
+              padding: '10px', // ลด padding ลงในหน้าจอขนาดเล็ก
+            },
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', flexDirection: { xs: 'column', md: 'row' } }}>
             <Logo src="/asset/logosc.png" alt="Logo" />
-            <Box sx={{ flexGrow: 1, textAlign: 'center' }}>
+            <Box sx={{ flexGrow: 1, textAlign: 'center', mt: { xs: 2, md: 0 } }}>
               <Typography variant="h5" component="div" gutterBottom
                 sx={{
                   color: 'black',
-                 
-                 
+                  [theme => theme.breakpoints.down('sm')]: {
+                    fontSize: '1.2rem', // ลดขนาด font ในหน้าจอขนาดเล็ก
+                  },
                 }} >
                 ระบบเตรียมข้อมูลสำหรับป้อนเข้าสู่ระบบเอกสารอิเล็กทรอนิกส์
               </Typography>
-              <Typography variant="h6" component="div" gutterBottom sx={{ color: 'black',  }}>
+              <Typography variant="h6" component="div" gutterBottom
+                sx={{
+                  color: 'black',
+                  [theme => theme.breakpoints.down('sm')]: {
+                    fontSize: '1rem', // ลดขนาด font ในหน้าจอขนาดเล็ก
+                  },
+                }}>
                 Data Preparation For E-DOC System
               </Typography>
             </Box>
