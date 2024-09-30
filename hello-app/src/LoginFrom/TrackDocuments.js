@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Link, Button, Tooltip, List, ListItem, Collapse, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation,useParams } from 'react-router-dom';
 import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Pagination from '@mui/material/Pagination';
@@ -10,9 +10,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { Chip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import Swal from 'sweetalert2';
-
-
-
+import Drawer from '../AppBar/Drawer';
 
 
 // การจัดรูปแบบวันที่และเวลา
@@ -28,6 +26,8 @@ const getFileName = (filePath) => {
 const TrackDocuments = () => {
     // สถานะสำหรับจัดการเอกสาร
     const [documents, setDocuments] = useState([]);
+    const { id } = useParams();
+    const [userId, setUserId] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [open, setOpen] = useState(false);
@@ -40,9 +40,8 @@ const TrackDocuments = () => {
     const storedUserFname = localStorage.getItem('user_fname');
     const storedUserLname = localStorage.getItem('user_lname');
     const senderName = `${storedUserFname} ${storedUserLname}`;
-
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#F1C40F', '#8E44AD']; // Array of colors
     const [menuOpen, setMenuOpen] = useState(true); // สถานะสำหรับการซ่อน/แสดงเมนู
-    // ใช้สำหรับการนำทางในแอป
     const navigate = useNavigate(); // ใช้สำหรับนำทาง
     const location = useLocation(); // ใช้สำหรับตรวจสอบที่อยู่ URL ปัจจุบัน
 
@@ -66,7 +65,6 @@ const TrackDocuments = () => {
         if (!docId) {
             return;
         }
-
         Swal.fire({
             title: 'Are you sure?',
             text: `คุณแน่ใจว่าต้องการลบเอกสารที่มี ID: ${docId} หรือไม่?`,
@@ -102,8 +100,6 @@ const TrackDocuments = () => {
     useEffect(() => {
         fetchDocuments();
     }, []);
-
-
 
     const handleOpen = (document) => {
         setSelectedDocument(document); // ตั้งค่าเอกสารที่เลือก
@@ -159,21 +155,6 @@ const TrackDocuments = () => {
         }
     };
 
-
-
-    // รายการเมนูที่แสดงในแถบเมนู
-    const menuItems = [
-        { text: 'ติดตามเอกสาร', link: '/track', icon: <InsertDriveFile /> },
-        { text: 'ส่งเอกสาร', link: '/fileupload', icon: <FileUpload /> },
-        { text: 'ข้อมูลผู้ใช้', link: `/profile/`, icon: <AccountCircle /> },
-    ];
-    const handleMenuClick = (link) => {
-        setLoading(true);
-        setTimeout(() => {
-            navigate(link);
-            setLoading(false);
-        }, 400); // หน่วงเวลา 400ms
-    };
     const toggleMenu = () => {
         setMenuOpen((prev) => !prev); // เปลี่ยนสถานะของเมนู
     };
@@ -197,64 +178,9 @@ const TrackDocuments = () => {
                     <CircularProgress />
                 </Box>
             )}
-            {/* ส่วนหลักของ Menu ฝั่งซ้าย */}
-            <Box sx={{
-                width: menuOpen ? 250 : 60, // ขนาดของเมนูตามสถานะ
-                bgcolor: '#e3f2fd',
-                color: '#212121',
-                p: 2,
-                boxShadow: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                transition: 'width 0.3s' // เพิ่มแอนิเมชั่นให้กับการแสดง/ซ่อนเมนู
-            }}>
-                <Typography variant="h6" gutterBottom>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            backgroundColor: '#bbdefb',
-                            padding: '8px 16px',
-                            borderRadius: '4px',
-                        }}
-                    >
-                        <MenuIcon sx={{ marginRight: '8px' }} onClick={toggleMenu} /> {/* ไอคอนเมนู */}
-                        {menuOpen && 'Menu'} {/* แสดงชื่อเมนูเฉพาะเมื่อเมนูเปิด */}
-                    </Box>
-                </Typography>
-                <Collapse in={menuOpen}>
-                    <List>
-                        {menuItems.map((item) => (
-                            <Tooltip title={item.text} key={item.text} arrow>
-                                <ListItem
-                                    component="div"
-                                    onClick={() => handleMenuClick(item.link)}
-                                    sx={{
-                                        borderRadius: '8px',
-                                        mb: 1,
-                                        backgroundColor: location.pathname === item.link ? '#64b5f6' : 'transparent',
-                                        '&:hover': { backgroundColor: '#90caf9', transform: 'scale(1.05)' }, // เพิ่มการย่อขยาย
-                                        color: '#212121',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease' // ทำให้การเปลี่ยนสถานะนุ่มนวล
-                                    }}
-                                >
-
-                                    <ListItemIcon sx={{ color: 'inherit' }}>
-                                        {item.icon}
-                                    </ListItemIcon>
-                                    {menuOpen && <ListItemText primary={item.text} />} {/* แสดงชื่อเมนูเฉพาะเมื่อเมนูเปิด */}
-                                </ListItem>
-                            </Tooltip>
-                        ))}
-                    </List>
-                </Collapse>
-
-                <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
-            </Box>
-
+            <Drawer menuOpen={menuOpen} toggleMenu={toggleMenu} />
             {/* เนื้อหาหลัก */}
-            <Box sx={{ flex: 1, p: 2 }}>
+            <Box sx={{ flex: 1, p: 2 ,bgcolor: '#E4E4E7'}}>
                 <Typography variant="h4" gutterBottom>
                     ยินดีต้อนรับสู่หน้าแรก
                 </Typography>

@@ -96,7 +96,7 @@ function Navbar() {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#1976d2' }}> {/* สีหลัก */}
+    <AppBar position="static" sx={{ backgroundColor: '#005bc4' }}> {/* สีหลัก */}
       {loading && (
         <Box style={{
           position: 'fixed',

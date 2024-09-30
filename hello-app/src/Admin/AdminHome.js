@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Grid, Paper, Typography, Box, CssBaseline, CircularProgress } from '@mui/material';
+import { Container, Grid, Paper, Typography, Box, CssBaseline, CircularProgress,Divider } from '@mui/material';
 import { InsertDriveFile, Person, ReportProblem } from '@mui/icons-material';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert'; // สำหรับการแจ้งเตือน
@@ -129,6 +129,12 @@ function AdminHome() {
             </Box>
           )}
           <Container maxWidth="lg">
+            <Typography  
+            variant="h5" 
+            sx={{ color:'#71717A', textAlign:'left' }}>
+              Dashboard
+            </Typography>
+          <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
             <Grid container spacing={3}>
 
               {/* Card 1 */}
@@ -139,7 +145,8 @@ function AdminHome() {
                     sx={{
                       p: 3,
                       textAlign: 'center',
-                      backgroundColor: '#fff3e0',
+                      backgroundColor: '#f5a524',
+                      color:'#fff',
                       borderRadius: 2,
                       boxShadow: 4,
                       transition: '0.3s',
@@ -160,10 +167,10 @@ function AdminHome() {
                           mb: 2,
                         }}
                       >
-                        <ReportProblem fontSize="large" sx={{ mr: 1, color: '#ff9800' }} />
+                        <ReportProblem fontSize="large" sx={{ mr: 1, color: '#fff' }} />
                         เอกสารที่ยังไม่อ่าน
                       </Typography>
-                      <Typography variant="h6" sx={{ color: '#555' }}>{unreadDocuments} รายการ</Typography>
+                      <Typography variant="h6" sx={{ fontSize:30,color: '#fff' }}>{unreadDocuments} รายการ</Typography>
                     </>
                   </Paper>
                 </Link>
@@ -177,7 +184,8 @@ function AdminHome() {
                     sx={{
                       p: 3,
                       textAlign: 'center',
-                      backgroundColor: '#e8f5e9',
+                      backgroundColor: '#17c964',
+                      color:'#fff',
                       borderRadius: 2,
                       boxShadow: 4,
                       transition: '0.3s',
@@ -198,10 +206,10 @@ function AdminHome() {
                           mb: 2,
                         }}
                       >
-                        <InsertDriveFile fontSize="large" sx={{ mr: 1, color: '#4caf50' }} />
+                        <InsertDriveFile fontSize="large" sx={{ mr: 1, color: '#fff' }} />
                         เอกสารทั้งหมด
                       </Typography>
-                      <Typography variant="h6" sx={{ color: '#555' }}>{documentCount} รายการ</Typography>
+                      <Typography variant="h6" sx={{ fontSize:30,color: '#fff' }}>{documentCount} รายการ</Typography>
                     </>
 
                   </Paper>
@@ -216,7 +224,8 @@ function AdminHome() {
                     sx={{
                       p: 3,
                       textAlign: 'center',
-                      backgroundColor: '#e3f2fd',
+                      backgroundColor: '#006FEE',
+                      color:'#fff',
                       borderRadius: 2,
                       boxShadow: 4,
                       transition: '0.3s',
@@ -238,10 +247,10 @@ function AdminHome() {
                           mb: 2,
                         }}
                       >
-                        <Person fontSize="large" sx={{ mr: 1, color: '#0277bd' }} />
+                        <Person fontSize="large" sx={{ mr: 1, color: '#fff' }} />
                         ผู้ใช้ที่ลงทะเบียน
                       </Typography>
-                      <Typography variant="h6" sx={{ color: '#555' }}>{userCount} คน</Typography>
+                      <Typography variant="h6" sx={{ fontSize:30,color: '#fff' }}>{userCount} คน</Typography>
                     </>
                   </Paper>
                 </Link>
@@ -255,7 +264,8 @@ function AdminHome() {
                     sx={{
                       p: 3,
                       textAlign: 'center',
-                      backgroundColor: '#f3e5f5',
+                      backgroundColor: '#6020a0',
+                      color:'#fff',
                       borderRadius: 2,
                       boxShadow: 4,
                       transition: '0.3s',
@@ -276,10 +286,10 @@ function AdminHome() {
                           mb: 2,
                         }}
                       >
-                        <ReportProblem fontSize="large" sx={{ mr: 1, color: '#ab47bc' }} />
+                        <ReportProblem fontSize="large" sx={{ mr: 1, color: '#fff' }} />
                         สถิติการรับเอกสาร
                       </Typography>
-                      <Typography variant="h6" sx={{ color: '#555' }}> รายการ</Typography>
+                      <Typography variant="h6" sx={{ color: '#fff' }}> รายการ</Typography>
                     </>
 
                   </Paper>

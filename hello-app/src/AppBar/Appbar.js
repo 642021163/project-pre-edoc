@@ -20,7 +20,7 @@ const Logo = styled('img')(({ theme }) => ({
 
 function Appbar() {
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'white' }}>
+    <AppBar position="static" sx={{ backgroundColor: '#fff' }}>
       <Container maxWidth="xl">
         <Toolbar
           disableGutters

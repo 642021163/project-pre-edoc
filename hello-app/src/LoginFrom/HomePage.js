@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Link, List, ListItem, ListItemIcon, ListItemText, Divider, Tooltip, Collapse, CircularProgress } from '@mui/material';
+import { Box, Typography, Link, CircularProgress } from '@mui/material';
 import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link as RouterLink } from 'react-router-dom';
 import Navbar from '../AppBar/Navbar';
 import AppBar from '../AppBar/Appbar';
+import Drawer from '../AppBar/Drawer';
 
 const images = [
     { src: '/asset/0001.png', title: 'ส่งเอกสาร', link: '/fileupload' },
@@ -17,6 +18,7 @@ const images = [
 
 function HomePage() {
     const [username, setUsername] = useState('');
+    const { id } = useParams();
     const [user_fname, setUser_fname] = useState('');
     const [user_lname, setUser_lname] = useState('');
     const [userId, setUserId] = useState('');
@@ -45,11 +47,7 @@ function HomePage() {
         }
     }, [navigate]);
 
-    const menuItems = [
-        { text: 'ติดตามเอกสาร', link: '/track', icon: <InsertDriveFile /> },
-        { text: 'ส่งเอกสาร', link: '/fileupload', icon: <FileUpload /> },
-        { text: 'ข้อมูลผู้ใช้', link: `/profile/${userId}`, icon: <AccountCircle /> },
-    ];
+
 
     const handleMenuClick = (link) => {
         setLoading(true);
@@ -59,6 +57,7 @@ function HomePage() {
         }, 400); // หน่วงเวลา 400ms
     };
 
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#F1C40F', '#8E44AD']; // Array of colors
     return (
         <Box>
             {location.pathname === '/homepage' && (
@@ -85,62 +84,11 @@ function HomePage() {
                         <CircularProgress />
                     </Box>
                 )}
-                {/* ส่วนหลักของ Menu ฝั่งซ้าย */}
-                <Box sx={{
-                    width: menuOpen ? 250 : 60, // ขนาดของเมนูตามสถานะ
-                    bgcolor: '#e3f2fd',
-                    color: '#212121',
-                    p: 2,
-                    boxShadow: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'width 0.3s' // เพิ่มแอนิเมชั่นให้กับการแสดง/ซ่อนเมนู
-                }}>
-                    <Typography variant="h6" gutterBottom>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                backgroundColor: '#bbdefb',
-                                padding: '8px 16px',
-                                borderRadius: '4px',
-                            }}
-                        >
-                            <MenuIcon sx={{ marginRight: '8px' }} onClick={toggleMenu} /> {/* ไอคอนเมนู */}
-                            {menuOpen && 'Menu'} {/* แสดงชื่อเมนูเฉพาะเมื่อเมนูเปิด */}
-                        </Box>
-                    </Typography>
-                    <Collapse in={menuOpen}>
-                        <List>
-                            {menuItems.map((item) => (
-                                <Tooltip title={item.text} key={item.text} arrow>
-                                    <ListItem
-                                        component="div"
-                                        onClick={() => handleMenuClick(item.link)}
-                                        sx={{
-                                            borderRadius: '8px',
-                                            mb: 1,
-                                            backgroundColor: location.pathname === item.link ? '#64b5f6' : 'transparent',
-                                            '&:hover': { backgroundColor: '#90caf9', transform: 'scale(1.05)' }, // เพิ่มการย่อขยาย
-                                            color: '#212121',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.3s ease' // ทำให้การเปลี่ยนสถานะนุ่มนวล
-                                        }}
-                                    >
 
-                                        <ListItemIcon sx={{ color: 'inherit' }}>
-                                            {item.icon}
-                                        </ListItemIcon>
-                                        {menuOpen && <ListItemText primary={item.text} />}
-                                    </ListItem>
-                                </Tooltip>
-                            ))}
-                        </List>
-                    </Collapse>
-
-                    <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
-                </Box>
+                <Drawer menuOpen={menuOpen} toggleMenu={toggleMenu} />
+                {/* เนื้อหาหลัก */}
                 <Box sx={{ flex: 1, p: 2 }}>
+
                     <Typography variant="h4" gutterBottom>
                         สวัสดีคุณ ,{user_fname} {user_lname}!
                     </Typography>
@@ -149,7 +97,7 @@ function HomePage() {
                     </Typography>
                     <Box sx={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, // เปลี่ยนจำนวนคอลัมน์ตามขนาดหน้าจอ
                         gap: 2,
                         padding: 2
                     }}>
@@ -160,12 +108,12 @@ function HomePage() {
                                     alt={image.title}
                                     loading="lazy"
                                     style={{
-                                        width: '300px',
+                                        width: '250px',
                                         height: '200px',
                                         objectFit: 'cover',
                                     }}
                                 />
-                                <Typography variant="body2" sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center', bgcolor: 'rgba(0, 0, 0, 0.5)', color: 'white', p: 1 }}>
+                                <Typography variant="body2" sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center', bgcolor: '#338ef7', color: 'white', p: 1 }}>
                                     <Link
                                         component={RouterLink}
                                         to={image.link}
@@ -179,6 +127,7 @@ function HomePage() {
                         ))}
                     </Box>
                 </Box>
+
             </Box>
         </Box>
     );

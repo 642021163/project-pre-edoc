@@ -20,12 +20,22 @@ const UserProfile = () => {
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false); // สถานะเปิด/ปิด Dialog
   const [successMessage, setSuccessMessage] = useState(''); // สถานะข้อความสำเร็จ
+  const [userId, setUserId] = useState('');
 
-  // ดึงข้อมูลผู้ใช้จากเซิร์ฟเวอร์
   useEffect(() => {
+    if (!id) {
+      setError('ID ของผู้ใช้ไม่ถูกต้อง');
+      setLoading(false);
+      return; // หยุดการทำงานหาก id เป็น null
+    } else {
+      console.log(userId, 'id')
+    }
+
+
     const fetchUser = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/users/${id}`);
+
+        const response = await axios.get(`http://localhost:3000/users-profile/${id}`);
         setUser(response.data);
       } catch (error) {
         console.error('เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้:', error.response?.data || error.message);
@@ -37,6 +47,8 @@ const UserProfile = () => {
 
     fetchUser();
   }, [id]);
+
+
 
   // จัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
   const handleChange = (e) => {

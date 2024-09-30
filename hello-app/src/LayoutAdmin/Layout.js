@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, CssBaseline, IconButton, Badge, Menu, MenuItem, Collapse, Divider, Tooltip } from '@mui/material';
-import { Home as HomeIcon, PersonAdd, Article, InsertDriveFile, ArrowDropDown, ArrowDropUp, AddComment, Description, SupervisorAccount, BarChart, ExitToApp, Notifications, Search, AccountCircle } from '@mui/icons-material';
+import { Home as HomeIcon, PersonAdd, Article, InsertDriveFile, ArrowDropDown, ArrowDropUp, AddComment, Description,MenuIcon ,CloseIcon , SupervisorAccount, BarChart, ExitToApp, Notifications, Search, AccountCircle } from '@mui/icons-material';
 import InputBase from '@mui/material/InputBase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -25,6 +25,8 @@ const Layout = ({ children }) => {
   const [notificationMenuAnchor, setNotificationMenuAnchor] = useState(null); // State สำหรับ Menu ของการแจ้งเตือน
   const location = useLocation()
   const [loading, setLoading] = useState(false);
+  const [miniDrawerOpen, setMiniDrawerOpen] = useState(false); // สถานะควบคุม Drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   function timeAgo(uploadDate) {
     const date = new Date(uploadDate);
@@ -156,7 +158,10 @@ const Layout = ({ children }) => {
   const handleCloseNotificationMenu = () => {
     setNotificationMenuAnchor(null);
   };
-
+  const handleToggleDrawer = () => setMiniDrawerOpen(!miniDrawerOpen); // ฟังก์ชันสลับ
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
   return (
     <>
       <CssBaseline />
@@ -216,21 +221,21 @@ const Layout = ({ children }) => {
             >
               <MenuItem
                 onClick={handleProfileMenuClose}
-                sx={{ fontSize: '18px'}} // ปรับแต่งฟอนต์ที่นี่
+                sx={{ fontSize: '18px' }} // ปรับแต่งฟอนต์ที่นี่
               >
                 คุณ, {user_fname}
               </MenuItem>
               <Divider />
               <MenuItem
                 onClick={handleProfileMenuClose}
-                sx={{  fontSize: '16px' }} // ปรับแต่งฟอนต์ที่นี่
+                sx={{ fontSize: '16px' }} // ปรับแต่งฟอนต์ที่นี่
               >
                 {username}
               </MenuItem>
               <Divider />
               <MenuItem
                 onClick={handleLogout}
-                sx={{  fontSize: '16px'}} // ปรับแต่งฟอนต์ที่นี่
+                sx={{ fontSize: '16px' }} // ปรับแต่งฟอนต์ที่นี่
               >
                 ออกจากระบบ
               </MenuItem>
@@ -286,7 +291,6 @@ const Layout = ({ children }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer */}
       <Drawer
         sx={{
           width: drawerWidth,
@@ -301,42 +305,40 @@ const Layout = ({ children }) => {
         variant="permanent"
         anchor="left"
       >
-        {/* <Backdrop
-          sx={{
-            color: '#fff',
-            zIndex: (theme) => theme.zIndex.drawer + 1,
-            backgroundColor: 'rgba(0, 0, 0, 0.2)', // เปลี่ยนพื้นหลังให้เป็นสีดำโปร่งแสง
-          }}
-          open={loading} // เปิดเมื่อ loading เป็น true
-        >
-          <CircularProgress color="inherit" />
-        </Backdrop> */}
         <Toolbar />
+        <Tooltip title="Dashboard" arrow>
+          <ListItem button onClick={handleBackToHome}>
+            <ListItemIcon sx={{ color: '#F5365C' }}><HomeIcon /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
+            <ListItemText primary="Dashboard" />
+          </ListItem>
+        </Tooltip>
+
         <Box sx={{ overflow: 'auto' }}>
+          <Divider sx={{ my: 2, bgcolor: '#bbdefb' }} />
           <List>
             <Tooltip title="Home" arrow>
               <ListItem button onClick={handleBackToHome}>
-                <ListItemIcon sx={{ color: '#ddd' }}><HomeIcon /></ListItemIcon>
+                <ListItemIcon sx={{ color: '#FFD54F' }}><HomeIcon /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                 <ListItemText primary="Home" />
               </ListItem>
             </Tooltip>
 
             <Tooltip title="ผู้ใช้ที่ลงทะเบียน" arrow>
               <ListItem button onClick={handleClick}>
-                <ListItemIcon sx={{ color: '#ddd' }}><SupervisorAccount /></ListItemIcon>
+                <ListItemIcon sx={{ color: '#64B5F6' }}><SupervisorAccount /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                 <ListItemText primary="ผู้ใช้" />
-                {openUserMenu ? <ArrowDropUp /> : <ArrowDropDown />} {/* ไอคอนลูกศร */}
+                {openUserMenu ? <ArrowDropUp /> : <ArrowDropDown />}
               </ListItem>
             </Tooltip>
 
             <Collapse in={openUserMenu} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItem button sx={{ pl: 4 }} onClick={handleListUser}>
-                  <ListItemIcon sx={{ color: '#ddd' }}><Article /></ListItemIcon>
+                  <ListItemIcon sx={{ color: '#4DB6AC' }}><Article /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="รายชื่อผู้ใช้" />
                 </ListItem>
                 <ListItem button sx={{ pl: 4 }} onClick={handleAddUser}>
-                  <ListItemIcon sx={{ color: '#ddd' }}><PersonAdd /></ListItemIcon>
+                  <ListItemIcon sx={{ color: '#FF8A65' }}><PersonAdd /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="เพิ่มผู้ใช้" />
                 </ListItem>
               </List>
@@ -344,37 +346,38 @@ const Layout = ({ children }) => {
 
             <Tooltip title="เอกสารทั้งหมด" arrow>
               <ListItem button onClick={handleClickDocument}>
-                <ListItemIcon sx={{ color: '#ddd' }}><InsertDriveFile /></ListItemIcon>
+                <ListItemIcon sx={{ color: '#BA68C8' }}><InsertDriveFile /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                 <ListItemText primary="รายการเอกสาร" />
-                {openUserMenu ? <ArrowDropUp /> : <ArrowDropDown />} {/* ไอคอนลูกศร */}
+                {openDocumentMenu ? <ArrowDropUp /> : <ArrowDropDown />}
               </ListItem>
             </Tooltip>
 
             <Collapse in={openDocumentMenu} timeout="auto" unmountOnExit>
               <List component="div" disablePadding>
                 <ListItem button sx={{ pl: 4 }} onClick={handleAllDocuments}>
-                  <ListItemIcon sx={{ color: '#ddd' }}><Description /></ListItemIcon>
+                  <ListItemIcon sx={{ color: '#F06292' }}><Description /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="เอกสารทั้งหมด" />
                 </ListItem>
                 <ListItem button sx={{ pl: 4 }} onClick={handleAddFile}>
-                  <ListItemIcon sx={{ color: '#ddd' }}><AddComment /></ListItemIcon>
+                  <ListItemIcon sx={{ color: '#64B5F6' }}><AddComment /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="เพิ่มเอกสาร" />
                 </ListItem>
               </List>
             </Collapse>
 
             <ListItem button onClick={handleStatistics}>
-              <ListItemIcon sx={{ color: '#ddd' }}><BarChart /></ListItemIcon>
+              <ListItemIcon sx={{ color: '#FFD54F' }}><BarChart /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
               <ListItemText primary="สถิติการรับเอกสาร" />
             </ListItem>
 
             <ListItem button onClick={handleLogout}>
-              <ListItemIcon sx={{ color: '#ddd' }}><ExitToApp /></ListItemIcon>
+              <ListItemIcon sx={{ color: '#EF5350' }}><ExitToApp /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
               <ListItemText primary="ออกจากระบบ" />
             </ListItem>
           </List>
         </Box>
       </Drawer>
+
       <Box
         component="main"
         sx={{ flexGrow: 1, bgcolor: '#f5f5f5', p: 3, marginLeft: `${drawerWidth}px` }}

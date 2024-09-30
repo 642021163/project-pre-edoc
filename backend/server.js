@@ -5,7 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const secretKey = 'your_secret_key';
 const saltRounds = 10; // จำนวนรอบของ salt สำหรับ bcrypt
 const winston = require('winston'); // เพิ่มไลบรารีสำหรับการล็อก
@@ -284,7 +284,7 @@ app.post('/documents', upload.single('file'), async (req, res) => {
         const token = 'YOUR_LINE_NOTIFY_TOKEN'; // เปลี่ยนเป็น Token ของคุณ
         const message = `เอกสารใหม่ถูกส่งโดย ${req.body.user_fname} ${req.body.user_lname} มีหัวข้อ: ${req.body.subject}`;
         await sendLineNotification(token, message);
-       
+
 
         // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
         const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending
@@ -389,8 +389,12 @@ app.use((err, req, res, next) => {
 
 //Api หน้า UserProfile ฝั่ง User
 // ดึงข้อมูลผู้ใช้ตาม ID ฝั่ง user
-app.get('/users/:id', (req, res) => {
-    const userId = req.params.id;
+app.get('/users-profile/:id', (req, res) => {
+    const userId = req.params.id;  // ดึงค่า id จาก URL
+
+    // แก้ไขตรงนี้ เพื่อ log ค่า userId
+    console.log(userId, "ไม่มีไอดีส่งมา");
+
     const sql = "SELECT * FROM users WHERE user_id = ?";
 
     db.query(sql, [userId], (err, results) => {
@@ -404,6 +408,7 @@ app.get('/users/:id', (req, res) => {
         return res.status(200).json(results[0]);
     });
 });
+
 
 // อัปเดตข้อมูลผู้ใช้ตาม ID ฝั่ง user
 app.put('/users/:id', (req, res) => {
