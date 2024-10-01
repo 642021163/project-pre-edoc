@@ -6,12 +6,14 @@ const multer = require('multer');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const secretKey = process.env.JWT_SECRET; // ใช้ secretKey จาก environment variable
+// const secretKey = process.env.JWT_SECRET; // ใช้ secretKey จาก environment variable
+const secretKey = 'bb6bd72a2f4a9f9545b6e1aaf78cbe1466716814ab0f1675553922658f5ce09a';
 const saltRounds = parseInt(process.env.SALT_ROUNDS, 10); // จำนวนรอบของ salt สำหรับ bcrypt
 const winston = require('winston'); // เพิ่มไลบรารีสำหรับการล็อก
 const { v4: uuidv4 } = require('uuid');
 const { header, data } = require("framer-motion/client");
 const axios = require('axios');
+
 
 // ประกาศและกำหนดค่า `port` ที่นี่
 const port = 3000;
