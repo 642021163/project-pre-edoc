@@ -287,7 +287,6 @@ const TrackDocuments = () => {
                                         })}
                                 </TableBody>
 
-
                             </Table>
                         </TableContainer>
                         <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
@@ -298,10 +297,7 @@ const TrackDocuments = () => {
                                 onChange={(event, value) => setPage(value)}
                             />
                         </Box>
-
                     </Box>
-
-
                 )}
             </Box>
 

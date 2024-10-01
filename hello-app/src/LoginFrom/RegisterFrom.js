@@ -4,7 +4,6 @@ import { CssBaseline, Container, Box, Typography, TextField, Button, MenuItem, F
 import { styled } from '@mui/material/styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../AppBar/Navbar';
 import AppBar from '../AppBar/Appbar';
@@ -18,6 +17,10 @@ const Logo = styled('img')(({ theme }) => ({
 function RegisterFrom() {
     const [dialogOpen, setDialogOpen] = useState(false); // State สำหรับ Dialog
     const [successMessage, setSuccessMessage] = useState(''); // ข้อความสำเร็จ
+    const navigate = useNavigate(); // ประกาศ navigate
+    const [showPassword, setShowPassword] = useState(false);
+    const [touchedFields, setTouchedFields] = useState({}); // ใช้เก็บว่าฟิลล์ไหนถูกสัมผัส
+    const [formSubmitted, setFormSubmitted] = useState(false); // สถานะสำหรับการส่งฟอร์ม
     const [formValues, setFormValues] = useState({
         prefix: '',
         user_fname: '',
@@ -26,9 +29,9 @@ function RegisterFrom() {
         password: '',
         phone_number: '',
         affiliation: '',
-        role: '' // ตรวจสอบว่า field นี้ส่งข้อมูลไปด้วย
+        role: 'user' // ตรวจสอบว่า field นี้ส่งข้อมูลไปด้วย
     });
-    const [showPassword, setShowPassword] = useState(false);
+
     const [errors, setErrors] = useState({
         prefix: '',
         user_fname: '',
@@ -40,23 +43,46 @@ function RegisterFrom() {
         role: ''
     });
 
-    const navigate = useNavigate(); // ประกาศ navigate
+    const [success, setSuccess] = useState({
+        prefix: false,
+        user_fname: false,
+        user_lname: false,
+        username: false,
+        password: false,
+        phone_number: false,
+        affiliation: false,
+        role: false
+    });
+
 
     const handleChange = (event) => {
-        const { name, value } = event.target; // เปลี่ยน e เป็น event
+        const { name, value } = event.target;
+
+        // อัปเดตค่าใน formValues
         setFormValues(prev => ({
             ...prev,
             [name]: value
         }));
 
-        // เมื่อผู้ใช้กรอกข้อมูลในช่องที่มี error, ลบ error นั้นออก
-        if (errors[name]) {
-            setErrors(prev => ({
+        // บันทึกสถานะการสัมผัส
+        setTouchedFields(prev => ({
+            ...prev,
+            [name]: true
+        }));
+
+        // อัปเดตสถานะ success เฉพาะถ้าฟอร์มถูกส่ง
+        if (formSubmitted) {
+            const validationErrors = validateForm({ ...formValues, [name]: value });
+            setErrors(validationErrors);
+
+            // เปลี่ยนสถานะ success
+            setSuccess(prev => ({
                 ...prev,
-                [name]: ''
+                [name]: !validationErrors[name]
             }));
         }
     };
+
 
     const handleClickShowPassword = () => {
         setShowPassword(!showPassword);
@@ -64,19 +90,52 @@ function RegisterFrom() {
 
     const validateForm = (values) => {
         const newErrors = {};
-        if (!values.prefix) newErrors.prefix = 'Prefix is required';
-        if (!values.user_fname) newErrors.user_fname = 'First Name is required';
-        if (!values.user_lname) newErrors.user_lname = 'Last Name is required';
-        if (!values.password) newErrors.password = 'Password is required';
-        if (!values.username) newErrors.username = 'Username is required';
-        if (!values.phone_number) newErrors.phone_number = 'Phone Number is required';
-        if (!values.affiliation) newErrors.affiliation = 'Affiliation is required';
-        if (!values.role) newErrors.role = 'Role is required';
+
+        // ตรวจสอบคำนำหน้า
+        if (!values.prefix) newErrors.prefix = 'กรุณาเลือกคำนำหน้า';
+
+        // ตรวจสอบชื่อ
+        if (!values.user_fname) newErrors.user_fname = 'กรุณากรอกชื่อ';
+
+        // ตรวจสอบนามสกุล
+        if (!values.user_lname) newErrors.user_lname = 'กรุณากรอกนามสกุล';
+
+        // ตรวจสอบ username ต้องเป็นอีเมล
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!values.username) {
+            newErrors.username = 'กรุณากรอกอีเมล';
+        } else if (!emailPattern.test(values.username)) {
+            newErrors.username = 'กรุณากรอกอีเมลให้ถูกต้อง';
+        }
+
+        // ตรวจสอบรหัสผ่าน อย่างน้อย 8 ตัวอักษร
+        if (!values.password) {
+            newErrors.password = 'กรุณาใส่รหัสผ่าน';
+        } else if (values.password.length < 8) {
+            newErrors.password = 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร';
+        }
+
+        // ตรวจสอบเบอร์โทรศัพท์ ต้องมีความยาวระหว่าง 4 ถึง 10 หลัก
+        const phonePattern = /^[0-9]{4,10}$/; // อนุญาตให้มี 4 ถึง 10 หลัก
+        if (!values.phone_number) {
+            newErrors.phone_number = 'กรุณากรอกเบอร์โทรศัพท์';
+        } else if (!phonePattern.test(values.phone_number)) {
+            newErrors.phone_number = 'เบอร์โทรศัพท์ต้องมีระหว่าง 4 ถึง 10 หลัก';
+        }
+
+        // ตรวจสอบสังกัด
+        if (!values.affiliation) newErrors.affiliation = 'กรุณากรอกสังกัด';
+
+        // ตรวจสอบประเภทผู้ใช้
+        if (!values.role) newErrors.role = 'กรุณาเลือกประเภทผู้ใช้';
+
         return newErrors;
     };
 
+
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setFormSubmitted(true); // ตั้งค่าสถานะว่าฟอร์มถูกส่ง
 
         // ตรวจสอบข้อมูลที่กรอกก่อนส่ง
         const validationErrors = validateForm(formValues);
@@ -84,6 +143,24 @@ function RegisterFrom() {
             setErrors(validationErrors);
             return; // การใช้ return ในกรณีนี้จะหยุดการดำเนินการถ้ามีข้อผิดพลาดในการตรวจสอบ
         }
+        // ตรวจสอบชื่อผู้ใช้ว่ามีอยู่ในระบบหรือไม่
+        try {
+            const usernameCheckResponse = await axios.get(`http://localhost:3000/check-username?username=${formValues.username}`);
+            if (usernameCheckResponse.data.exists) {
+                setErrors({ username: 'ชื่อผู้ใช้นี้มีอยู่แล้ว กรุณาเลือกชื่อผู้ใช้อื่น' });
+                return; // หยุดการดำเนินการหากชื่อผู้ใช้มีอยู่แล้ว
+            }
+        } catch (error) {
+            console.error("Error checking username:", error);
+            // แสดง SweetAlert เมื่อเกิดข้อผิดพลาด
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด!',
+                text: 'ไม่สามารถตรวจสอบชื่อผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง.',
+            });
+            return; // หยุดการดำเนินการหากเกิดข้อผิดพลาด
+        }
+
 
         try {
             const response = await axios.post('http://localhost:3000/users', formValues); // เปลี่ยน URL เป็นที่อยู่ API ของคุณ
@@ -95,6 +172,9 @@ function RegisterFrom() {
                 icon: 'success',
                 title: 'สำเร็จ!',
                 text: 'ลงทะเบียนสำเร็จ!',
+            }).then(() => {
+                // หลังจากปิด SweetAlert ให้เปลี่ยนเส้นทางไปที่หน้า Login
+                navigate('/loginpage'); // เปลี่ยนเส้นทางไปที่หน้า Login Page
             });
 
             // ตั้งข้อความสำเร็จและเปิด Dialog
@@ -113,6 +193,7 @@ function RegisterFrom() {
         }
     };
 
+
     // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
     const resetForm = () => {
         setFormValues({
@@ -127,10 +208,6 @@ function RegisterFrom() {
         });
     };
 
-    const handleDialogClose = () => {
-        setDialogOpen(false);
-        navigate('/loginpage');
-    };
     const handleCancel = () => {
         navigate('/loginpage');
     };
@@ -191,7 +268,18 @@ function RegisterFrom() {
                                 <FormControl variant="outlined"
                                     margin="normal"
                                     error={Boolean(errors.prefix)}
-                                    sx={{ flexBasis: '50%' }} >
+
+                                    InputProps={{
+                                        style: { borderColor: success.user_fname ? 'green' : '', borderWidth: '2px' },
+                                    }}
+                                    sx={{
+                                        flexBasis: '50%',
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: success.user_fname ? 'green' : (errors.user_fname ? 'red' : ''),
+                                            },
+                                        },
+                                    }} >
 
                                     <InputLabel>คำนำหน้า</InputLabel>
                                     <Select
@@ -220,6 +308,16 @@ function RegisterFrom() {
                                     onChange={handleChange}
                                     error={Boolean(errors.user_fname)}
                                     helperText={errors.user_fname}
+                                    InputProps={{
+                                        style: { borderColor: success.user_fname ? 'green' : '', borderWidth: '2px' },
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: success.user_fname ? 'green' : (errors.user_fname ? 'red' : ''),
+                                            },
+                                        },
+                                    }}
                                 />
                                 <TextField
                                     fullWidth
@@ -231,6 +329,16 @@ function RegisterFrom() {
                                     onChange={handleChange}
                                     error={Boolean(errors.user_lname)}
                                     helperText={errors.user_lname}
+                                    InputProps={{
+                                        style: { borderColor: success.user_lname ? 'green' : '', borderWidth: '2px' },
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': {
+                                                borderColor: success.user_lname ? 'green' : (errors.user_lname ? 'red' : ''),
+                                            },
+                                        },
+                                    }}
                                 />
                             </Box>
                             <Box sx={{ display: 'flex', gap: 2, mb: -3 }}>
@@ -238,14 +346,25 @@ function RegisterFrom() {
                             </Box>
                             <TextField
                                 fullWidth
-                                label="Username"
+                                label="Email"
                                 name="username"
                                 variant="outlined"
                                 margin="normal"
                                 value={formValues.username}
                                 onChange={handleChange}
                                 error={Boolean(errors.username)}
-                                helperText={errors.username}
+                                helperText={errors.username || '*กรุณากรอกอีเมล'}
+                                InputProps={{
+                                    style: { borderColor: success.username ? 'green' : '', borderWidth: '2px' },
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: success.user_lname ? 'green' : (errors.user_lname ? 'red' : ''),
+                                        },
+                                    },
+                                }}
+
                             />
                             <TextField
                                 fullWidth
@@ -257,7 +376,7 @@ function RegisterFrom() {
                                 value={formValues.password}
                                 onChange={handleChange}
                                 error={Boolean(errors.password)}
-                                helperText={errors.password}
+                                helperText={errors.password || '*รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร'}
                                 InputProps={{
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -267,11 +386,16 @@ function RegisterFrom() {
                                                 edge="end"
                                             >
                                                 {showPassword ? <VisibilityOff /> : <Visibility />}
-
                                             </IconButton>
                                         </InputAdornment>
-
                                     ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: success.password ? 'green' : (errors.password ? 'red' : ''),
+                                        },
+                                    },
                                 }}
                             />
                             <TextField
@@ -284,6 +408,16 @@ function RegisterFrom() {
                                 onChange={handleChange}
                                 error={Boolean(errors.phone_number)}
                                 helperText={errors.phone_number}
+                                InputProps={{
+                                    style: { borderColor: success.phone_number ? 'green' : '', borderWidth: '2px' },
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: success.user_lname ? 'green' : (errors.user_lname ? 'red' : ''),
+                                        },
+                                    },
+                                }}
                             />
                             <TextField
                                 fullWidth
@@ -295,20 +429,28 @@ function RegisterFrom() {
                                 onChange={handleChange}
                                 error={Boolean(errors.affiliation)}
                                 helperText={errors.affiliation}
+                                InputProps={{
+                                    style: { borderColor: success.affiliation ? 'green' : '', borderWidth: '2px' },
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: success.user_lname ? 'green' : (errors.user_lname ? 'red' : ''),
+                                        },
+                                    },
+                                }}
                             />
                             <FormControl fullWidth variant="outlined" margin="normal">
-                                <InputLabel>กรุณาเลือก</InputLabel>
+                                <InputLabel>ประเภทผู้ใช้</InputLabel>
                                 <Select
                                     name="role"
-                                    value={formValues.role || ""} // ตั้งค่าเริ่มต้นเป็นค่าว่างหากไม่มีค่า
+                                    value={formValues.role} // ตั้งค่าเริ่มต้นเป็น 'user'
                                     onChange={handleChange}
                                     label="User Type"
+                                    disabled // ทำให้ช่องนี้ไม่สามารถแก้ไขได้
                                 >
-
-
                                     <MenuItem value="user">User</MenuItem>
-                                    <MenuItem value="admin">Admin</MenuItem>
-
+                                    <MenuItem value="admin" disabled>Admin</MenuItem> {/* ทำให้ตัวเลือก Admin ไม่สามารถเลือกได้ */}
                                 </Select>
                                 <FormHelperText>{errors.role}</FormHelperText>
                             </FormControl>
@@ -325,29 +467,6 @@ function RegisterFrom() {
                     </Box>
                 </Container>
             </React.Fragment>
-            <Dialog
-                open={dialogOpen}
-                onClose={handleDialogClose}
-                maxWidth="xs"
-                fullWidth
-            >
-                <DialogTitle>
-                    <Typography variant="h6" style={{ display: 'flex', alignItems: 'center' }}>
-                        <CheckCircleIcon color="success" style={{ marginRight: 8 }} />
-                        สำเร็จ
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1">
-                        {successMessage}
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleDialogClose} color="primary">
-                        ปิด
-                    </Button>
-                </DialogActions>
-            </Dialog>
         </div>
     )
 }

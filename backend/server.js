@@ -39,10 +39,20 @@ db.connect((err) => {
 
 
 //Apiหน้า RegisterFrom ฝั่ง user
+// API หน้า RegisterForm ฝั่ง user
 app.post('/users', async (req, res) => {
     try {
         console.log('Received request to create user account with data:', req.body);
-        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);   // เข้ารหัสรหัสผ่านด้วย bcrypt
+
+        // // ตรวจสอบว่าชื่อผู้ใช้มีอยู่ในฐานข้อมูลหรือไม่
+        // const checkUsernameSql = "SELECT * FROM users WHERE username = ?";
+        // const [existingUser] = await db.promise().query(checkUsernameSql, [req.body.username]);
+
+        // if (existingUser.length > 0) {
+        //     return res.status(400).json({ message: 'Username already exists' });
+        // }
+
+        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds); // เข้ารหัสรหัสผ่านด้วย bcrypt
         const sql = "INSERT INTO users (prefix, user_fname, user_lname, username, password, phone_number, affiliation, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         const values = [
             req.body.prefix,
@@ -68,6 +78,20 @@ app.post('/users', async (req, res) => {
     }
 });
 
+// ตรวจสอบชื่อผู้ใช้
+app.get('/check-username', async (req, res) => {
+    const username = req.query.username;
+
+    // ตรวจสอบว่าชื่อผู้ใช้มีอยู่ในฐานข้อมูลหรือไม่
+    const checkUsernameSql = "SELECT * FROM users WHERE username = ?";
+    const [existingUser] = await db.promise().query(checkUsernameSql, [username]);
+
+    if (existingUser.length > 0) {
+        return res.json({ exists: true }); // ชื่อผู้ใช้มีอยู่
+    } else {
+        return res.json({ exists: false }); // ชื่อผู้ใช้ไม่อยู่
+    }
+});
 
 //Api หน้า LoginFrom ฝั่ง User
 
