@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, CssBaseline, Typography, Paper, Button, Grid, TextField, FormControl,
-  InputLabel, Select, MenuItem,  DialogActions,
+  InputLabel, Select, MenuItem, DialogActions,
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -42,13 +42,6 @@ function EditDocuments() {
 
   const [pdfPages, setPdfPages] = useState(''); // สถานะสำหรับเก็บจำนวนหน้าของ PDF
   const [savings, setSavings] = useState(null); // สถานะสำหรับเก็บผลลัพธ์การประหยัดกระดาษ
-
-  // ฟังก์ชันคำนวณการประหยัดกระดาษ
-  const calculateSavings = () => {
-    const costPerPage = 0.5; // ตัวอย่างค่าใช้จ่ายต่อหน้า (ปรับแต่งตามความต้องการ)
-    const totalSavings = pdfPages * costPerPage; // คำนวณการประหยัด
-    setSavings(totalSavings); // เก็บผลลัพธ์การประหยัด
-  };
 
 
 
@@ -224,25 +217,76 @@ function EditDocuments() {
     }
   };
 
-  const handleSavePaperCost = async () => {
-    try {
-      await axios.post('http://localhost:3000/document-stats', {
-        paperCost: savings // ค่าการประหยัดกระดาษที่คำนวณได้
-      });
-      Swal.fire({
-        icon: 'success',
-        title: 'บันทึกสำเร็จ',
-        text: 'ค่าประหยัดกระดาษถูกบันทึกเรียบร้อยแล้ว'
-      });
-    } catch (error) {
-      console.error('Error saving paper cost:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'เกิดข้อผิดพลาด',
-        text: 'ไม่สามารถบันทึกค่าประหยัดกระดาษได้'
-      });
+  // const handleSavePaperCost = async () => {
+  //   try {
+  //     await axios.post('http://localhost:3000/document-stats', {
+  //       paperCost: savings // ค่าการประหยัดกระดาษที่คำนวณได้
+  //     });
+  //     Swal.fire({
+  //       icon: 'success',
+  //       title: 'บันทึกสำเร็จ',
+  //       text: 'ค่าประหยัดกระดาษถูกบันทึกเรียบร้อยแล้ว'
+  //     });
+  //   } catch (error) {
+  //     console.error('Error saving paper cost:', error);
+  //     Swal.fire({
+  //       icon: 'error',
+  //       title: 'เกิดข้อผิดพลาด',
+  //       text: 'ไม่สามารถบันทึกค่าประหยัดกระดาษได้'
+  //     });
+  //   }
+  // };
+  // ฟังก์ชันสำหรับคำนวณและบันทึกค่าประหยัดกระดาษ
+  const calculateSavings = async () => {
+    // ตรวจสอบจำนวนหน้าของ PDF ก่อนคำนวณ
+    if (pdfPages > 0) {
+      // สมมุติว่าคุณมีอัตราการประหยัดกระดาษต่อหน้ากระดาษ
+      const savingsPerPage = 0.5; // ตัวอย่าง: ประหยัด 0.5 บาทต่อหน้า
+      const calculatedSavings = pdfPages * savingsPerPage;
+      const documentId = document.document_id; // ตรวจสอบว่าคุณดึง id มาอย่างถูกต้อง
+
+      // ตั้งค่าการประหยัด
+      setSavings(calculatedSavings);
+
+      // ดึง user_id จาก localStorage
+      const userId = localStorage.getItem('user_id'); // แทนที่ 'user_id' ด้วยคีย์ที่คุณใช้จัดเก็บใน localStorage
+
+      // Log สำหรับตรวจสอบค่าที่ได้
+      console.log('PDF Pages:', pdfPages);
+      console.log('Savings per Page:', savingsPerPage);
+      console.log('Calculated Savings:', calculatedSavings);
+      console.log('User ID from localStorage:', userId);
+
+      if (!userId) {
+        console.error('User ID not found in localStorage.');
+        return;
+      }
+
+      try {
+        // Log ค่าที่จะส่งไปยัง backend
+        console.log('Sending data to backend:', {
+          document_id: document.document_id,
+          user_id: userId,
+          paper_cost: calculatedSavings,
+        });
+
+        // ส่งข้อมูลไปยังฐานข้อมูล
+        const response = await axios.post('http://localhost:3000/api/document_receipts', {
+          document_id: document.document_id, // รหัสเอกสารที่ต้องการบันทึก
+          user_id: userId, // รหัสแอดมินที่เกี่ยวข้องจาก localStorage
+          paper_cost: calculatedSavings, // ค่าการประหยัดที่คำนวณได้
+        });
+
+        console.log('Savings recorded:', response.data);
+        // แสดงข้อความสำเร็จหรือตั้งค่า state อื่นๆ ตามต้องการ
+      } catch (error) {
+        console.error('Error saving savings to database:', error);
+      }
+    } else {
+      console.error('Please enter a valid number of PDF pages.');
     }
   };
+
 
 
 
@@ -411,9 +455,9 @@ function EditDocuments() {
                             ประหยัดค่ากระดาษ: {savings} บาท
                           </Typography>
                         )}
-                        <Button variant="contained" color="secondary" onClick={handleSavePaperCost}>
+                        {/* <Button variant="contained" color="secondary" onClick={handleSavePaperCost}>
                           บันทึกค่าประหยัดกระดาษ
-                        </Button>
+                        </Button> */}
                       </Box>
                     </Grid>
                   )}

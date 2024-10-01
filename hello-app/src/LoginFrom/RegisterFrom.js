@@ -5,7 +5,10 @@ import { styled } from '@mui/material/styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // ไอคอนสำเร็จ
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../AppBar/Navbar';
+import AppBar from '../AppBar/Appbar';
+import Swal from 'sweetalert2';
 
 const Logo = styled('img')(({ theme }) => ({
     height: '60px', // ปรับขนาดโลโก้ตามต้องการ
@@ -42,16 +45,16 @@ function RegisterFrom() {
     const handleChange = (event) => {
         const { name, value } = event.target; // เปลี่ยน e เป็น event
         setFormValues(prev => ({
-          ...prev,
-          [name]: value
+            ...prev,
+            [name]: value
         }));
 
         // เมื่อผู้ใช้กรอกข้อมูลในช่องที่มี error, ลบ error นั้นออก
         if (errors[name]) {
-          setErrors(prev => ({
-            ...prev,
-            [name]: ''
-          }));
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
         }
     };
 
@@ -84,16 +87,30 @@ function RegisterFrom() {
 
         try {
             const response = await axios.post('http://localhost:3000/users', formValues); // เปลี่ยน URL เป็นที่อยู่ API ของคุณ
-            
+
             console.log('Registration successful:', response.data);
+
+            // แสดง SweetAlert เมื่อการลงทะเบียนสำเร็จ
+            Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ!',
+                text: 'ลงทะเบียนสำเร็จ!',
+            });
+
+            // ตั้งข้อความสำเร็จและเปิด Dialog
+            setSuccessMessage('ลงทะเบียนสำเร็จ');
+            setDialogOpen(true);
+            resetForm();
         } catch (error) {
             console.error("Error during registration", error);
-        }
 
-        // ตั้งข้อความสำเร็จและเปิด Dialog
-        setSuccessMessage('ลงทะเบียนสำเร็จ');
-        setDialogOpen(true);
-        resetForm();
+            // แสดง SweetAlert เมื่อมีข้อผิดพลาด
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด!',
+                text: 'การลงทะเบียนไม่สำเร็จ! กรุณาลองใหม่อีกครั้ง.',
+            });
+        }
     };
 
     // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
@@ -108,17 +125,24 @@ function RegisterFrom() {
             affiliation: '',
             role: ''
         });
-     };
-    
-     const handleDialogClose = () => {
+    };
+
+    const handleDialogClose = () => {
         setDialogOpen(false);
-        navigate('/loginpage'); 
+        navigate('/loginpage');
     };
     const handleCancel = () => {
-        navigate('/loginpage'); 
+        navigate('/loginpage');
     };
     return (
         <div>
+            {window.location.pathname === '/registerfrom' && (
+
+                <>
+                    <AppBar />
+                    <Navbar />
+                </>
+            )}
             <React.Fragment>
                 <CssBaseline />
                 <Container
@@ -284,7 +308,7 @@ function RegisterFrom() {
 
                                     <MenuItem value="user">User</MenuItem>
                                     <MenuItem value="admin">Admin</MenuItem>
-                                    
+
                                 </Select>
                                 <FormHelperText>{errors.role}</FormHelperText>
                             </FormControl>

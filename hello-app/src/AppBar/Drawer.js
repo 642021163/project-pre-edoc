@@ -17,9 +17,16 @@ const Drawer = ({ menuOpen, toggleMenu }) => {
         }, 400); // หน่วงเวลา 400ms
     };
 
+
     // ฟังก์ชันสำหรับ Profile
     const handleProfile = () => {
-        handleNavigation('/profile'); // เรียกใช้ handleNavigation เพื่อไปที่หน้าโปรไฟล์
+        const userId = localStorage.getItem('user_id'); // ดึง userId ที่เก็บไว้ใน localStorage
+        if (userId) {
+            console.log("Logged in user ID:", userId);
+            handleNavigation(`/profile/${userId}`); // ใช้เครื่องหมาย backtick
+        } else {
+            console.error("User is not logged in or userId is missing.");
+        }// เรียกใช้ handleNavigation เพื่อไปที่หน้าโปรไฟล์
     };
 
     // ฟังก์ชันสำหรับติดตามเอกสาร

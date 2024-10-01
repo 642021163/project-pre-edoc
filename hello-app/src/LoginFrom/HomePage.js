@@ -48,15 +48,6 @@ function HomePage() {
     }, [navigate]);
 
 
-
-    const handleMenuClick = (link) => {
-        setLoading(true);
-        setTimeout(() => {
-            navigate(link);
-            setLoading(false);
-        }, 400); // หน่วงเวลา 400ms
-    };
-
     const colors = ['#FF5733', '#33FF57', '#3357FF', '#F1C40F', '#8E44AD']; // Array of colors
     return (
         <Box>
@@ -91,9 +82,6 @@ function HomePage() {
 
                     <Typography variant="h4" gutterBottom>
                         สวัสดีคุณ ,{user_fname} {user_lname}!
-                    </Typography>
-                    <Typography variant="body1" paragraph>
-                        This is the main content area.
                     </Typography>
                     <Box sx={{
                         display: 'grid',
