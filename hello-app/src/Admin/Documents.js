@@ -159,14 +159,14 @@ function Documents() {
             setIsReceived(true);
             setDocument(prev => ({ ...prev, status: 1 }));
 
-            // บันทึกข้อมูลการรับเอกสาร
-            const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
-                documentId: docId,
-                adminId: adminId,
-                dateReceived: new Date().toISOString().split('T')[0],
-                paperCost: 19
-            });
-            console.log('Receipt response:', receiptResponse.data);
+            // // บันทึกข้อมูลการรับเอกสาร
+            // const receiptResponse = await axios.post('http://localhost:3000/document-stats', {
+            //     documentId: docId,
+            //     adminId: adminId,
+            //     dateReceived: new Date().toISOString().split('T')[0],
+               
+            // });
+            // console.log('Receipt response:', receiptResponse.data);
 
             // อัปเดตสถานะเอกสารใน state ว่าได้รับการบันทึกแล้ว
             setReceivedDocuments((prev) => new Set(prev).add(docId));

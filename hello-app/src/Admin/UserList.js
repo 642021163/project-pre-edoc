@@ -158,8 +158,8 @@ function UserList() {
                                 <Button variant="contained"
                                   sx={{
                                     mx: 1,
-                                    backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
-                                    color: '#000',
+                                    backgroundColor: 'success', // สีหลักของปุ่ม
+                                    color: '#fff',
                                     '&:hover': {
                                       backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
                                     },
@@ -171,10 +171,10 @@ function UserList() {
                                   Edit
                                 </Button>
                               </Tooltip>
-
+{/* 
                               <IconButton onClick={() => handleDelete(user.user_id)} color="secondary">
                                 <Delete />
-                              </IconButton>
+                              </IconButton> */}
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -219,8 +219,8 @@ function UserList() {
                                 <Button variant="contained"
                                   sx={{
                                     mx: 1,
-                                    backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
-                                    color: '#000',
+                                    backgroundColor: 'success', // สีหลักของปุ่ม
+                                    color: '#fff',
                                     '&:hover': {
                                       backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
                                     },
@@ -233,9 +233,9 @@ function UserList() {
                                 </Button>
                               </Tooltip>
 
-                              <IconButton onClick={() => handleDelete(user.user_id)} color="secondary">
+                              {/* <IconButton onClick={() => handleDelete(user.user_id)} color="secondary">
                                 <Delete />
-                              </IconButton>
+                              </IconButton> */}
                             </Box>
                           </TableCell>
                         </TableRow>

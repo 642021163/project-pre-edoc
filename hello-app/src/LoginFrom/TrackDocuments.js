@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Link, Button, Tooltip, List, ListItem, Collapse, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
-import { useNavigate, useLocation,useParams } from 'react-router-dom';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, InputBase, Link, Button, Tooltip, List, ListItem, Collapse, ListItemIcon, ListItemText, Divider, Modal, IconButton, Grid } from '@mui/material';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Pagination from '@mui/material/Pagination';
@@ -11,6 +11,7 @@ import { Chip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import Swal from 'sweetalert2';
 import Drawer from '../AppBar/Drawer';
+import { Search, } from '@mui/icons-material';
 
 
 // การจัดรูปแบบวันที่และเวลา
@@ -44,14 +45,15 @@ const TrackDocuments = () => {
     const [menuOpen, setMenuOpen] = useState(true); // สถานะสำหรับการซ่อน/แสดงเมนู
     const navigate = useNavigate(); // ใช้สำหรับนำทาง
     const location = useLocation(); // ใช้สำหรับตรวจสอบที่อยู่ URL ปัจจุบัน
+    const [search, setSearch] = useState('');
 
-    // ฟังก์ชันสำหรับดึงข้อมูลเอกสารจากเซิร์ฟเวอร์
     const fetchDocuments = async () => {
         try {
             const token = localStorage.getItem('token'); // สมมุติว่าเก็บ token ไว้ใน localStorage
             const response = await axios.get('http://localhost:3000/documents', {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            console.log(response.data); // ตรวจสอบข้อมูลที่ได้รับ
             const sortedDocuments = response.data.sort((a, b) => new Date(b.upload_date) - new Date(a.upload_date));
             setDocuments(sortedDocuments);
             setLoading(false);
@@ -60,6 +62,7 @@ const TrackDocuments = () => {
             setLoading(false);
         }
     };
+
 
     const handleDelete = async (docId) => {
         if (!docId) {
@@ -119,7 +122,10 @@ const TrackDocuments = () => {
         }, 400); // หน่วงเวลา 400ms
     };
 
-
+    // ฟังก์ชันกรองเอกสารตามการค้นหา
+    const filteredDocuments = documents.filter(doc =>
+        doc.subject.toLowerCase().includes(search.toLowerCase()) // ฟิลเตอร์เอกสารตามชื่อเรื่อง
+    );
     // การแสดงข้อความเมื่อเกิดข้อผิดพลาด
     if (error) return (
         <Box>
@@ -131,7 +137,7 @@ const TrackDocuments = () => {
     const getStatusText = (status) => {
         switch (status) {
             case 0:
-                return { label: 'รอดำเนินการ', color: 'warning' }; // สีเหลือง
+                return { label: 'รอดำเนินการ', color: 'error' }; // สีเหลือง
             case 1:
                 return { label: 'กำลังดำเนินการ', color: 'info' }; // สีฟ้า
             case 2:
@@ -140,6 +146,25 @@ const TrackDocuments = () => {
                 return { label: 'ไม่ทราบสถานะ', color: 'default' }; // สีเทา
         }
     };
+
+    // ฟังก์ชันจัดเรียงเอกสาร
+    const sortedDocuments = filteredDocuments.sort((a, b) => {
+        const statusOrder = {
+            0: 1, // รอดำเนินการ
+            1: 2, // กำลังดำเนินการ
+            2: 3, // ดำเนินการเรียบร้อย
+        };
+        const statusA = statusOrder[a.status];
+        const statusB = statusOrder[b.status];
+
+        // เรียงตามสถานะ
+        if (statusA !== statusB) {
+            return statusA - statusB; // ถ้าไม่เหมือนกัน เรียงตามสถานะ
+        }
+
+        // เรียงตามวันที่ (ใหม่สุดไปเก่าที่สุด)
+        return new Date(b.upload_date) - new Date(a.upload_date);
+    });
 
     // ฟังก์ชันเพื่อแปลง ID เป็นชื่อ
     const getAdminNameById = (recipient) => {
@@ -173,6 +198,7 @@ const TrackDocuments = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    cursor: loading ? 'none' : 'auto',
                     zIndex: 9999
                 }}>
                     <CircularProgress />
@@ -180,126 +206,147 @@ const TrackDocuments = () => {
             )}
             <Drawer menuOpen={menuOpen} toggleMenu={toggleMenu} />
             {/* เนื้อหาหลัก */}
-            <Box sx={{ flex: 1, p: 2 ,bgcolor: '#E4E4E7'}}>
+            {/* เนื้อหาหลัก */}
+            <Box sx={{ flex: 1, p: 2, bgcolor: '#E4E4E7' }}>
                 <Typography variant="h4" gutterBottom>
                     ยินดีต้อนรับสู่หน้าแรก
                 </Typography>
-
-                {/* การแสดงผลเอกสาร */}
-                {documents.length === 0 ? (
-                    <Typography>ไม่มีเอกสาร</Typography>
-                ) : (
-                    <Box sx={{ overflowX: 'auto', p: 2 }}>
-                        <TableContainer component={Paper}>
-                            <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell >ลำดับ</TableCell>
-                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>วันที่</TableCell>
-                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>เรื่อง</TableCell>
-                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>ชื่อไฟล์</TableCell>
-                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>สถานะ</TableCell>
-                                        <TableCell align="left" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>ผู้รับเอกสาร</TableCell>
-                                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>Action</TableCell>
-                                        <TableCell align="left" sx={{ fontWeight: 'bold' }}>รายละเอียด</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {documents
-                                        .slice((page - 1) * rowsPerPage, page * rowsPerPage) // ใช้ slice เพื่อแบ่งเอกสารตามหน้าที่จะแสดง
-                                        .map((doc, index) => {
-                                            return (
-                                                <TableRow
-                                                    key={doc.id || index}
-                                                    sx={{
-                                                        '&:nth-of-type(even)': { backgroundColor: '#f5f5f5' },
-                                                        '&:hover': { backgroundColor: '#e0e0e0' },
-                                                        '&:last-child td, &:last-child th': { border: 0 },
-                                                    }}
-                                                >
-                                                    <TableCell component="th" scope="row">{index + 1 + (page - 1) * rowsPerPage}</TableCell>
-                                                    <TableCell align="left">{formatDateTime(doc.upload_date)}</TableCell>
-                                                    <TableCell align="left">{doc.subject}</TableCell>
-                                                    <TableCell align="left">
-                                                        <Link
-                                                            href={`http://localhost:3000/${doc.file}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            sx={{ color: '#1976d2', textDecoration: 'none' }}
+                <Box sx={{ overflowX: 'auto', p: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2, mb: 4 }}>
+                        <IconButton sx={{ p: '10px' }}>
+                            <Search />
+                        </IconButton>
+                        <InputBase
+                            placeholder="Search…"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)} // อัปเดตค่าเมื่อมีการพิมพ์
+                            sx={{ ml: 1, flex: 1 }}
+                        />
+                    </Box>
+                    <TableContainer component={Paper}>
+                        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>ลำดับ</TableCell>
+                                    <TableCell align="left" sx={{ fontWeight: 'bold' }}>วันที่</TableCell>
+                                    <TableCell align="left" sx={{ fontWeight: 'bold' }}>เรื่อง</TableCell>
+                                    <TableCell align="left" sx={{ fontWeight: 'bold' }}>ไฟล์</TableCell>
+                                    <TableCell align="left" sx={{ fontWeight: 'bold' }}>สถานะ</TableCell>
+                                    <TableCell align="left" sx={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>ผู้รับเอกสาร</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Action</TableCell>
+                                    <TableCell align="left" sx={{ fontWeight: 'bold' }}>รายละเอียด</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {(filteredDocuments.length === 0 ? documents : filteredDocuments)
+                                    .slice((page - 1) * rowsPerPage, page * rowsPerPage) // ใช้ slice เพื่อแบ่งเอกสารตามหน้าที่จะแสดง
+                                    .map((doc, index) => {
+                                        return (
+                                            <TableRow
+                                                key={doc.id || index}
+                                                sx={{
+                                                    '&:nth-of-type(even)': { backgroundColor: '#f5f5f5' },
+                                                    '&:hover': { backgroundColor: '#e0e0e0' },
+                                                    '&:last-child td, &:last-child th': { border: 0 },
+                                                }}
+                                            >
+                                                <TableCell component="th" scope="row">{index + 1 + (page - 1) * rowsPerPage}</TableCell>
+                                                <TableCell align="left">{formatDateTime(doc.upload_date)}</TableCell>
+                                                <TableCell align="left">
+                                                    {/* ไฮไลต์ชื่อเรื่องที่ตรงกับการค้นหา */}
+                                                    {doc.subject.split(new RegExp(`(${search})`, 'i')).map((part, i) => (
+                                                        <span key={i} style={{ backgroundColor: part.toLowerCase() === search.toLowerCase() && filteredDocuments.length > 0 ? '#ffeb3b' : 'transparent' }}>
+                                                            {part}
+                                                        </span>
+                                                    ))}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Tooltip title="เปิดไฟล์ PDF" arrow>
+                                                        <Button
+                                                            variant="contained"
+                                                            color="primary"
+                                                            onClick={() => {
+                                                                window.open(`http://localhost:3000/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
+                                                            }}
+                                                            sx={{
+                                                                textTransform: 'none', // ปิดการแปลงข้อความเป็นตัวพิมพ์ใหญ่
+                                                            }}
                                                         >
-                                                            {getFileName(doc.file)}
-                                                        </Link>
-                                                    </TableCell>
-                                                    <TableCell align="left" sx={{ maxWidth: 200, whiteSpace: 'nowrap' }}>{
+                                                            PDF
+                                                        </Button>
+                                                    </Tooltip>
+                                                </TableCell>
+                                                <TableCell align="left" sx={{ maxWidth: 200, whiteSpace: 'nowrap' }}>
+                                                    {
                                                         (() => {
                                                             const { label, color } = getStatusText(doc.status);
                                                             return <Chip label={label} color={color} sx={{ borderRadius: '4px' }} />;
                                                         })()
-                                                    }</TableCell>
-                                                    <TableCell align="left">{getAdminNameById(doc.recipient)}</TableCell>
-                                                    <TableCell align="left">
-                                                        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                                                            <Button
-                                                                variant="contained" // เปลี่ยนเป็น variant "contained" เพื่อให้ปุ่มดูเด่นขึ้น
-                                                                startIcon={<EditIcon />}
-                                                                color="primary" // เปลี่ยนสีเป็น primary
-                                                                sx={{
-                                                                    mx: 0.5,
-                                                                    '&:hover': {
-                                                                        backgroundColor: '#1976d2', // เปลี่ยนสีเมื่อ Hover
-                                                                        boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)', // เพิ่มเงาเมื่อ Hover
-                                                                    },
-                                                                    transition: '0.3s', // เพิ่มการเคลื่อนไหว
-                                                                }}
-                                                                onClick={() => handleEditClick(doc.document_id)}
-                                                            >
-                                                                Edit
-                                                            </Button>
-                                                            <Button
-                                                                variant="outlined"
-                                                                startIcon={<DeleteIcon />}
-                                                                color="error"
-                                                                sx={{
-                                                                    mx: 0.5,
-                                                                    '&:hover': {
-                                                                        backgroundColor: '#f44336', // เปลี่ยนสีเมื่อ Hover
-                                                                        color: '#fff', // เปลี่ยนสีข้อความเมื่อ Hover
-                                                                    },
-                                                                    transition: '0.3s',
-                                                                }}
-                                                                onClick={() => handleDelete(doc.document_id)}
-                                                            >
-                                                                Delete
-                                                            </Button>
-                                                        </Box>
-                                                    </TableCell>
-                                                    <TableCell align="left">
+                                                    }
+                                                </TableCell>
+                                                <TableCell align="left">{getAdminNameById(doc.recipient)}</TableCell>
+                                                <TableCell align="left">
+                                                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                                                         <Button
                                                             variant="contained"
+                                                            startIcon={<EditIcon />}
                                                             color="primary"
-                                                            onClick={() => handleOpen(doc)}
+                                                            sx={{
+                                                                mx: 0.5,
+                                                                '&:hover': {
+                                                                    backgroundColor: '#1976d2',
+                                                                    boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)',
+                                                                },
+                                                                transition: '0.3s',
+                                                            }}
+                                                            onClick={() => handleEditClick(doc.document_id)}
                                                         >
-                                                            ดูรายละเอียด
+                                                            Edit
                                                         </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })}
-                                </TableBody>
-
-                            </Table>
-                        </TableContainer>
-                        <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
-                            <Pagination
-                                count={Math.ceil(documents.length / rowsPerPage)}
-                                page={page}
-                                shape="rounded"
-                                onChange={(event, value) => setPage(value)}
-                            />
-                        </Box>
+                                                        <Button
+                                                            variant="outlined"
+                                                            startIcon={<DeleteIcon />}
+                                                            color="error"
+                                                            sx={{
+                                                                mx: 0.5,
+                                                                '&:hover': {
+                                                                    backgroundColor: '#f44336',
+                                                                    color: '#fff',
+                                                                },
+                                                                transition: '0.3s',
+                                                            }}
+                                                            onClick={() => handleDelete(doc.document_id)}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell align="left">
+                                                    <Button
+                                                        variant="contained"
+                                                        color="primary"
+                                                        onClick={() => handleOpen(doc)}
+                                                    >
+                                                        ดูรายละเอียด
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                        <Pagination
+                            count={Math.ceil(filteredDocuments.length / rowsPerPage)} // ใช้ count จาก filteredDocuments
+                            page={page}
+                            shape="rounded"
+                            onChange={(event, value) => setPage(value)}
+                        />
                     </Box>
-                )}
+                </Box>
             </Box>
+
 
             {/* ป๊อปอัพสำหรับรายละเอียดเอกสาร */}
             <Modal
@@ -359,7 +406,25 @@ const TrackDocuments = () => {
                                 },
                                 { label: 'เลขที่เอกสาร:', value: selectedDocument.document_number },
                                 { label: 'ประเภทเอกสาร:', value: selectedDocument.document_type },
-                                { label: 'หมายเหตุ:', value: selectedDocument.notes },
+                                {
+                                    label: 'หมายเหตุ:',
+                                    value: (
+                                        <Box>
+                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                หมายเหตุจากผู้ใช้:
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ ml: 1, mb: 2 }}>
+                                                {selectedDocument.notes}
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                                                ตอบกลับจากแอดมิน:
+                                            </Typography>
+                                            <Typography variant="body2" sx={{ ml: 1 }}>
+                                                {selectedDocument.admin_reply || "ยังไม่มีการตอบกลับ"}
+                                            </Typography>
+                                        </Box>
+                                    ),
+                                },
                                 { label: 'ผู้ส่ง:', value: senderName },
                                 { label: 'ผู้รับเอกสาร:', value: getAdminNameById(selectedDocument.recipient) },
                             ].map((item, index) => (
@@ -376,6 +441,7 @@ const TrackDocuments = () => {
                             ))}
                         </Grid>
                     )}
+
                     <Button
                         onClick={handleClose}
                         variant="contained"

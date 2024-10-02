@@ -18,7 +18,7 @@ function ReceiptsList() {
     const [open, setOpen] = useState(false);
     const navigate = useNavigate();
     const totalReceipts = receipts.length; // จำนวนเอกสารทั้งหมด
-    const paperCostTotal = receipts.reduce((total, receipt) => total + receipt.paper_cost, 0); // รวมค่าใช้จ่ายในการประหยัดกระดาษ
+    const totalSavings = receipts.reduce((acc, receipt) => acc + parseFloat(receipt.paper_cost), 0); // ใช้ parseFloat
     const [adminData, setAdminData] = useState([]);
 
 
@@ -57,7 +57,7 @@ function ReceiptsList() {
                 const adminId = receipt.user_id; // ไอดี Admin
                 acc[adminId] = (acc[adminId] || { count: 0, paper_cost: 0 });
                 acc[adminId].count += 1; // นับจำนวนเอกสาร
-                acc[adminId].paper_cost += receipt.paper_cost; // รวมค่าใช้จ่ายในการประหยัดกระดาษ
+                acc[adminId].paper_cost += Number(receipt.paper_cost); // รวมค่าใช้จ่ายในการประหยัดกระดาษ แปลงเป็นตัวเลข
                 return acc;
             }, {});
 
@@ -77,9 +77,10 @@ function ReceiptsList() {
                 try {
                     const response = await axios.get(`http://localhost:3000/document-receipts/${selectedAdmin}`);
                     setReceipts(response.data); // ตั้งค่าผลลัพธ์ที่ได้จากการเลือกแอดมิน
+
                     // สร้างข้อมูลสำหรับกราฟ
                     const dataForChart = response.data.reduce((acc, receipt) => {
-                        acc.push({ label: receipt.document_id, value: receipt.paper_cost });
+                        acc.push({ label: receipt.document_id, value: Number(receipt.paper_cost) }); // แปลงเป็นตัวเลข
                         return acc;
                     }, []);
                     setAdminData(dataForChart); // ตั้งค่าข้อมูลกราฟ
@@ -94,22 +95,26 @@ function ReceiptsList() {
 
 
 
-
     const adminCounts = receipts.reduce((acc, receipt) => {
         const adminId = receipt.user_id; // ไอดี Admin
         acc[adminId] = (acc[adminId] || 0) + 1; // เพิ่มจำนวนเอกสารที่แอดมินคนนี้รับ
         return acc;
     }, {});
 
-    // ประกาศ chartData ที่นี่
+
+    // คำนวณจำนวนเอกสารทั้งหมดที่ได้รับโดยรวมจากแอดมินทุกคน
+    const totalDocuments = adminData.reduce((total, admin) => total + admin.count, 0);
+
+    // คำนวณเปอร์เซ็นต์สำหรับแต่ละแอดมิน
     const chartData = {
-        labels: adminData.map(item => item.label), // ชื่อเอกสารที่ได้รับ
+        labels: adminData.map(admin => `${admin.user_fname} ${admin.user_lname}`), // ชื่อแอดมิน
         datasets: [{
-            label: 'จำนวนเงินประหยัดกระดาษ',
-            data: adminData.map(item => item.value), // จำนวนเงินประหยัดกระดาษตามเอกสาร
+            label: 'จำนวนเอกสารที่รับ (%)',
+            data: adminData.map(admin => (admin.count / totalDocuments) * 100), // คำนวณเปอร์เซ็นต์
             backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'], // กำหนดสีของกราฟ
         }]
     };
+
     return (
         <Layout> {/* เรียกใช้ Layout ที่ห่อไว้ */}
             <Box sx={{ display: 'flex' }}>
@@ -205,7 +210,7 @@ function ReceiptsList() {
                                                 </TableRow>
                                                 <TableRow>
                                                     <TableCell>รวมเงินประหยัดกระดาษ</TableCell>
-                                                    <TableCell>{paperCostTotal}</TableCell>
+                                                    <TableCell>{totalSavings}</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                         </Table>
@@ -239,8 +244,8 @@ function ReceiptsList() {
                             </>
                         )}
 
-
-                        {selectedAdmin !== 'all' && selectedAdmin && (
+                        {/* แสดงกราฟ */}
+                        {selectedAdmin === 'all' && (
                             <Box sx={{ width: 500, height: 500, textAlign: 'center', justifyContent: 'center', mt: 4 }}>
                                 <Pie data={chartData} />
                             </Box>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, Collapse, Tooltip, CircularProgress } from '@mui/material';
+import { Box, List, ListItem, ListItemIcon, ListItemText, Divider, Collapse, Tooltip, CircularProgress,Typography } from '@mui/material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AccountCircle, InsertDriveFile, Description, Menu as MenuIcon } from '@mui/icons-material';
 
@@ -64,7 +64,10 @@ const Drawer = ({ menuOpen, toggleMenu }) => {
                     backgroundColor: 'rgba(255, 255, 255, 0.7)',
                     zIndex: 9999
                 }}>
-                    <CircularProgress />
+                    <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress />
+                        <Typography sx={{ mt: 2 }}>Loading...</Typography>
+                    </Box>
                 </Box>
             )}
             <MenuIcon onClick={toggleMenu} />

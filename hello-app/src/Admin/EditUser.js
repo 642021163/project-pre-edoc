@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import {
   Box, CssBaseline, AppBar, Toolbar, Typography, IconButton, Badge, InputBase, Drawer, List, ListItem,
-  ListItemIcon, ListItemText, Paper, Button, Grid, TextField, FormControl, InputLabel, Select,
+  ListItemIcon, ListItemText, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, CircularProgress,
   MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, Tooltip
 } from '@mui/material';
 import { Search, Notifications, Home, PersonAdd } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import Layout from '../LayoutAdmin/Layout';
 
 const drawerWidth = 240; // หรือค่าที่คุณต้องการ
 
@@ -23,7 +24,7 @@ function EditUser() {
     role: ''
   });
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false); // สถานะเปิด/ปิด Dialog
   const [resetPassword, setResetPassword] = useState('');
@@ -53,12 +54,7 @@ function EditUser() {
     fetchUser();
   }, [id]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-  if (error) {
-    return <div>{error}</div>;
-  }
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -81,7 +77,7 @@ function EditUser() {
         icon: 'success',
         title: 'Success',
         text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-        timer: 2000, // กำหนดเวลาแสดง SweetAlert 2 วินาที
+        timer: 1500, // กำหนดเวลาแสดง SweetAlert 2 วินาที
         showConfirmButton: false // ไม่ต้องแสดงปุ่ม Confirm
       }).then(() => {
         // คุณสามารถเพิ่มการนำทางไปยังหน้าที่คุณต้องการหลังจากแสดง SweetAlert เสร็จ
@@ -145,174 +141,171 @@ function EditUser() {
     navigate('/home'); // นำทางไปที่หน้าโฮม
   };
   const handleCancel = () => {
-    navigate('/list');
+
+    setLoading(true); // เริ่มการโหลด
+    setTimeout(() => {
+      navigate('/list');
+      setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+    }, 400); // หน่วงเวลา 400ms
   };
 
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      {/* AppBar */}
-      <AppBar position="fixed" sx={{ width: `calc(100% - ${drawerWidth}px)`, ml: `${drawerWidth}px`, bgcolor: '#1976d2' }}>
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: '#fff' }}>
-            Admin Dashboard
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {/* Search Box */}
-            <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2 }}>
-              <IconButton sx={{ p: '10px' }}>
-                <Search />
-              </IconButton>
-              <InputBase
-                placeholder="Search…"
-                sx={{ ml: 1, flex: 1 }}
-              />
+    <Layout>
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        {/* สถานะการโหลด */}
+        {loading && (
+          <Box style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 9999
+          }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <CircularProgress />
+              <Typography sx={{ mt: 2 }}>Loading...</Typography>
             </Box>
-            {/* Notifications Icon */}
-            <IconButton sx={{ color: '#fff' }}>
-              <Badge badgeContent={4} color="error">
-                <Notifications />
-              </Badge>
-            </IconButton>
           </Box>
-        </Toolbar>
-      </AppBar>
+        )}
 
-      {/* Drawer */}
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: drawerWidth,
-            boxSizing: 'border-box',
-            bgcolor: '#1A2035',  // สีพื้นหลังของ Drawer (สีเข้ม)
-            color: '#B9BABF',    // สีของตัวหนังสือ (สีขาว/เทาอ่อน)
-          },
-        }}
-        variant="permanent"
-        anchor="left"
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            <Tooltip title="Home" arrow>
-              <ListItem button onClick={handleBackToHome}>
-                <ListItemIcon sx={{ color: '#ddd' }}> {/* ไอคอนสีเทาอ่อน */}
-                  <Home />
-                </ListItemIcon>
-                <ListItemText primary="Home" />
-              </ListItem>
-            </Tooltip>
-            <Tooltip title="Registered Users" arrow>
-              <ListItem button onClick={() => navigate('/list')}>
-                <ListItemIcon sx={{ color: '#ddd' }}> {/* ไอคอนสีเทาอ่อน */}
-                  <PersonAdd />
-                </ListItemIcon>
-                <ListItemText primary="Registered Users" />
-              </ListItem>
-            </Tooltip>
-          </List>
-        </Box>
-      </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Typography variant="h4" gutterBottom>Edit Document</Typography>
-        <Paper
-          sx={{
-            padding: 3,
-            backgroundColor: '#f5f5f5' // สีพื้นหลังของ Paper
-          }}
-        >
-          <form onSubmit={handleSubmit}>
-            <Typography variant="h6" gutterBottom sx={{ p: 2 }}>แก้ไขข้อมูลผู้ใช้</Typography>
-            <Box mb={2}>
-              <Grid container spacing={2}>
-                {/* Row 1 */}
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="ชื่อ"
-                    name="user_fname"
-                    value={user.user_fname}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="นามสกุล"
-                    name="user_lname"
-                    value={user.user_lname}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                  />
-                </Grid>
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>เเก้ไขข้อมูลผู้ใช้</Typography>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Username"
-                    name="username"
-                    value={user.username}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                  />
-                </Grid>
+          <Paper
+            sx={{
+              padding: 3,
+              backgroundColor: '#f5f5f5' // สีพื้นหลังของ Paper
+            }}
+          >
+            <form onSubmit={handleSubmit}>
+              <Typography variant="h6" gutterBottom sx={{ p: 2 }}>แก้ไขข้อมูลผู้ใช้</Typography>
+              <Box mb={2}>
+                <Grid container spacing={2}>
+                  {/* Row 1 */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="ชื่อ"
+                      name="user_fname"
+                      value={user.user_fname}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="นามสกุล"
+                      name="user_lname"
+                      value={user.user_lname}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="หมายเลขโทรศัพท์"
-                    name="phone_number"
-                    value={user.phone_number}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                  />
-                </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Username"
+                      name="username"
+                      value={user.username}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="สังกัด"
-                    name="affiliation"
-                    value={user.affiliation}
-                    onChange={handleChange}
-                    fullWidth
-                    required
-                  />
-                </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="หมายเลขโทรศัพท์"
+                      name="phone_number"
+                      value={user.phone_number}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <FormControl fullWidth>
-                    <InputLabel>Role</InputLabel>
-                    <Select
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="สังกัด"
+                      name="affiliation"
+                      value={user.affiliation}
+                      onChange={handleChange}
+                      fullWidth
+                      required
+                    />
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <TextField
                       label="Role"
                       name="role"
-                      value={user.role}
+                      value={user.role || ''}
                       onChange={handleChange}
+                      fullWidth
                       required
-                    >
-                      {roleOptions.map(option => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                      disabled // ทำให้ช่องนี้ไม่สามารถแก้ไขได้
+                    />
+                  </Grid>
+
+
                 </Grid>
-
-
-              </Grid>
-            </Box>
-            <DialogActions style={{ justifyContent: 'center' }}>
+              </Box>
+              <DialogActions style={{ justifyContent: 'center' }}>
+                <Button
+                  type="submit"
+                  color="primary"
+                  variant="contained"
+                  style={{ marginRight: '8px' }} // เพิ่มระยะห่าง
+                >
+                  บันทึก
+                </Button>
+                <Button
+                  color="error"
+                  variant="outlined"
+                  onClick={handleCancel}
+                >
+                  ยกเลิก
+                </Button>
+              </DialogActions>
+            </form>
+          </Paper>
+          {/* Form for Resetting Password */}
+          <Paper sx={{ padding: 3, mt: 3, backgroundColor: '#f5f5f5' }}>
+            <Typography variant="h6" gutterBottom>รีเซ็ตรหัสผ่านใหม่</Typography>
+            <TextField
+              margin="dense"
+              label="รหัสผ่านใหม่"
+              type="password"
+              fullWidth
+              variant="outlined"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+            />
+            <TextField
+              margin="dense"
+              label="ยืนยันรหัสผ่านอีกครั้ง"
+              type="password"
+              fullWidth
+              variant="outlined"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            <Box sx={{ mt: 2 }}>
               <Button
-                type="submit"
-                color="primary"
                 variant="contained"
-                style={{ marginRight: '8px' }} // เพิ่มระยะห่าง
+                color="primary"
+                onClick={handleResetPassword}
+                sx={{ mr: 2 }}
               >
-                บันทึก
+                รีเซ็ต
               </Button>
               <Button
                 color="error"
@@ -321,50 +314,11 @@ function EditUser() {
               >
                 ยกเลิก
               </Button>
-            </DialogActions>
-          </form>
-        </Paper>
-        {/* Form for Resetting Password */}
-        <Paper sx={{ padding: 3, mt: 3, backgroundColor: '#f5f5f5' }}>
-          <Typography variant="h6" gutterBottom>รีเซ็ตรหัสผ่านใหม่</Typography>
-          <TextField
-            margin="dense"
-            label="รหัสผ่านใหม่"
-            type="password"
-            fullWidth
-            variant="outlined"
-            value={resetPassword}
-            onChange={(e) => setResetPassword(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            label="ยืนยันรหัสผ่านอีกครั้ง"
-            type="password"
-            fullWidth
-            variant="outlined"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <Box sx={{ mt: 2 }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={handleResetPassword}
-              sx={{ mr: 2 }}
-            >
-              รีเซ็ต
-            </Button>
-            <Button
-              color="error"
-              variant="outlined"
-              onClick={handleCancel}
-            >
-              ยกเลิก
-            </Button>
-          </Box>
-        </Paper>
+            </Box>
+          </Paper>
+        </Box>
       </Box>
-    </Box>
+    </Layout>
   );
 }
 

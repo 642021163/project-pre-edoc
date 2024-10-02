@@ -92,7 +92,12 @@ function Navbar() {
   });
 
   const handleNavigateHome = () => {
-    navigate('/homepage');
+    setLoading(true); // เริ่มการโหลด
+    setTimeout(() => {
+      navigate('/homepage');
+      setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+    }, 400); // หน่วงเวลา 400ms
+
   };
 
   return (
@@ -100,19 +105,19 @@ function Navbar() {
       {loading && (
         <Box style={{
           position: 'fixed',
-          top: '50%', // ย้ายขึ้นกลางจอ
-          left: '50%', // ย้ายไปกลางจอ
-          transform: 'translate(-50%, -50%)', // ปรับตำแหน่งให้ตรงกลาง
-          width: '300px', // ความกว้างของกรอบ
-          padding: '20px', // การเว้นระยะภายในกรอบ
-          backgroundColor: 'rgba(255, 255, 255, 0.9)', // เปลี่ยนสีพื้นหลัง
-          borderRadius: '8px', // มุมโค้ง
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // เงาเพื่อให้ดูเด่นขึ้น
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
           zIndex: 9999
         }}>
           <Box sx={{ textAlign: 'center' }}>
             <CircularProgress />
-            <Typography sx={{ mt: 2 }}>กำลังออกจากระบบ...</Typography>
+            <Typography sx={{ mt: 2 }}>Loading...</Typography>
           </Box>
         </Box>
       )}

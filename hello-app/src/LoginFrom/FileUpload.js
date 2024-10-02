@@ -152,7 +152,15 @@ function FileUpload() {
           icon: 'success',
           title: 'สำเร็จ!',
           text: 'อัปโหลดเอกสารสำเร็จ!',
+          showConfirmButton: false,
+          timer: 1500 // ปิดการแจ้งเตือนอัตโนมัติหลังจาก 1.5 วินาที
         });
+
+        // นำกลับไปหน้า homepage หลังจากการแจ้งเตือน
+        setTimeout(() => {
+          navigate('/track'); // นำไปหน้า homepage หลังจากการแจ้งเตือน
+        }, 1500); // รอให้การแจ้งเตือนแสดงครบ 1.5 วินาทีก่อนเปลี่ยนเส้นทาง
+
 
         resetForm();
 
@@ -210,8 +218,12 @@ function FileUpload() {
             </Typography>
             <form onSubmit={handleSubmit}>
               {/* ฟิลด์ข้อมูล */}
+              <Box sx={{ textAlign: 'left', color: 'gray', opacity: 0.6 }}>
+                * วันที่อัปโหลด
+              </Box>
+
               <TextField
-                label="วันที่อัปโหลด"
+                label=""
                 type="datetime-local"
                 name="upload_date"
                 value={values.upload_date}
@@ -283,11 +295,12 @@ function FileUpload() {
 
               </Box>
               {/* แถวที่ 6: เลือกไฟล์และปุ่มอัปโหลด */}
+              {/* แถวที่ 6: เลือกไฟล์และปุ่มอัปโหลด */}
               <Box sx={{ width: '100%', mb: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                 {/* ช่องสำหรับเลือกไฟล์ */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <input
-                    accept=".pdf, .doc, .docx, .jpg, .png"
+                    accept=".pdf " // อนุญาตให้เลือกเฉพาะไฟล์ PDF
                     id="upload-file"
                     type="file"
                     style={{ display: 'none' }} // ซ่อน input ดั้งเดิม
@@ -323,7 +336,13 @@ function FileUpload() {
                     </Paper>
                   )}
                 </Box>
+
+                {/* ข้อความแจ้งเตือนสำหรับไฟล์ PDF */}
+                <Typography variant="caption" color="textSecondary">
+                  * รับแค่ไฟล์ PDF 
+                </Typography>
               </Box>
+
               {/* ปุ่มบันทึกและล้างข้อมูล */}
               <Box sx={{ mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                 <Button

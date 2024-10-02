@@ -42,6 +42,7 @@ function EditDocuments() {
 
   const [pdfPages, setPdfPages] = useState(''); // สถานะสำหรับเก็บจำนวนหน้าของ PDF
   const [savings, setSavings] = useState(null); // สถานะสำหรับเก็บผลลัพธ์การประหยัดกระดาษ
+  const combinedNotes = `${document.notes || 'ไม่มีหมายเหตุจากผู้ใช้'}\n\nตอบกลับจากแอดมิน: ${document.admin_reply || 'ไม่มีการตอบกลับ'}`;
 
 
 
@@ -152,8 +153,19 @@ function EditDocuments() {
   // จัดการการส่งฟอร์ม
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.put(`http://localhost:3000/documents/${id}`, document);
+      // รวมข้อความจากหมายเหตุของผู้ใช้กับการตอบกลับของแอดมิน
+      const combinedNotes = `${document.notes || 'ไม่มีหมายเหตุจากผู้ใช้'}\n\nตอบกลับจากแอดมิน: ${document.admin_reply || 'ไม่มีการตอบกลับ'}`;
+
+      // สร้างข้อมูลเอกสารใหม่พร้อมรวมหมายเหตุทั้งสองส่วน
+      const updatedDocument = {
+        ...document,
+        notes: combinedNotes, // บันทึกหมายเหตุรวมทั้งสองส่วนในฟิลด์ notes
+      };
+
+      // อัปเดตข้อมูลในฐานข้อมูลผ่าน API
+      await axios.put(`http://localhost:3000/documents/${id}`, updatedDocument);
       console.log('Document updated successfully.');
 
       removeNavigationWarning(); // ลบการแจ้งเตือนเมื่อบันทึกข้อมูลสำเร็จ
@@ -163,10 +175,13 @@ function EditDocuments() {
         icon: 'success',
         title: 'Success',
         text: 'บันทึกข้อมูลเรียบร้อยแล้ว',
-      }).then(() => {
-        // นำผู้ใช้กลับไปที่หน้าติดตามเอกสารหลังจากปิด SweetAlert
-        navigate('/doc');
+        showConfirmButton: false,
+        timer: 1500 // ปิดการแจ้งเตือนอัตโนมัติหลังจาก 1.5 วินาที
       });
+
+      setTimeout(() => {
+        navigate('/doc');
+      }, 1500);
 
     } catch (error) {
       console.error('เกิดข้อผิดพลาดในการอัปเดตเอกสาร:', error.response?.data || error.message);
@@ -179,6 +194,7 @@ function EditDocuments() {
       });
     }
   };
+
 
   const handleDocumentReceive = async (docId) => {
     try {
@@ -404,19 +420,35 @@ function EditDocuments() {
 
 
                   {/* Row 7 */}
+                  {/* ช่องสำหรับหมายเหตุจากผู้ใช้ (read-only) */}
                   <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <TextField
-                        label="หมายเหตุ"
-                        name="notes"
-                        value={document.notes}
-                        onChange={handleChange}
-                        fullWidth
-                        multiline
-                        rows={4}
-                      />
-                    </FormControl>
+                    <TextField
+                      label="หมายเหตุจากผู้ใช้"
+                      name="user_notes"
+                      value={document.notes || 'ไม่มีหมายเหตุจากผู้ใช้'}
+                      fullWidth
+                      multiline
+                      rows={4}
+                      InputProps={{
+                        readOnly: true, // เพื่อไม่ให้แอดมินแก้ไขข้อความจากผู้ใช้ได้
+                      }}
+                    />
                   </Grid>
+
+                  {/* ช่องสำหรับการตอบกลับของแอดมิน */}
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="ตอบกลับจากแอดมิน"
+                      name="admin_reply"
+                      value={document.admin_reply || ''} // ใช้ state ในการจัดการค่าการตอบกลับ
+                      onChange={handleChange}
+                      fullWidth
+                      multiline
+                      rows={4}
+                    />
+                  </Grid>
+
+
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
                       <InputLabel>สถานะ</InputLabel>

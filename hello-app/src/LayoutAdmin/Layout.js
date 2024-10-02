@@ -187,18 +187,10 @@ const Layout = ({ children }) => {
         <Toolbar>
           {/* ช่องค้นหา */}
           <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2, justifyContent: 'flex-start' }}>
-            <IconButton sx={{ p: '10px' }}>
-              <Search />
-            </IconButton>
-            <InputBase
-              placeholder="Search…"
-              value={search}
-              onChange={handleSearchChange}
-              sx={{ ml: 1, flex: 1 }}
-            />
+            
           </Box>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            DashBoard
+          
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>

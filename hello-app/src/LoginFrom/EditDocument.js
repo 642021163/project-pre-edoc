@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, TextField, Typography, Paper, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, CircularProgress, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SendIcon from '@mui/icons-material/Send';
@@ -19,6 +19,7 @@ const EditDocument = () => {
     const [fileName, setFileName] = useState('');
     const [existingFileName, setExistingFileName] = useState('');
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
 
     useEffect(() => {
@@ -74,11 +75,16 @@ const EditDocument = () => {
                     icon: 'success',
                     title: 'สำเร็จ!',
                     text: 'เอกสารถูกอัปเดตเรียบร้อยแล้ว!',
-                }).then(() => {
-                    // นำทางกลับไปยังหน้าติดตามเอกสาร
-                    navigate('/track');
-                });
+                    showConfirmButton: false,
+                    timer: 1500 // ปิดการแจ้งเตือนอัตโนมัติหลังจาก 1.5 วินาที
+                })
             }
+
+            // นำกลับไปหน้า homepage หลังจากการแจ้งเตือน
+            setTimeout(() => {
+                navigate('/track'); // นำไปหน้า homepage หลังจากการแจ้งเตือน
+            }, 1500); // รอให้การแจ้งเตือนแสดงครบ 1.5 วินาทีก่อนเปลี่ยนเส้นทาง
+
         } catch (error) {
             console.error("Error updating document:", error);
 
@@ -92,11 +98,36 @@ const EditDocument = () => {
     };
 
     const handleCancel = () => {
-        navigate('/track');
+        setLoading(true); // เริ่มการโหลดเมื่อกดปุ่ม
+        setTimeout(() => {
+            setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+            navigate('/track'); // เปลี่ยนเส้นทางไปที่หน้า homepage
+        }, 400); // หน่วงเวลา 400ms ก่อนเปลี่ยนหน้า
     };
+
 
     return (
         <Box sx={{ flex: 1, p: 2, maxWidth: 800, mx: 'auto', bgcolor: '#f9f9f9', borderRadius: 2, boxShadow: 3 }}>
+            {loading && (
+                <Box style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100vw',
+                    height: '100vh',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    cursor: loading ? 'none' : 'auto', 
+                    zIndex: 9999
+                }}>
+                    <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress />
+                        <Typography sx={{ mt: 2 }}>Loading...</Typography>
+                    </Box>
+                </Box>
+            )}
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
                 <Typography variant="h4" gutterBottom>
                     แก้ไขเอกสาร

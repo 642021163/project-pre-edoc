@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Table, TableBody, TableCell, Paper, TableContainer, TableHead, TableRow, Box, Button, Tooltip, InputBase, Chip, Typography } from '@mui/material';
+import { Table, TableBody, TableCell, Paper, TableContainer, TableHead, TableRow, Box, Button, Tooltip, InputBase, Chip, Typography, IconButton,Pagination } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import EditIcon from '@mui/icons-material/Edit';
 import Layout from '../LayoutAdmin/Layout';
+import { Search, } from '@mui/icons-material';
 
 // การจัดรูปแบบวันที่และเวลา
 const formatDateTime = (dateTime) => format(parseISO(dateTime), 'yyyy-MM-dd HH:mm:ss');
@@ -13,6 +13,8 @@ function UnreadDocuments() {
     const [unreadDocuments, setUnreadDocuments] = useState([]);
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1); // State for current page
+    const rowsPerPage = 10; // Set number of rows per page to 10
 
     useEffect(() => {
         fetchUnreadDocuments(); // ดึงข้อมูลเอกสารที่ยังไม่ได้อ่านทันทีที่หน้าโหลด
@@ -49,6 +51,7 @@ function UnreadDocuments() {
         navigate(`/edit/${docId}`);
     };
 
+
     const getStatusText = (docStatus) => {
         switch (docStatus) {
             case 0:
@@ -62,14 +65,38 @@ function UnreadDocuments() {
         }
     };
 
+    // ฟังก์ชันเพื่อไฮไลต์ข้อความ
+    const highlightText = (text) => {
+        if (!search) return text;
+
+        const parts = text.split(new RegExp(`(${search})`, 'gi'));
+        return parts.map((part, index) =>
+            part.toLowerCase() === search.toLowerCase() ? (
+                <span key={index} style={{ backgroundColor: '#ffeb3b' }}>{part}</span>
+            ) : part
+        );
+    };
+
+    // ฟังก์ชันสำหรับการกรองเอกสารที่ยังไม่อ่านตามคำค้นหา
+    const filteredDocuments = unreadDocuments.filter(doc =>
+        doc.user_fname.toLowerCase().includes(search.toLowerCase()) ||
+        doc.subject.toLowerCase().includes(search.toLowerCase())
+    ).sort((a, b) => a.status - b.status); // เรียงตามสถานะ
+
+    const sortedDocuments = filteredDocuments.sort((a, b) => a.status - b.status);
+    const startIndex = (page - 1) * rowsPerPage;
+    const displayedDocuments = sortedDocuments.slice(startIndex, startIndex + rowsPerPage);
+
     return (
         <Layout> {/* เรียกใช้ Layout ที่ห่อไว้ */}
             <Box sx={{ display: 'flex' }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1' }}>
                     <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>เอกสารที่ยังไม่เปิดอ่าน</Typography>
 
-                    {/* ช่องค้นหา */}
                     <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2, mb: 3 }}>
+                        <IconButton sx={{ p: '10px' }}>
+                            <Search />
+                        </IconButton>
                         <InputBase
                             placeholder="Search…"
                             value={search}
@@ -78,7 +105,7 @@ function UnreadDocuments() {
                         />
                     </Box>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2,p:4 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2, p: 4 }}>
 
                         {/* ตารางแสดงเอกสารที่ยังไม่อ่าน */}
                         <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
@@ -91,18 +118,17 @@ function UnreadDocuments() {
                                         <TableCell sx={{ fontWeight: 'bold' }}>เรื่อง</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>ถึง</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>สถานะ</TableCell>
-                                        <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
                                         <TableCell sx={{ fontWeight: 'bold' }}>ไฟล์</TableCell>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {unreadDocuments.map((doc, index) => {
+                                    {filteredDocuments.map((doc, index) => {
                                         return (
                                             <TableRow key={doc.document_id}>
                                                 <TableCell>{index + 1}</TableCell>
                                                 <TableCell>{formatDateTime(doc.upload_date)}</TableCell>
-                                                <TableCell>{`${doc.user_fname} ${doc.user_lname}`}</TableCell>
-                                                <TableCell>{doc.subject}</TableCell>
+                                                <TableCell>{highlightText(`${doc.user_fname} ${doc.user_lname}`)}</TableCell>
+                                                <TableCell>{highlightText(doc.subject)}</TableCell>
                                                 <TableCell>{doc.to_recipient}</TableCell>
                                                 <TableCell>
                                                     {
@@ -112,25 +138,7 @@ function UnreadDocuments() {
                                                         })()
                                                     }
                                                 </TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        variant="contained"
-                                                        sx={{
-                                                            mx: 1,
-                                                            backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
-                                                            color: '#000',
-                                                            '&:hover': {
-                                                                backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
-                                                            },
-                                                            display: 'flex',
-                                                            alignItems: 'center', // จัดแนวให้อยู่กลาง
-                                                        }}
-                                                        onClick={() => handleEditClick(doc.document_id)}
-                                                    >
-                                                        <EditIcon sx={{ mr: 1 }} /> {/* ไอคอนการแก้ไข */}
-                                                        Edit
-                                                    </Button>
-                                                </TableCell>
+
                                                 <TableCell>
                                                     <Tooltip title="เปิดไฟล์ PDF" arrow>
                                                         <Button
@@ -147,7 +155,7 @@ function UnreadDocuments() {
                                                                 }
                                                             }}
                                                         >
-                                                            เปิดไฟล์ PDF
+                                                            PDF
                                                         </Button>
                                                     </Tooltip>
                                                 </TableCell>
@@ -157,6 +165,14 @@ function UnreadDocuments() {
                                 </TableBody>
                             </Table>
                         </TableContainer>
+                        <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                            <Pagination
+                                count={Math.ceil(sortedDocuments.length / rowsPerPage)} // คำนวณจำนวนหน้า
+                                page={page}
+                                shape="rounded"
+                                onChange={(event, value) => setPage(value)} // เปลี่ยนหน้าเมื่อคลิก
+                            />
+                        </Box>
                     </Box>
                 </Box>
             </Box>

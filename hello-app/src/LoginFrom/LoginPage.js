@@ -198,9 +198,20 @@ function LoginPage() {
                 {loading ? 'Logging in...' : 'Login'}
               </Button>
               {userType !== 'admin' && (
-                <Button variant="outlined" color="secondary" onClick={() => navigate('/registerfrom')}>
+                <Button variant="outlined"
+                  sx={{
+                    borderColor: '#4caf50', // สีของกรอบ (สีเขียว)
+                    color: '#4caf50', // สีของข้อความ (สีเขียว)
+                    '&:hover': {
+                      borderColor: '#388e3c', // สีของกรอบเมื่อเมาส์ชี้ (สีเขียวเข้ม)
+                      color: '#ffffff', // เปลี่ยนสีข้อความเมื่อเมาส์ชี้ (สีขาว)
+                      backgroundColor: '#4caf50', // เปลี่ยนสีพื้นหลังเมื่อเมาส์ชี้ (สีเขียว)
+                    },
+                  }}
+                  onClick={() => navigate('/registerfrom')}>
                   Register
                 </Button>
+
               )}
             </Box>
           </Box>

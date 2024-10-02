@@ -291,10 +291,11 @@ function RegisterFrom() {
                                         <MenuItem value="นาย">นาย</MenuItem>
                                         <MenuItem value="นาง">นาง</MenuItem>
                                         <MenuItem value="นางสาว">นางสาว</MenuItem>
-                                        <MenuItem value="ผศ.ดร">ผศ.ดร</MenuItem>
                                         <MenuItem value="อาจารย์">อาจารย์</MenuItem>
-                                        <MenuItem value="ศาสตราจารย์.ดร">ศาสตราจารย์.ดร</MenuItem>
                                         <MenuItem value="ดร.">ดร.</MenuItem>
+                                        <MenuItem value="ผศ.ดร">ผศ.ดร</MenuItem>
+                                        <MenuItem value="ศาสตราจารย์.ดร">ศาสตราจารย์.ดร</MenuItem>
+
                                     </Select>
                                     <FormHelperText>{errors.prefix}</FormHelperText>
                                 </FormControl>

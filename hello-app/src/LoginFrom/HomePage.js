@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Link, CircularProgress } from '@mui/material';
-import { FileUpload, AccountCircle, ExitToApp, InsertDriveFile } from '@mui/icons-material';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Link as RouterLink } from 'react-router-dom';
+import { Box, Typography, Link, CircularProgress, Tooltip } from '@mui/material';
+import { useNavigate, useLocation, useParams, Link as RouterLink } from 'react-router-dom';
 import Navbar from '../AppBar/Navbar';
 import AppBar from '../AppBar/Appbar';
 import Drawer from '../AppBar/Drawer';
@@ -11,8 +8,6 @@ import Drawer from '../AppBar/Drawer';
 const images = [
     { src: '/asset/0001.png', title: 'ส่งเอกสาร', link: '/fileupload' },
     { src: '/asset/002.png', title: 'ติดตามเอกสาร', link: '/track' },
-    { src: '/asset/005.jpg', title: 'Image Title 4', link: '/page4' },
-    { src: '/asset/006.jpg', title: 'Image Title 5', link: '/page5' },
     // เพิ่มรายการภาพที่นี่
 ];
 
@@ -47,8 +42,18 @@ function HomePage() {
         }
     }, [navigate]);
 
+    const handleLinkClick = (link) => {
+        setLoading(true); // เริ่มการโหลดเมื่อคลิก
+        setTimeout(() => {
+            navigate(link); // เปลี่ยนเส้นทางหลังจากหน่วงเวลาเล็กน้อย
+            setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
+        }, 1000); // หน่วงเวลา 1 วินาที (สามารถปรับได้)
+    };
 
-    const colors = ['#FF5733', '#33FF57', '#3357FF', '#F1C40F', '#8E44AD']; // Array of colors
+    // สีพื้นหลังที่สบายตา
+    const backgroundColors = ['#E8F5E9', '#E3F2FD', '#FFF3E0']; // ตัวอย่างสีพื้นหลังที่สบายตา
+    const borderColor = '#A5D6A7'; // สีกรอบ
+
     return (
         <Box>
             {location.pathname === '/homepage' && (
@@ -72,14 +77,16 @@ function HomePage() {
                         backgroundColor: 'rgba(255, 255, 255, 0.7)',
                         zIndex: 9999
                     }}>
-                        <CircularProgress />
+                        <Box sx={{ textAlign: 'center' }}>
+                            <CircularProgress />
+                            <Typography sx={{ mt: 2 }}>Loading...</Typography>
+                        </Box>
                     </Box>
                 )}
 
                 <Drawer menuOpen={menuOpen} toggleMenu={toggleMenu} />
                 {/* เนื้อหาหลัก */}
                 <Box sx={{ flex: 1, p: 2 }}>
-
                     <Typography variant="h4" gutterBottom>
                         สวัสดีคุณ ,{user_fname} {user_lname}!
                     </Typography>
@@ -90,32 +97,57 @@ function HomePage() {
                         padding: 2
                     }}>
                         {images.map((image, index) => (
-                            <Box key={index} sx={{ position: 'relative', overflow: 'hidden', borderRadius: 4 }}>
+                            <Box
+                                key={index}
+                                sx={{
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    borderRadius: 4,
+                                    backgroundColor: backgroundColors[index % backgroundColors.length],
+                                    border: `2px solid ${borderColor}`, // สร้างกรอบ
+                                    padding: 1,
+                                    boxShadow: 2 // เพิ่มเงาเพื่อให้กรอบเด่นขึ้น
+                                }}
+                            >
                                 <img
                                     src={image.src}
                                     alt={image.title}
                                     loading="lazy"
                                     style={{
-                                        width: '250px',
-                                        height: '200px',
+                                        width: '300px', // ขนาดภาพ
+                                        height: '300px', // ขนาดภาพ
                                         objectFit: 'cover',
                                     }}
                                 />
-                                <Typography variant="body2" sx={{ position: 'absolute', bottom: 0, left: 0, right: 0, textAlign: 'center', bgcolor: '#338ef7', color: 'white', p: 1 }}>
-                                    <Link
-                                        component={RouterLink}
-                                        to={image.link}
-                                        underline="hover"
-                                        color="inherit"
-                                    >
-                                        {image.title}
-                                    </Link>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        textAlign: 'center',
+                                        bgcolor: '#338ef7',
+                                        color: 'white',
+                                        p: 2, // เพิ่ม padding เพื่อให้กรอบข้อความมีขนาดใหญ่ขึ้น
+                                        fontSize: '1rem', // ปรับขนาดตัวอักษรให้สมดุลกับขนาดภาพ
+                                    }}
+                                >
+                                    <Tooltip title={image.title}>
+                                        <Link
+                                            onClick={() => handleLinkClick(image.link)} // เรียกใช้ฟังก์ชัน handleLinkClick
+                                            underline="hover"
+                                            color="inherit"
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            {image.title}
+                                        </Link>
+                                    </Tooltip>
                                 </Typography>
                             </Box>
                         ))}
                     </Box>
                 </Box>
-
             </Box>
         </Box>
     );

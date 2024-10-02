@@ -220,6 +220,14 @@ const storage = multer.diskStorage({
         const originalName = file.originalname; // ใช้ชื่อไฟล์เดิม
         console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
 
+        //  // ใช้ชื่อไฟล์ที่ถูกต้องตาม UTF-8
+        //  const originalName = decodeURIComponent(file.originalname); // แปลงชื่อไฟล์ให้ถูกต้อง
+        //  console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
+
+
+        // // แปลงชื่อไฟล์ให้เป็น UTF-8
+        // const safeFileName = Buffer.from(originalName, 'latin1').toString('utf8');
+
         // ตรวจสอบการทับซ้อนของชื่อไฟล์
         let filePath = path.join(__dirname, 'uploads', originalName);
         if (fs.existsSync(filePath)) {
@@ -341,8 +349,20 @@ app.get('/documents', authenticateToken, (req, res) => {
             console.error('Database Error:', err.code, err.message, err.sql);
             return res.status(500).json({ message: "Error fetching documents", error: err.message });
         }
-        console.log('Documents fetched successfully:', results);
-        return res.status(200).json(results);
+
+        // แปลงข้อมูลเพื่อส่งเฉพาะข้อมูลที่ต้องการ
+        const formattedResults = results.map(doc => ({
+            document_id: doc.document_id,
+            upload_date: doc.upload_date,
+            subject: doc.subject,
+            file: doc.file, // ชื่อไฟล์
+            status: doc.status,
+            document_type: doc.document_type,
+            recipient: doc.recipient
+        }));
+
+        console.log('Documents fetched successfully:', formattedResults);
+        return res.status(200).json(formattedResults);
     });
 });
 
@@ -432,7 +452,6 @@ app.get('/users-profile/:id', (req, res) => {
         return res.status(200).json(results[0]);
     });
 });
-
 
 // อัปเดตข้อมูลผู้ใช้ตาม ID ฝั่ง user
 app.put('/users/:id', (req, res) => {
@@ -780,6 +799,27 @@ app.post('/document-stats', (req, res) => {
     // SQL สำหรับการบันทึกข้อมูลการรับเอกสาร
     const sql = 'INSERT INTO document_receipts (document_id, user_id, date_received, paper_cost) VALUES (?, ?, ?, ?)';
     db.query(sql, [documentId, adminId, dateReceived, paperCost], (err, result) => {
+        if (err) {
+            console.error('Error inserting document receipt:', err);
+            return res.status(500).send('Error inserting document receipt');
+        }
+        res.send('Document receipt recorded successfully');
+    });
+});
+
+// Endpoint สำหรับบันทึกค่าประหยัดกระดาษ
+app.post('/api/document_receipts', (req, res) => {
+    console.log('Received data for document receipt:', req.body);
+    const { document_id, user_id, paper_cost } = req.body;
+
+    // ตรวจสอบค่าที่รับ
+    if (!document_id || !user_id || !paper_cost) {
+        return res.status(400).send('Missing parameters');
+    }
+
+    // SQL สำหรับการบันทึกข้อมูลการรับเอกสาร
+    const sql = 'INSERT INTO document_receipts (document_id, user_id, paper_cost) VALUES (?, ?, ?)';
+    db.query(sql, [document_id, user_id, paper_cost], (err, result) => {
         if (err) {
             console.error('Error inserting document receipt:', err);
             return res.status(500).send('Error inserting document receipt');
