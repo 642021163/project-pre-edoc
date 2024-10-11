@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, CssBaseline, IconButton, Badge, Menu, MenuItem, Collapse, Divider, Tooltip } from '@mui/material';
-import { Home as HomeIcon, PersonAdd, Article, InsertDriveFile, ArrowDropDown, ArrowDropUp, AddComment, Description,MenuIcon ,CloseIcon , SupervisorAccount, BarChart, ExitToApp, Notifications, Search, AccountCircle } from '@mui/icons-material';
+import { Home as HomeIcon, PersonAdd, Article, InsertDriveFile, ArrowDropDown, ArrowDropUp, AddComment, Description, MenuIcon, CloseIcon, SupervisorAccount, BarChart, ExitToApp, Notifications, Search, AccountCircle } from '@mui/icons-material';
 import InputBase from '@mui/material/InputBase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -187,10 +187,10 @@ const Layout = ({ children }) => {
         <Toolbar>
           {/* ช่องค้นหา */}
           <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2, justifyContent: 'flex-start' }}>
-            
+
           </Box>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          
+
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -254,24 +254,27 @@ const Layout = ({ children }) => {
                 </ListItem>
                 <Divider />
                 {notifications.length > 0 ? (
-                  notifications.map((notification, index) => (
-                    <React.Fragment key={index}>
-                      <ListItem sx={{ padding: '10px', '&:hover': { backgroundColor: '#f5f5f5' } }}>
-                        <ListItemIcon>
-                          <NotificationsIcon sx={{ color: '#1976d2' }} />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={`คุณ ${notification.user_fname} ${notification.user_lname} ได้เพิ่มเอกสาร`}
-                          secondary={
-                            <Typography variant="body2" color="text.secondary">
-                              {timeAgo(notification.upload_date)}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                      <Divider />
-                    </React.Fragment>
-                  ))
+                  notifications
+                    .slice() // ใช้ slice เพื่อสร้างสำเนาของ notifications
+                    .reverse() // กลับลำดับรายการ
+                    .map((notification, index) => (
+                      <React.Fragment key={index}>
+                        <ListItem sx={{ padding: '10px', '&:hover': { backgroundColor: '#f5f5f5' } }}>
+                          <ListItemIcon>
+                            <NotificationsIcon sx={{ color: '#1976d2' }} />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={`คุณ ${notification.user_fname} ${notification.user_lname} ได้เพิ่มเอกสาร`}
+                            secondary={
+                              <Typography variant="body2" color="text.secondary">
+                                {timeAgo(notification.create_at)}
+                              </Typography>
+                            }
+                          />
+                        </ListItem>
+                        <Divider />
+                      </React.Fragment>
+                    ))
                 ) : (
                   <ListItem>
                     <ListItemText primary="ไม่มีเอกสารใหม่" sx={{ textAlign: 'center' }} />
@@ -329,10 +332,10 @@ const Layout = ({ children }) => {
                   <ListItemIcon sx={{ color: '#4DB6AC' }}><Article /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="รายชื่อผู้ใช้" />
                 </ListItem>
-                <ListItem button sx={{ pl: 4 }} onClick={handleAddUser}>
-                  <ListItemIcon sx={{ color: '#FF8A65' }}><PersonAdd /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
+                {/* <ListItem button sx={{ pl: 4 }} onClick={handleAddUser}>
+                  <ListItemIcon sx={{ color: '#FF8A65' }}><PersonAdd /></ListItemIcon>
                   <ListItemText primary="เพิ่มผู้ใช้" />
-                </ListItem>
+                </ListItem> */}
               </List>
             </Collapse>
 
@@ -350,10 +353,10 @@ const Layout = ({ children }) => {
                   <ListItemIcon sx={{ color: '#F06292' }}><Description /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="เอกสารทั้งหมด" />
                 </ListItem>
-                <ListItem button sx={{ pl: 4 }} onClick={handleAddFile}>
-                  <ListItemIcon sx={{ color: '#64B5F6' }}><AddComment /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
+                {/* <ListItem button sx={{ pl: 4 }} onClick={handleAddFile}>
+                  <ListItemIcon sx={{ color: '#64B5F6' }}><AddComment /></ListItemIcon> 
                   <ListItemText primary="เพิ่มเอกสาร" />
-                </ListItem>
+                </ListItem> */}
               </List>
             </Collapse>
 

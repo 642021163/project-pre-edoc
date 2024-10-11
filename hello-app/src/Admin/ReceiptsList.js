@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     AppBar, Toolbar, Typography, IconButton, Box, TextField, InputAdornment, Container, Grid, FormControl,
-    InputLabel, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
+    InputLabel, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Pagination, Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,43 @@ function ReceiptsList() {
     const totalReceipts = receipts.length; // จำนวนเอกสารทั้งหมด
     const totalSavings = receipts.reduce((acc, receipt) => acc + parseFloat(receipt.paper_cost), 0); // ใช้ parseFloat
     const [adminData, setAdminData] = useState([]);
+    const [searchDate, setSearchDate] = useState('');
+    const [highlightedRows, setHighlightedRows] = useState([]); // สถานะสำหรับเก็บแถวที่ต้องการไฮไลต์
+    const [page, setPage] = useState(1); // State for current page
+    const rowsPerPage = 10; // Set number of rows per page to 10
+    const [documents, setDocuments] = useState([]);
+    const [startDate, setStartDate] = useState('');  // ประกาศสถานะ startDate
+    const [endDate, setEndDate] = useState('');  // ประกาศสถานะ endDate
+    const [searchTerm, setSearchTerm] = useState(''); // จัดการการค้นหา
+
+    // ฟังก์ชันจัดเรียงเอกสารให้ใหม่แสดงด้านบนสุด
+    const sortedReceipts = [...receipts].sort((a, b) => new Date(b.date_received) - new Date(a.date_received));
+    // ฟังก์ชันสำหรับแบ่งหน้า
+    const startIndex = (page - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const paginatedReceipts = sortedReceipts.slice(startIndex, endIndex);
+
+    // ฟังก์ชันสำหรับไฮไลท์ข้อความที่ตรงกับการค้นหา
+    const highlightText = (text, searchTerm) => {
+        if (!searchTerm) return text;
+        const regex = new RegExp(`(${searchTerm})`, 'gi');
+        const parts = text.split(regex);
+
+        return parts.map((part, index) =>
+            regex.test(part) ? <span key={index} style={{ backgroundColor: 'yellow' }}>{part}</span> : part
+        );
+    };
+
+
+
+    // ฟังก์ชันฟิลเตอร์ข้อมูลที่ตรงกับคำค้นหา
+    const filteredReceipts = paginatedReceipts.filter(receipt => {
+        const document = documents.find(doc => doc.document_id === receipt.document_id);
+        const subjectMatch = document?.subject.toLowerCase().includes(searchTerm.toLowerCase());
+        const senderMatch = `${document?.user_fname} ${document?.user_lname}`.toLowerCase().includes(searchTerm.toLowerCase());
+
+        return subjectMatch || senderMatch; // ฟิลเตอร์เฉพาะข้อมูลที่ตรง
+    });
 
 
 
@@ -93,7 +130,18 @@ function ReceiptsList() {
         }
     }, [selectedAdmin, receipts, admins]);
 
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            try {
+                const response = await axios.get('http://localhost:3000/admin/documents');
+                setDocuments(response.data); // เก็บข้อมูลเอกสาร
+            } catch (error) {
+                console.error('Error fetching documents:', error);
+            }
+        };
 
+        fetchDocuments();
+    }, []);
 
     const adminCounts = receipts.reduce((acc, receipt) => {
         const adminId = receipt.user_id; // ไอดี Admin
@@ -127,7 +175,9 @@ function ReceiptsList() {
                                 <TextField
                                     fullWidth
                                     variant="outlined"
-                                    placeholder="Search..."
+                                    placeholder="Search by subject or sender..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)} // อัปเดต searchTerm เมื่อพิมพ์
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
@@ -172,23 +222,36 @@ function ReceiptsList() {
                                             <TableHead>
                                                 <TableRow>
                                                     <TableCell>ลำดับ</TableCell>
-                                                    <TableCell>ID เอกสาร</TableCell>
-                                                    <TableCell>ไอดี Admin</TableCell>
                                                     <TableCell>วันที่รับเอกสาร</TableCell>
+                                                    <TableCell>เรื่อง</TableCell>
+                                                    <TableCell>ผู้ส่ง</TableCell>
                                                     <TableCell>จำนวนเงินประหยัดกระดาษ</TableCell>
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
-                                                {receipts.length > 0 ? (
-                                                    receipts.map((receipt, index) => (
-                                                        <TableRow key={receipt.receipt_id}>
-                                                            <TableCell>{index + 1}</TableCell>
-                                                            <TableCell>{receipt.document_id}</TableCell>
-                                                            <TableCell>{receipt.user_id}</TableCell>
-                                                            <TableCell>{new Date(receipt.date_received).toLocaleDateString()}</TableCell>
-                                                            <TableCell>{receipt.paper_cost}</TableCell>
-                                                        </TableRow>
-                                                    ))
+                                                {filteredReceipts.length > 0 ? (
+                                                    filteredReceipts.map((receipt, index) => {
+                                                        const document = documents.find(doc => doc.document_id === receipt.document_id);
+                                                        return (
+                                                            <TableRow key={receipt.receipt_id}>
+                                                                <TableCell>{(page - 1) * rowsPerPage + index + 1}</TableCell>
+                                                                <TableCell>
+                                                                    {new Date(receipt.date_received).toLocaleDateString('th-TH', {
+                                                                        day: 'numeric',
+                                                                        month: 'long',
+                                                                        year: 'numeric',
+                                                                    })}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {document ? highlightText(document.subject, searchTerm) : 'No Subject'}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {document ? highlightText(`${document.user_fname} ${document.user_lname}`, searchTerm) : 'No Name'}
+                                                                </TableCell>
+                                                                <TableCell>{receipt.paper_cost}</TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })
                                                 ) : (
                                                     <TableRow>
                                                         <TableCell colSpan={5}>No receipts available</TableCell>
@@ -199,6 +262,15 @@ function ReceiptsList() {
                                     </TableContainer>
                                 )}
 
+                                {/* Pagination */}
+                                <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                                    <Pagination
+                                        count={Math.ceil(sortedReceipts.length / rowsPerPage)} // คำนวณจำนวนหน้า
+                                        page={page}
+                                        shape="rounded"
+                                        onChange={(event, value) => setPage(value)} // เปลี่ยนหน้าเมื่อคลิก
+                                    />
+                                </Box>
                                 {/* ตารางผลรวมด้านล่าง */}
                                 {selectedAdmin !== 'all' && ( // เพิ่มเงื่อนไขที่นี่เพื่อให้ไม่แสดงตารางผลรวมเมื่อเลือก "ทั้งหมด"
                                     <TableContainer component={Paper} sx={{ mt: 4 }}>
@@ -251,6 +323,14 @@ function ReceiptsList() {
                             </Box>
                         )}
                     </Container>
+                    {/* <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
+                        <Pagination
+                            count={Math.ceil(sortedDocuments.length / rowsPerPage)} // คำนวณจำนวนหน้า
+                            page={page}
+                            shape="rounded"
+                            onChange={(event, value) => setPage(value)} // เปลี่ยนหน้าเมื่อคลิก
+                        />
+                    </Box> */}
                 </Box>
             </Box>
 

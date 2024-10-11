@@ -9,8 +9,7 @@ import { format, parseISO } from 'date-fns';
 import Layout from '../LayoutAdmin/Layout';
 import Swal from 'sweetalert2';
 
-// การจัดรูปแบบวันที่และเวลา
-const formatDateTime = (dateTime) => format(parseISO(dateTime), 'yyyy-MM-dd HH:mm:ss');
+
 function EditDocuments() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -257,7 +256,7 @@ function EditDocuments() {
     // ตรวจสอบจำนวนหน้าของ PDF ก่อนคำนวณ
     if (pdfPages > 0) {
       // สมมุติว่าคุณมีอัตราการประหยัดกระดาษต่อหน้ากระดาษ
-      const savingsPerPage = 0.5; // ตัวอย่าง: ประหยัด 0.5 บาทต่อหน้า
+      const savingsPerPage = 0.9; // ตัวอย่าง: ประหยัด 0.5 บาทต่อหน้า
       const calculatedSavings = pdfPages * savingsPerPage;
       const documentId = document.document_id; // ตรวจสอบว่าคุณดึง id มาอย่างถูกต้อง
 
@@ -328,16 +327,18 @@ function EditDocuments() {
                   {/* Row 1 */}
                   <Grid item xs={12} md={6}>
                     <TextField
-                      label="วันที่อัปโหลด"
-                      name="upload_date"
-                      type="datetime-local"
-                      value={document.upload_date}
+                      label="ผู้ส่ง"
+                      name="user_fullname"
+                      value={`${document.user_fname} ${document.user_lname}`}  // รวมทั้งชื่อและนามสกุล
                       onChange={handleChange}
                       fullWidth
                       required
-                      InputLabelProps={{ shrink: true }}
+                      InputProps={{
+                        readOnly: true,  // ให้ไม่สามารถแก้ไขได้
+                      }}
                     />
                   </Grid>
+
                   {/* Row 2 */}
                   <Grid item xs={12} md={6}>
                     <TextField
@@ -347,6 +348,9 @@ function EditDocuments() {
                       onChange={handleChange}
                       fullWidth
                       required
+                      InputProps={{
+                        readOnly: true,  // ให้ไม่สามารถแก้ไขได้
+                      }}
                     />
                   </Grid>
 
@@ -359,6 +363,9 @@ function EditDocuments() {
                       onChange={handleChange}
                       fullWidth
                       required
+                      InputProps={{
+                        readOnly: true,  // ให้ไม่สามารถแก้ไขได้
+                      }}
                     />
                   </Grid>
 
@@ -372,6 +379,7 @@ function EditDocuments() {
                         value={document.recipient || ''}
                         onChange={handleChange}
                         required
+                        disabled={!!document.recipient}
                       >
                         {recipients.length > 0 ? (
                           recipients.map(admin => (
@@ -397,6 +405,7 @@ function EditDocuments() {
                         value={document.document_type}
                         onChange={handleChange}
                         required
+                        
                       >
                         {document_typeOptions.map(option => (
                           <MenuItem key={option.value} value={option.value}>
@@ -425,7 +434,7 @@ function EditDocuments() {
                     <TextField
                       label="หมายเหตุจากผู้ใช้"
                       name="user_notes"
-                      value={document.notes || 'ไม่มีหมายเหตุจากผู้ใช้'}
+                      value={document.notes}
                       fullWidth
                       multiline
                       rows={4}
@@ -436,7 +445,7 @@ function EditDocuments() {
                   </Grid>
 
                   {/* ช่องสำหรับการตอบกลับของแอดมิน */}
-                  <Grid item xs={12} md={6}>
+                  {/* <Grid item xs={12} md={6}>
                     <TextField
                       label="ตอบกลับจากแอดมิน"
                       name="admin_reply"
@@ -446,7 +455,7 @@ function EditDocuments() {
                       multiline
                       rows={4}
                     />
-                  </Grid>
+                  </Grid> */}
 
 
                   <Grid item xs={12} md={6}>

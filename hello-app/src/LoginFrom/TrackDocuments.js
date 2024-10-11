@@ -47,6 +47,31 @@ const TrackDocuments = () => {
     const location = useLocation(); // ใช้สำหรับตรวจสอบที่อยู่ URL ปัจจุบัน
     const [search, setSearch] = useState('');
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) {
+            return "No Date Available";  // ถ้าไม่มีวันที่ จะแสดงข้อความนี้
+        }
+        try {
+            const formattedDate = new Date(dateString); // แปลงค่าเป็นวันที่
+            const datePart = formattedDate.toLocaleDateString("th-TH", {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }); // จัดรูปแบบวันที่ (วัน, เดือน, ปี)
+            const timePart = formattedDate.toLocaleTimeString("th-TH", {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false  // ใช้เวลาในรูปแบบ 24 ชั่วโมง
+            }); // จัดรูปแบบเวลา (ชั่วโมง:นาที) ไม่มีวินาที
+
+            return `${datePart}  ${timePart}`;  // รวมวันที่และเวลา
+        } catch (error) {
+            console.error("Invalid Date Format", error);
+            return "Invalid Date"; // ถ้าไม่สามารถแปลงวันที่ได้
+        }
+    };
+
+
     const fetchDocuments = async () => {
         try {
             const token = localStorage.getItem('token'); // สมมุติว่าเก็บ token ไว้ใน localStorage
@@ -239,6 +264,7 @@ const TrackDocuments = () => {
                             </TableHead>
                             <TableBody>
                                 {(filteredDocuments.length === 0 ? documents : filteredDocuments)
+                                    .sort((a, b) => new Date(b.create_at) - new Date(a.create_at)) // เรียงตามวันที่ล่าสุด (desc)
                                     .slice((page - 1) * rowsPerPage, page * rowsPerPage) // ใช้ slice เพื่อแบ่งเอกสารตามหน้าที่จะแสดง
                                     .map((doc, index) => {
                                         return (
@@ -251,7 +277,7 @@ const TrackDocuments = () => {
                                                 }}
                                             >
                                                 <TableCell component="th" scope="row">{index + 1 + (page - 1) * rowsPerPage}</TableCell>
-                                                <TableCell align="left">{formatDateTime(doc.upload_date)}</TableCell>
+                                                <TableCell align="left">{formatDateTime(doc.create_at)}</TableCell>
                                                 <TableCell align="left">
                                                     {/* ไฮไลต์ชื่อเรื่องที่ตรงกับการค้นหา */}
                                                     {doc.subject.split(new RegExp(`(${search})`, 'i')).map((part, i) => (
@@ -261,8 +287,8 @@ const TrackDocuments = () => {
                                                     ))}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Tooltip title="เปิดไฟล์ PDF" arrow>
-                                                        <Button
+                                                    <Tooltip title="เปิดไฟล์ " arrow>
+                                                        <Link
                                                             variant="contained"
                                                             color="primary"
                                                             onClick={() => {
@@ -272,8 +298,8 @@ const TrackDocuments = () => {
                                                                 textTransform: 'none', // ปิดการแปลงข้อความเป็นตัวพิมพ์ใหญ่
                                                             }}
                                                         >
-                                                            PDF
-                                                        </Button>
+                                                            ViewFile
+                                                        </Link>
                                                     </Tooltip>
                                                 </TableCell>
                                                 <TableCell align="left" sx={{ maxWidth: 200, whiteSpace: 'nowrap' }}>
@@ -300,6 +326,7 @@ const TrackDocuments = () => {
                                                                 transition: '0.3s',
                                                             }}
                                                             onClick={() => handleEditClick(doc.document_id)}
+                                                            disabled={doc.status === 2} // ปิดปุ่มเมื่อสถานะเอกสารเป็น "ดำเนินการเรียบร้อย"
                                                         >
                                                             Edit
                                                         </Button>
@@ -321,6 +348,7 @@ const TrackDocuments = () => {
                                                         </Button>
                                                     </Box>
                                                 </TableCell>
+
                                                 <TableCell align="left">
                                                     <Button
                                                         variant="contained"
@@ -334,6 +362,7 @@ const TrackDocuments = () => {
                                         );
                                     })}
                             </TableBody>
+
                         </Table>
                     </TableContainer>
                     <Box sx={{ mt: 3, textAlign: 'center', display: 'flex', justifyContent: 'center' }}>
@@ -383,7 +412,7 @@ const TrackDocuments = () => {
                         <Grid container spacing={2}>
                             {[
                                 { label: 'เรื่อง:', value: selectedDocument.subject },
-                                { label: 'วันที่และเวลาอัพโหลด:', value: new Date(selectedDocument.upload_date).toLocaleString() },
+                                { label: 'วันที่และเวลาอัพโหลด:', value: formatDateTime(selectedDocument.create_at) },
                                 { label: 'ถึง:', value: selectedDocument.to_recipient },
                                 {
                                     label: 'ชื่อไฟล์:',
@@ -406,25 +435,8 @@ const TrackDocuments = () => {
                                 },
                                 { label: 'เลขที่เอกสาร:', value: selectedDocument.document_number },
                                 { label: 'ประเภทเอกสาร:', value: selectedDocument.document_type },
-                                {
-                                    label: 'หมายเหตุ:',
-                                    value: (
-                                        <Box>
-                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                หมายเหตุจากผู้ใช้:
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ ml: 1, mb: 2 }}>
-                                                {selectedDocument.notes}
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                ตอบกลับจากแอดมิน:
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ ml: 1 }}>
-                                                {selectedDocument.admin_reply || "ยังไม่มีการตอบกลับ"}
-                                            </Typography>
-                                        </Box>
-                                    ),
-                                },
+                                { label: 'หมายเหตุ:', value: selectedDocument.notes },
+
                                 { label: 'ผู้ส่ง:', value: senderName },
                                 { label: 'ผู้รับเอกสาร:', value: getAdminNameById(selectedDocument.recipient) },
                             ].map((item, index) => (

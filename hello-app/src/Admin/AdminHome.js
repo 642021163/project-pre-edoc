@@ -138,7 +138,7 @@ function AdminHome() {
             <Grid container spacing={3}>
 
               {/* Card 1 */}
-              <Grid item xs={12} sm={6} md={4}>
+              {/* <Grid item xs={12} sm={6} md={4}>
                 <Link onClick={() => handleLinkClick('/unread')} style={{ textDecoration: 'none' }}>
                   <Paper
                     elevation={6}
@@ -174,7 +174,7 @@ function AdminHome() {
                     </>
                   </Paper>
                 </Link>
-              </Grid>
+              </Grid> */}
 
               {/* Card 2 */}
               <Grid item xs={12} sm={6} md={4}>

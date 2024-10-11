@@ -278,7 +278,7 @@ function EditUser() {
             </form>
           </Paper>
           {/* Form for Resetting Password */}
-          <Paper sx={{ padding: 3, mt: 3, backgroundColor: '#f5f5f5' }}>
+          {/* <Paper sx={{ padding: 3, mt: 3, backgroundColor: '#f5f5f5' }}>
             <Typography variant="h6" gutterBottom>รีเซ็ตรหัสผ่านใหม่</Typography>
             <TextField
               margin="dense"
@@ -315,7 +315,7 @@ function EditUser() {
                 ยกเลิก
               </Button>
             </Box>
-          </Paper>
+          </Paper> */}
         </Box>
       </Box>
     </Layout>

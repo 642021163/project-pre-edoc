@@ -26,6 +26,30 @@ function Documents() {
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
 
+    const formatDateTime = (dateString) => {
+        if (!dateString) {
+            return "No Date Available";  // ถ้าไม่มีวันที่ จะแสดงข้อความนี้
+        }
+        try {
+            const formattedDate = new Date(dateString); // แปลงค่าเป็นวันที่
+            const datePart = formattedDate.toLocaleDateString("th-TH", {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            }); // จัดรูปแบบวันที่ (วัน, เดือน, ปี)
+            const timePart = formattedDate.toLocaleTimeString("th-TH", {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false  // ใช้เวลาในรูปแบบ 24 ชั่วโมง
+            }); // จัดรูปแบบเวลา (ชั่วโมง:นาที) ไม่มีวินาที
+
+            return `${datePart}  ${timePart}`;  // รวมวันที่และเวลา
+        } catch (error) {
+            console.error("Invalid Date Format", error);
+            return "Invalid Date"; // ถ้าไม่สามารถแปลงวันที่ได้
+        }
+    };
+
 
 
     // ฟังก์ชันกรองเอกสารตามการค้นหา
@@ -164,7 +188,7 @@ function Documents() {
             //     documentId: docId,
             //     adminId: adminId,
             //     dateReceived: new Date().toISOString().split('T')[0],
-               
+
             // });
             // console.log('Receipt response:', receiptResponse.data);
 
@@ -284,7 +308,7 @@ function Documents() {
                 )}
                 <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, p: 3, bgcolor: '#eaeff1' }}>
 
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                         <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                             เอกสารทั้งหมด
                         </Typography>
@@ -296,7 +320,7 @@ function Documents() {
                         >
                             + Add File
                         </Button>
-                    </Box>
+                    </Box> */}
 
                     <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2 }}>
                         <IconButton sx={{ p: '10px' }}>
@@ -310,7 +334,7 @@ function Documents() {
                         />
                     </Box>
                     <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
-                        <Tab label="เอกสารที่ยังไม่เปิดอ่าน" value="unread" />
+                        {/* <Tab label="เอกสารที่ยังไม่เปิดอ่าน" value="unread" /> */}
                         <Tab label="เอกสารทั้งหมด" value="all" />
                     </Tabs>
                     <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
@@ -332,7 +356,7 @@ function Documents() {
                                     return (
                                         <TableRow key={doc.document_id}>
                                             <TableCell>{index + 1}</TableCell>
-                                            <TableCell>{formatDateTime(doc.upload_date)}</TableCell>
+                                            <TableCell>{formatDateTime(doc.create_at)}</TableCell>
                                             <TableCell>
                                                 <Tooltip title={`${doc.user_fname} ${doc.user_lname}`} arrow>
                                                     <Typography variant="body1" noWrap>
@@ -380,7 +404,7 @@ function Documents() {
                                                     })()
                                                 }
                                             </TableCell>
-                                            <TableCell sx={{ width: '130px' }}>
+                                            {/* <TableCell sx={{ width: '130px' }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                                                     <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>
@@ -399,7 +423,7 @@ function Documents() {
                                                                 console.log('Edit button clicked for document_id:', doc.document_id);
                                                                 handleEditClick(doc.document_id);
                                                             }}>
-                                                            <EditIcon /> {/* ไอคอนการแก้ไข */}
+                                                            <EditIcon /> 
                                                             Edit
                                                         </Button>
                                                     </Tooltip>
@@ -416,14 +440,56 @@ function Documents() {
                                                     </Tooltip>
                                                 </Box>
 
-                                                {/* <IconButton
+                                                <IconButton
                                                     sx={{ mx: 1, color: '#1976d2' }}
                                                     onClick={() => handleReceiveButtonClick(doc.document_id)}
                                                     disabled={doc.status === 1}
                                                 >
                                                     <CheckCircle />
-                                                </IconButton> */}
+                                                </IconButton>
+                                            </TableCell> */}
+                                            <TableCell sx={{ width: '130px' }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
+                                                    {/* ปุ่ม Edit ถูกปิดเมื่อสถานะเอกสารเป็น "ดำเนินการเรียบร้อย" */}
+                                                    <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>
+                                                        <Button
+                                                            variant="contained"
+                                                            sx={{
+                                                                mx: 1,
+                                                                backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
+                                                                color: '#000',
+                                                                '&:hover': {
+                                                                    backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
+                                                                },
+                                                                display: 'flex',
+                                                                alignItems: 'center', // จัดแนวให้อยู่กลาง
+                                                            }}
+                                                            onClick={() => {
+                                                                console.log('Edit button clicked for document_id:', doc.document_id);
+                                                                handleEditClick(doc.document_id);
+                                                            }}
+                                                            disabled={doc.status === 2} // ปิดปุ่มเมื่อสถานะเป็น "ดำเนินการเรียบร้อย"
+                                                        >
+                                                            <EditIcon /> {/* ไอคอนการแก้ไข */}
+                                                            Edit
+                                                        </Button>
+                                                    </Tooltip>
+
+                                                    {/* ปุ่มรับเอกสาร */}
+                                                    {/* <Tooltip title="สำหรับรับเอกสาร" arrow>
+                                                        <Button
+                                                            variant="contained"
+                                                            color={doc.status === 1 || doc.status === 2 ? "success" : "primary"}
+                                                            onClick={() => handleReceiveButtonClick(doc.document_id)}
+                                                            disabled={receivedDocuments.has(doc.document_id) || doc.status === 1 || doc.status === 2}
+                                                        >
+                                                            {doc.status === 1 || doc.status === 2 || receivedDocuments.has(doc.document_id) ? 'สำเร็จ' : 'รับ'}
+                                                        </Button>
+                                                    </Tooltip> */}
+                                                </Box>
                                             </TableCell>
+
 
 
                                             <TableCell>

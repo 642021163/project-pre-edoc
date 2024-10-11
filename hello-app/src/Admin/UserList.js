@@ -106,14 +106,14 @@ function UserList() {
               <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
                 รายชื่อผู้ใช้
               </Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 color="primary"
                 onClick={handleAddUser}
                 sx={{ height: 'fit-content' }}
               >
-                Add User
-              </Button>
+                + Add User
+              </Button> */}
             </Box>
 
             {/* Tabs */}
@@ -216,7 +216,7 @@ function UserList() {
                           <TableCell sx={{ textAlign: 'center' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                               <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>
-                                <Button variant="contained"
+                                {/* <Button variant="contained"
                                   sx={{
                                     mx: 1,
                                     backgroundColor: 'success', // สีหลักของปุ่ม
@@ -230,7 +230,7 @@ function UserList() {
                                   onClick={() => handleEditClick(user.user_id)}>
                                   <EditIcon />
                                   Edit
-                                </Button>
+                                </Button> */}
                               </Tooltip>
 
                               {/* <IconButton onClick={() => handleDelete(user.user_id)} color="secondary">

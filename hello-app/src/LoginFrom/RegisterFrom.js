@@ -88,6 +88,7 @@ function RegisterFrom() {
         setShowPassword(!showPassword);
     };
 
+    // ฟังก์ชันตรวจสอบค่าฟอร์ม
     const validateForm = (values) => {
         const newErrors = {};
 
@@ -100,17 +101,16 @@ function RegisterFrom() {
         // ตรวจสอบนามสกุล
         if (!values.user_lname) newErrors.user_lname = 'กรุณากรอกนามสกุล';
 
-        // ตรวจสอบ username ต้องเป็นอีเมล
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // ตรวจสอบ username ต้องเป็นอีเมลที่ลงท้ายด้วย @tsu.ac.th
         if (!values.username) {
-            newErrors.username = 'กรุณากรอกอีเมล';
-        } else if (!emailPattern.test(values.username)) {
-            newErrors.username = 'กรุณากรอกอีเมลให้ถูกต้อง';
+            newErrors.username = 'กรุณากรอกชื่อผู้ใช้งาน';
+        } else if (!values.username.endsWith('@tsu.ac.th')) {
+            newErrors.username = 'กรุณากรอกอีเมลที่ลงท้ายด้วย @tsu.ac.th';
         }
 
         // ตรวจสอบรหัสผ่าน อย่างน้อย 8 ตัวอักษร
         if (!values.password) {
-            newErrors.password = 'กรุณาใส่รหัสผ่าน';
+            newErrors.password = 'กรุณากรอกข้อมูลรหัสผ่าน';
         } else if (values.password.length < 8) {
             newErrors.password = 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร';
         }
@@ -132,66 +132,62 @@ function RegisterFrom() {
         return newErrors;
     };
 
-
+    // ฟังก์ชันการจัดการการ submit
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setFormSubmitted(true); // ตั้งค่าสถานะว่าฟอร์มถูกส่ง
+        setFormSubmitted(true);
 
         // ตรวจสอบข้อมูลที่กรอกก่อนส่ง
         const validationErrors = validateForm(formValues);
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
-            return; // การใช้ return ในกรณีนี้จะหยุดการดำเนินการถ้ามีข้อผิดพลาดในการตรวจสอบ
+            return;
         }
-        // ตรวจสอบชื่อผู้ใช้ว่ามีอยู่ในระบบหรือไม่
+
+        // ตรวจสอบชื่อผู้ใช้ว่าไม่มีในระบบ
         try {
             const usernameCheckResponse = await axios.get(`http://localhost:3000/check-username?username=${formValues.username}`);
             if (usernameCheckResponse.data.exists) {
                 setErrors({ username: 'ชื่อผู้ใช้นี้มีอยู่แล้ว กรุณาเลือกชื่อผู้ใช้อื่น' });
-                return; // หยุดการดำเนินการหากชื่อผู้ใช้มีอยู่แล้ว
+                return;
             }
         } catch (error) {
             console.error("Error checking username:", error);
-            // แสดง SweetAlert เมื่อเกิดข้อผิดพลาด
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด!',
-                text: 'ไม่สามารถตรวจสอบชื่อผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง.',
+                text: 'ไม่สามารถตรวจสอบชื่อผู้ใช้ได้ กรุณาลองใหม่อีกครั้ง',
             });
-            return; // หยุดการดำเนินการหากเกิดข้อผิดพลาด
+            return;
         }
 
-
+        // หากผ่านการตรวจสอบแล้ว ให้ส่งข้อมูลไปยัง API
         try {
-            const response = await axios.post('http://localhost:3000/users', formValues); // เปลี่ยน URL เป็นที่อยู่ API ของคุณ
+            const response = await axios.post('http://localhost:3000/users', formValues);
 
-            console.log('Registration successful:', response.data);
-
-            // แสดง SweetAlert เมื่อการลงทะเบียนสำเร็จ
             Swal.fire({
                 icon: 'success',
                 title: 'สำเร็จ!',
                 text: 'ลงทะเบียนสำเร็จ!',
             }).then(() => {
-                // หลังจากปิด SweetAlert ให้เปลี่ยนเส้นทางไปที่หน้า Login
-                navigate('/loginpage'); // เปลี่ยนเส้นทางไปที่หน้า Login Page
+                navigate('/loginpage'); // ไปที่หน้า login หลังจากสำเร็จ
             });
 
-            // ตั้งข้อความสำเร็จและเปิด Dialog
             setSuccessMessage('ลงทะเบียนสำเร็จ');
             setDialogOpen(true);
             resetForm();
         } catch (error) {
             console.error("Error during registration", error);
-
-            // แสดง SweetAlert เมื่อมีข้อผิดพลาด
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด!',
-                text: 'การลงทะเบียนไม่สำเร็จ! กรุณาลองใหม่อีกครั้ง.',
+                text: 'การลงทะเบียนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
             });
         }
     };
+
+
+
 
 
     // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
@@ -356,17 +352,19 @@ function RegisterFrom() {
                                 error={Boolean(errors.username)}
                                 helperText={errors.username || '*กรุณากรอกอีเมล'}
                                 InputProps={{
+                                    endAdornment: <InputAdornment position="end">@tsu.ac.th</InputAdornment>,
                                     style: { borderColor: success.username ? 'green' : '', borderWidth: '2px' },
                                 }}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         '& fieldset': {
-                                            borderColor: success.user_lname ? 'green' : (errors.user_lname ? 'red' : ''),
+                                            borderColor: success.username ? 'green' : (errors.username ? 'red' : ''),
                                         },
                                     },
                                 }}
-
                             />
+
+
                             <TextField
                                 fullWidth
                                 label="Password"
@@ -420,7 +418,7 @@ function RegisterFrom() {
                                     },
                                 }}
                             />
-                            <TextField
+                            {/* <TextField
                                 fullWidth
                                 label="สังกัด"
                                 name="affiliation"
@@ -440,8 +438,43 @@ function RegisterFrom() {
                                         },
                                     },
                                 }}
-                            />
-                            <FormControl fullWidth variant="outlined" margin="normal">
+                            /> */}
+                            <FormControl
+                                fullWidth
+                                variant="outlined"
+                                margin="normal"
+                                error={Boolean(errors.affiliation)}
+                                InputProps={{
+                                    style: { borderColor: success.user_fname ? 'green' : '', borderWidth: '2px' },
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: success.user_fname ? 'green' : (errors.user_fname ? 'red' : ''),
+                                        },
+                                    },
+                                }}
+                            >
+                                <InputLabel>สังกัด</InputLabel>
+                                <Select
+                                    name="affiliation"
+                                    value={formValues.affiliation}
+                                    onChange={handleChange}
+                                    label="สังกัด"
+                                    fullWidth
+                                >
+                                    <MenuItem value="สาขาวิชาวิทยาศาสตร์กายภาพ">สาขาวิชาวิทยาศาสตร์กายภาพ</MenuItem>
+                                    <MenuItem value="สาขาวิชาวิทยาศาสตร์ชีวภาพ">สาขาวิชาวิทยาศาสตร์ชีวภาพ</MenuItem>
+                                    <MenuItem value="หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล">หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล</MenuItem>
+                                    <MenuItem value="หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ">หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ</MenuItem>
+                                    <MenuItem value="หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม">หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม</MenuItem>
+                                    <MenuItem value="สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล">สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล</MenuItem>
+                                </Select>
+                                <FormHelperText>{errors.affiliation}</FormHelperText>
+                            </FormControl>
+
+
+                            {/* <FormControl fullWidth variant="outlined" margin="normal">
                                 <InputLabel>ประเภทผู้ใช้</InputLabel>
                                 <Select
                                     name="role"
@@ -451,10 +484,10 @@ function RegisterFrom() {
                                     disabled // ทำให้ช่องนี้ไม่สามารถแก้ไขได้
                                 >
                                     <MenuItem value="user">User</MenuItem>
-                                    <MenuItem value="admin" disabled>Admin</MenuItem> {/* ทำให้ตัวเลือก Admin ไม่สามารถเลือกได้ */}
+                                    <MenuItem value="admin" disabled>Admin</MenuItem>
                                 </Select>
                                 <FormHelperText>{errors.role}</FormHelperText>
-                            </FormControl>
+                            </FormControl> */}
 
                             <Box sx={{ display: 'flex', flexDirection: 'column', mt: 3 }}>
                                 <Button type="submit" variant="contained" color="primary" sx={{ mb: 2 }}>

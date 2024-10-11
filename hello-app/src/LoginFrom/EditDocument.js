@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 const EditDocument = () => {
     const { id } = useParams(); // ใช้ id จาก URL เพื่อดึงข้อมูล
     const [values, setValues] = useState({
-        upload_date: '',
+        // upload_date: '',
         subject: '',
         to_recipient: '',
         document_type: '',
@@ -119,7 +119,7 @@ const EditDocument = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                    cursor: loading ? 'none' : 'auto', 
+                    cursor: loading ? 'none' : 'auto',
                     zIndex: 9999
                 }}>
                     <Box sx={{ textAlign: 'center' }}>
@@ -134,7 +134,7 @@ const EditDocument = () => {
                 </Typography>
 
                 {/* ฟิลด์ต่างๆ สำหรับแก้ไข */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                     <Box sx={{ flexGrow: 1 }}>
                         <TextField
                             type="datetime-local"
@@ -145,7 +145,7 @@ const EditDocument = () => {
 
                         />
                     </Box>
-                </Box>
+                </Box> */}
 
                 <Box sx={{ width: '100%', mb: 5, display: 'flex', gap: 2, justifyContent: 'center' }}>
                     <TextField
