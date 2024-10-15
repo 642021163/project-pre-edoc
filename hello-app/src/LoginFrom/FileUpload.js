@@ -12,11 +12,8 @@ import Swal from 'sweetalert2';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import Drawer from '../AppBar/Drawer';
 
-
 function FileUpload() {
-  // สร้าง state เพื่อเก็บค่าต่างๆ ของฟอร์ม
   const [values, setValues] = useState({
-    // upload_date: "",
     subject: "",
     user_id: localStorage.getItem('user_id'),
     to_recipient: "",
@@ -26,7 +23,6 @@ function FileUpload() {
     notes: "",
   });
 
-  // สร้าง state เพื่อเก็บข้อผิดพลาด
   const [errors, setErrors] = useState({});
   const { id } = useParams();
   const [isFormDirty, setIsFormDirty] = useState(false); // ใช้ในการตรวจสอบว่าฟอร์มถูกเปลี่ยนแปลงหรือไม่
@@ -41,6 +37,7 @@ function FileUpload() {
   const [imageUrl, setImageUrl] = useState('');
   const [isOtherRecipient, setIsOtherRecipient] = useState(false);
   const [fileType, setFileType] = useState('pdf');
+  
 
   const token = 't0FBAxsgfRvhtRlYrKNezvKy4SjrJmmtnFk4aaRSk2b'; // ใส่ Token ของคุณที่นี่
 
@@ -50,12 +47,11 @@ function FileUpload() {
   };
 
   useEffect(() => {
-    fetchImage(); // เรียกใช้ฟังก์ชันดึงภาพเริ่มต้น
-    const intervalId = setInterval(fetchImage, 3000); // ดึงภาพใหม่ทุก 5 วินาที
+    fetchImage();
+    const intervalId = setInterval(fetchImage, 3000);
 
-    return () => clearInterval(intervalId); // เคลียร์ interval เมื่อ component ถูก unmount
+    return () => clearInterval(intervalId);
   }, []);
-
 
   const handleInput = e => {
     const { name, value } = e.target;
@@ -63,9 +59,8 @@ function FileUpload() {
       ...prev,
       [name]: value
     }));
-    setIsFormDirty(true); // กำหนดให้ฟอร์มมีการเปลี่ยนแปลง
+    setIsFormDirty(true);
 
-    // เมื่อผู้ใช้กรอกข้อมูลในช่องที่มี error, ลบ error นั้นออก
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -81,8 +76,8 @@ function FileUpload() {
       ...prev,
       file
     }));
-    setFileName(file.name); // ตั้งค่า fileName เมื่อไฟล์ถูกเลือก
-    setIsFormDirty(true); // กำหนดให้ฟอร์มมีการเปลี่ยนแปลง
+    setFileName(file.name);
+    setIsFormDirty(true);
   };
 
   // const [wordFileName, setWordFileName] = useState(null); // Track the file name
@@ -101,8 +96,6 @@ function FileUpload() {
   //   }
   // };
 
-
-
   useEffect(() => {
     const storedUser_fname = localStorage.getItem('user_fname');
     const storedUser_lname = localStorage.getItem('user_lname');
@@ -111,7 +104,7 @@ function FileUpload() {
     setUser_lname(storedUser_lname || '');
 
     const handleBeforeUnload = (event) => {
-      if (isFormDirty) { // ตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลง
+      if (isFormDirty) {
         event.preventDefault();
         event.returnValue = 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก คุณต้องการออกจากหน้านี้หรือไม่?';
       }
@@ -122,19 +115,16 @@ function FileUpload() {
     };
   }, [isFormDirty]);
 
-
-  // ฟังก์ชันตรวจสอบข้อมูลว่าครบถ้วนหรือไม่
   const validate = () => {
-    let tempErrors = {}; // เก็บข้อผิดพลาดชั่วคราว
-    // if (!values.upload_date) tempErrors.upload_date = 'กรุณาเลือกวันที่อัปโหลด'; // ตรวจสอบวันที่อัปโหลด
-    if (!values.subject) tempErrors.subject = 'กรุณากรอกเรื่อง'; // ตรวจสอบว่ากรอกเรื่องหรือไม่
-    if (!values.to_recipient) tempErrors.to_recipient = 'กรุณากรอกชื่อผู้รับ'; // ตรวจสอบว่ากรอกชื่อผู้รับหรือไม่
-    if (!values.document_type) tempErrors.document_type = 'กรุณาเลือกประเภทเอกสาร'; // ตรวจสอบประเภทเอกสาร
-    if (!values.file) tempErrors.file = 'กรุณาเลือกไฟล์'; // ตรวจสอบว่ามีการเลือกไฟล์หรือไม่
-    if (!values.notes) tempErrors.notes = 'กรุณากรอกหมายเหตุ'; // ตรวจสอบหมายเหตุ
+    let tempErrors = {};
+    if (!values.subject) tempErrors.subject = 'กรุณากรอกเรื่อง';
+    if (!values.to_recipient) tempErrors.to_recipient = 'กรุณากรอกชื่อผู้รับ';
+    if (!values.document_type) tempErrors.document_type = 'กรุณาเลือกประเภทเอกสาร';
+    if (!values.file) tempErrors.file = 'กรุณาเลือกไฟล์';
+    if (!values.notes) tempErrors.notes = 'กรุณากรอกหมายเหตุ';
 
-    setErrors(tempErrors); // ตั้งค่า error ใหม่
-    return Object.keys(tempErrors).length === 0; // ถ้าไม่มี error ก็จะคืนค่าเป็น true
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
   };
 
   const handleSubmit = async e => {
@@ -143,7 +133,6 @@ function FileUpload() {
     if (validate()) {
       try {
         const formData = new FormData();
-        // formData.append('upload_date', values.upload_date);
         formData.append('subject', values.subject);
         formData.append('user_id', localStorage.getItem('user_id'));
         formData.append('to_recipient', values.to_recipient);
@@ -252,26 +241,6 @@ function FileUpload() {
               <Box sx={{ textAlign: 'left', color: 'gray', opacity: 0.6 }}>
 
               </Box>
-              {/* 
-              <TextField
-                label="วันที่อัปโหลด"
-                type="datetime-local"
-                name="upload_date"
-                value={values.upload_date}
-                onChange={handleInput}
-                fullWidth
-                error={!!errors.upload_date}
-                helperText={errors.upload_date}
-                required
-                InputLabelProps={{
-                  shrink: true, // เพื่อให้ป้าย Label ขยับขึ้นด้านบน
-                }}
-                inputProps={{
-                  max: new Date().toISOString().slice(0, 16), // จำกัดวันที่ไม่เกินวันที่ปัจจุบัน
-                }}
-                sx={{ marginBottom: 2 }}
-              /> */}
-
 
               <TextField
                 label="เรื่อง"
@@ -422,7 +391,7 @@ function FileUpload() {
                 </Typography>
               </Box>
 
-{/* 
+              {/* 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
                 <input
                   accept=".doc,.docx" // อนุญาตให้เลือกเฉพาะไฟล์ Word
@@ -438,7 +407,7 @@ function FileUpload() {
                     startIcon={<DescriptionIcon />} // ใช้ไอคอนใหม่สำหรับไฟล์ Word
                     sx={{ mr: 2, width: '150px', height: '50px', fontSize: '16px' }}
                   >
-                    เลือกไฟล์ Word
+                     Word
                   </Button>
                 </label>
 
@@ -463,7 +432,7 @@ function FileUpload() {
 
               </Box> */}
 
-{/* 
+              {/* 
               <Typography variant="caption" color="textSecondary">
                 * รับแค่ไฟล์ Word (.doc, .docx)
               </Typography> */}

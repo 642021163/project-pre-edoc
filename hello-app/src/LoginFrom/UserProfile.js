@@ -23,12 +23,10 @@ const UserProfile = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
-  const [formData, setFormData] = useState({
-    old_password: '',
-    new_password: '',
-    confirm_password: '',
-  });
 
   useEffect(() => {
     if (!id) {
@@ -75,7 +73,7 @@ const UserProfile = () => {
       });
 
       setTimeout(() => {
-        navigate('/homepage');  
+        navigate('/homepage');
       }, 1500);
 
     } catch (error) {
@@ -91,45 +89,42 @@ const UserProfile = () => {
     }
   };
 
-  const handleChangePassword = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-  const handlePasswordSubmit = async (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
-
-    if (formData.new_password !== formData.confirm_password) {
+    if (newPassword !== confirmPassword) {
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: 'New password and confirm password do not match.',
+        title: 'รหัสผ่านไม่ตรงกัน',
+        text: 'กรุณาตรวจสอบรหัสผ่านใหม่อีกครั้ง'
       });
       return;
     }
 
-    setPasswordLoading(true);
-
     try {
-      await axios.put(`http://localhost:3000/users/change-password/${id}`, formData);
+      const response = await axios.put(`http://localhost:3000/users/change-password/${id}`, {
+        old_password: oldPassword,
+        new_password: newPassword,
+      });
+
       Swal.fire({
         icon: 'success',
-        title: 'Success!',
-        text: 'Password changed successfully',
+        title: 'สำเร็จ!',
+        text: response.data.message,
         showConfirmButton: false,
-        timer: 1500,
+        timer: 1500
       });
-      navigate('/homepage');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
     } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน:', error.response?.data || error.message);
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: 'Failed to change password. Please try again later',
+        title: 'เกิดข้อผิดพลาด',
+        text: error.response?.data.message || 'กรุณาลองใหม่อีกครั้ง'
       });
-    } finally {
-      setPasswordLoading(false);
     }
   };
-
 
   const handleDialogClose = () => {
     setDialogOpen(false);
@@ -215,36 +210,14 @@ const UserProfile = () => {
             onChange={handleChange}
             fullWidth
             margin="normal"
+            InputProps={{
+              readOnly: true, // ทำให้ฟิลด์เป็นแบบอ่านได้
+              style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ข้อความในฟิลด์มีสีจาง
+            }}
+            InputLabelProps={{
+              style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ชื่อฟิลด์มีสีจาง
+            }}
           />
-          {/* <TextField
-            label="รหัสผ่านเดิม"
-            name="old_password"
-            type="password"
-            value={user.old_password || ''} // ถ้าผู้ใช้ไม่ได้กรอกจะเป็นค่าว่าง
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-
-          <TextField
-            label="รหัสผ่านใหม่"
-            name="new_password"
-            type="password"
-            value={user.new_password || ''} // ถ้าผู้ใช้ไม่ได้กรอกจะเป็นค่าว่าง
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          />
-
-          <TextField
-            label="ยืนยันรหัสผ่านใหม่"
-            name="confirm_password"
-            type="password"
-            value={user.confirm_password || ''} // ถ้าผู้ใช้ไม่ได้กรอกจะเป็นค่าว่าง
-            onChange={handleChange}
-            fullWidth
-            margin="normal"
-          /> */}
 
           <TextField
             label="หมายเลขโทรศัพท์"
@@ -254,14 +227,28 @@ const UserProfile = () => {
             fullWidth
             margin="normal"
           />
-          <TextField
-            label="หน่วยงาน"
-            name="affiliation"
-            value={user.affiliation}
-            onChange={handleChange}
+          <FormControl
             fullWidth
+            variant="outlined"
             margin="normal"
-          />
+          >
+            <InputLabel>หน่วยงาน</InputLabel>
+            <Select
+              name="affiliation"
+              value={user.affiliation}
+              onChange={handleChange}
+              label="หน่วยงาน"
+              fullWidth
+            >
+              <MenuItem value="สาขาวิชาวิทยาศาสตร์กายภาพ">สาขาวิชาวิทยาศาสตร์กายภาพ</MenuItem>
+              <MenuItem value="สาขาวิชาวิทยาศาสตร์ชีวภาพ">สาขาวิชาวิทยาศาสตร์ชีวภาพ</MenuItem>
+              <MenuItem value="หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล">หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล</MenuItem>
+              <MenuItem value="หลักสูตร วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ">หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ</MenuItem>
+              <MenuItem value="หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม">หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม</MenuItem>
+              <MenuItem value="สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล">สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล</MenuItem>
+            </Select>
+          </FormControl>
+
           {/* <TextField
             label="บทบาท"
             name="role"
@@ -295,50 +282,38 @@ const UserProfile = () => {
               ยกเลิก
             </Button>
           </DialogActions>
-          {/* ฟอร์มเปลี่ยนรหัสผ่าน */}
-          <Paper elevation={3} sx={{ padding: '2rem', marginTop: '2rem', backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
-            <Typography variant="h4" gutterBottom>
-              เปลี่ยนรหัสผ่าน
-            </Typography>
-            <form onSubmit={handlePasswordSubmit}>
-              <TextField
-                label="รหัสผ่านเดิม"
-                name="old_password"
-                type="password"
-                value={formData.old_password}
-                onChange={handleChangePassword}
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="รหัสผ่านใหม่"
-                name="new_password"
-                type="password"
-                value={formData.new_password}
-                onChange={handleChangePassword}
-                fullWidth
-                margin="normal"
-              />
-              <TextField
-                label="ยืนยันรหัสผ่านใหม่"
-                name="confirm_password"
-                type="password"
-                value={formData.confirm_password}
-                onChange={handleChangePassword}
-                fullWidth
-                margin="normal"
-              />
-
-              <DialogActions>
-                <Button type="submit" color="primary" variant="contained" disabled={passwordLoading}>
-                  {passwordLoading ? 'Changing...' : 'Change Password'}
-                </Button>
-                <Button color="secondary" variant="outlined" onClick={() => navigate('/homepage')}>
-                  Cancel
-                </Button>
-              </DialogActions>
-            </form>
-          </Paper>
+        </form>
+        <Typography variant="h5" sx={{ mt: 3 }}>
+          เปลี่ยนรหัสผ่าน
+        </Typography>
+        <form onSubmit={handleChangePassword}>
+          <TextField
+            label="รหัสผ่านเดิม"
+            type="password"
+            value={oldPassword}
+            onChange={(e) => setOldPassword(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="รหัสผ่านใหม่"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <TextField
+            label="ยืนยันรหัสผ่านใหม่"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+          <Button type="submit" color="primary" variant="contained" style={{ marginTop: '16px' }}>
+            เปลี่ยนรหัสผ่าน
+          </Button>
         </form>
       </Paper>
     </Container>

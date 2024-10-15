@@ -308,10 +308,25 @@ function ReceiptsList() {
                                                         <TableCell>{admin.paper_cost}</TableCell>
                                                     </TableRow>
                                                 ))}
+                                                {/* แถวรวม */}
+                                                <TableRow>
+                                                    <TableCell><strong>รวม</strong></TableCell>
+                                                    <TableCell>
+                                                        <strong>
+                                                            {adminData.reduce((total, admin) => total + admin.count, 0)}
+                                                        </strong>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <strong>
+                                                            {adminData.reduce((total, admin) => total + admin.paper_cost, 0).toLocaleString()}
+                                                        </strong>
+                                                    </TableCell>
+                                                </TableRow>
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
                                 )}
+
 
                             </>
                         )}

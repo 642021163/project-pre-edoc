@@ -16,7 +16,7 @@ import { Search, } from '@mui/icons-material';
 
 // การจัดรูปแบบวันที่และเวลา
 const formatDateTime = (dateTime) => format(new Date(dateTime), 'dd/MM/yyyy HH:mm:ss');
-// ฟังก์ชันสำหรับดึงชื่อไฟล์จากพาธ
+
 const getFileName = (filePath) => {
     if (filePath) {
         return filePath.split('/').pop();
@@ -25,7 +25,6 @@ const getFileName = (filePath) => {
 };
 
 const TrackDocuments = () => {
-    // สถานะสำหรับจัดการเอกสาร
     const [documents, setDocuments] = useState([]);
     const { id } = useParams();
     const [userId, setUserId] = useState('');
@@ -33,18 +32,18 @@ const TrackDocuments = () => {
     const [error, setError] = useState(null);
     const [open, setOpen] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState(null);
-    const [page, setPage] = useState(1); // สถานะสำหรับเก็บหน้าปัจจุบัน
-    const [rowsPerPage] = useState(10);   // จำนวนเอกสารที่จะแสดงต่อหน้า
+    const [page, setPage] = useState(1);
+    const [rowsPerPage] = useState(10);
     const indexOfLastDocument = page * rowsPerPage;
     const indexOfFirstDocument = indexOfLastDocument - rowsPerPage;
     const currentDocuments = documents.slice(indexOfFirstDocument, indexOfLastDocument);
     const storedUserFname = localStorage.getItem('user_fname');
     const storedUserLname = localStorage.getItem('user_lname');
     const senderName = `${storedUserFname} ${storedUserLname}`;
-    const colors = ['#FF5733', '#33FF57', '#3357FF', '#F1C40F', '#8E44AD']; // Array of colors
-    const [menuOpen, setMenuOpen] = useState(true); // สถานะสำหรับการซ่อน/แสดงเมนู
-    const navigate = useNavigate(); // ใช้สำหรับนำทาง
-    const location = useLocation(); // ใช้สำหรับตรวจสอบที่อยู่ URL ปัจจุบัน
+    const colors = ['#FF5733', '#33FF57', '#3357FF', '#F1C40F', '#8E44AD'];
+    const [menuOpen, setMenuOpen] = useState(true);
+    const navigate = useNavigate();
+    const location = useLocation();
     const [search, setSearch] = useState('');
 
     const formatDateTime = (dateString) => {
@@ -62,12 +61,12 @@ const TrackDocuments = () => {
                 hour: 'numeric',
                 minute: 'numeric',
                 hour12: false  // ใช้เวลาในรูปแบบ 24 ชั่วโมง
-            }); // จัดรูปแบบเวลา (ชั่วโมง:นาที) ไม่มีวินาที
+            });
 
-            return `${datePart}  ${timePart}`;  // รวมวันที่และเวลา
+            return `${datePart}  ${timePart}`;
         } catch (error) {
             console.error("Invalid Date Format", error);
-            return "Invalid Date"; // ถ้าไม่สามารถแปลงวันที่ได้
+            return "Invalid Date";
         }
     };
 
@@ -78,7 +77,6 @@ const TrackDocuments = () => {
             const response = await axios.get('http://localhost:3000/documents', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log(response.data); // ตรวจสอบข้อมูลที่ได้รับ
             const sortedDocuments = response.data.sort((a, b) => new Date(b.upload_date) - new Date(a.upload_date));
             setDocuments(sortedDocuments);
             setLoading(false);
@@ -108,14 +106,12 @@ const TrackDocuments = () => {
                     await axios.delete(`http://localhost:3000/document/${docId}`);
                     console.log(`Document with ID ${docId} deleted successfully.`);
 
-                    // แสดงข้อความเมื่อทำการลบสำเร็จ
                     Swal.fire(
                         'Deleted!',
                         `เอกสารที่มี ID ${docId} ถูกลบเรียบร้อยแล้ว.`,
                         'success'
                     );
 
-                    // รีเฟรชรายการเอกสารหลังจากลบสำเร็จ
                     fetchDocuments();
                 } catch (error) {
                     console.error('Error deleting document:', error);
@@ -130,28 +126,28 @@ const TrackDocuments = () => {
     }, []);
 
     const handleOpen = (document) => {
-        setSelectedDocument(document); // ตั้งค่าเอกสารที่เลือก
-        setOpen(true); // เปิด modal
+        setSelectedDocument(document);
+        setOpen(true);
     };
 
     const handleClose = () => {
-        setOpen(false); // ปิด modal
-        setSelectedDocument(null); // ล้างข้อมูลเอกสารที่เลือก
+        setOpen(false);
+        setSelectedDocument(null);
     };
 
     const handleEditClick = (docId) => {
-        setLoading(true); // เริ่มการโหลด
+        setLoading(true);
         setTimeout(() => {
-            navigate(`/user-edit/${docId}`);// เปลี่ยนหน้าไปยัง path ที่ระบุ
-            setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
-        }, 400); // หน่วงเวลา 400ms
+            navigate(`/user-edit/${docId}`);
+            setLoading(false);
+        }, 400);
     };
 
     // ฟังก์ชันกรองเอกสารตามการค้นหา
     const filteredDocuments = documents.filter(doc =>
-        doc.subject.toLowerCase().includes(search.toLowerCase()) // ฟิลเตอร์เอกสารตามชื่อเรื่อง
+        doc.subject && doc.subject.toLowerCase().includes(search.toLowerCase())
     );
-    // การแสดงข้อความเมื่อเกิดข้อผิดพลาด
+
     if (error) return (
         <Box>
             <Typography>ข้อผิดพลาด: {error}</Typography>
@@ -172,7 +168,6 @@ const TrackDocuments = () => {
         }
     };
 
-    // ฟังก์ชันจัดเรียงเอกสาร
     const sortedDocuments = filteredDocuments.sort((a, b) => {
         const statusOrder = {
             0: 1, // รอดำเนินการ
@@ -182,16 +177,13 @@ const TrackDocuments = () => {
         const statusA = statusOrder[a.status];
         const statusB = statusOrder[b.status];
 
-        // เรียงตามสถานะ
         if (statusA !== statusB) {
-            return statusA - statusB; // ถ้าไม่เหมือนกัน เรียงตามสถานะ
+            return statusA - statusB;
         }
 
-        // เรียงตามวันที่ (ใหม่สุดไปเก่าที่สุด)
         return new Date(b.upload_date) - new Date(a.upload_date);
     });
 
-    // ฟังก์ชันเพื่อแปลง ID เป็นชื่อ
     const getAdminNameById = (recipient) => {
         switch (recipient) {
             case 1:
@@ -199,14 +191,14 @@ const TrackDocuments = () => {
             case 2:
                 return 'สุภา นวลจันทร์';
             case 3:
-                return 'เซเวอร์รหัส สเนป';
+                return 'ปัทติมา รัตนะบุรี';
             default:
                 return 'รอผู้รับ';
         }
     };
 
     const toggleMenu = () => {
-        setMenuOpen((prev) => !prev); // เปลี่ยนสถานะของเมนู
+        setMenuOpen((prev) => !prev);
     };
 
     return (
@@ -231,7 +223,6 @@ const TrackDocuments = () => {
             )}
             <Drawer menuOpen={menuOpen} toggleMenu={toggleMenu} />
             {/* เนื้อหาหลัก */}
-            {/* เนื้อหาหลัก */}
             <Box sx={{ flex: 1, p: 2, bgcolor: '#E4E4E7' }}>
                 <Typography variant="h4" gutterBottom>
                     ยินดีต้อนรับสู่หน้าแรก
@@ -244,7 +235,7 @@ const TrackDocuments = () => {
                         <InputBase
                             placeholder="Search…"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)} // อัปเดตค่าเมื่อมีการพิมพ์
+                            onChange={(e) => setSearch(e.target.value)}
                             sx={{ ml: 1, flex: 1 }}
                         />
                     </Box>
@@ -264,8 +255,8 @@ const TrackDocuments = () => {
                             </TableHead>
                             <TableBody>
                                 {(filteredDocuments.length === 0 ? documents : filteredDocuments)
-                                    .sort((a, b) => new Date(b.create_at) - new Date(a.create_at)) // เรียงตามวันที่ล่าสุด (desc)
-                                    .slice((page - 1) * rowsPerPage, page * rowsPerPage) // ใช้ slice เพื่อแบ่งเอกสารตามหน้าที่จะแสดง
+                                    .sort((a, b) => new Date(b.create_at) - new Date(a.create_at))
+                                    .slice((page - 1) * rowsPerPage, page * rowsPerPage)
                                     .map((doc, index) => {
                                         return (
                                             <TableRow
@@ -279,7 +270,6 @@ const TrackDocuments = () => {
                                                 <TableCell component="th" scope="row">{index + 1 + (page - 1) * rowsPerPage}</TableCell>
                                                 <TableCell align="left">{formatDateTime(doc.create_at)}</TableCell>
                                                 <TableCell align="left">
-                                                    {/* ไฮไลต์ชื่อเรื่องที่ตรงกับการค้นหา */}
                                                     {doc.subject.split(new RegExp(`(${search})`, 'i')).map((part, i) => (
                                                         <span key={i} style={{ backgroundColor: part.toLowerCase() === search.toLowerCase() && filteredDocuments.length > 0 ? '#ffeb3b' : 'transparent' }}>
                                                             {part}
@@ -292,10 +282,10 @@ const TrackDocuments = () => {
                                                             variant="contained"
                                                             color="primary"
                                                             onClick={() => {
-                                                                window.open(`http://localhost:3000/${doc.file}`, '_blank'); // เปิดไฟล์ในแท็บใหม่
+                                                                window.open(`http://localhost:3000/${doc.file}`, '_blank');
                                                             }}
                                                             sx={{
-                                                                textTransform: 'none', // ปิดการแปลงข้อความเป็นตัวพิมพ์ใหญ่
+                                                                textTransform: 'none',
                                                             }}
                                                         >
                                                             ViewFile
@@ -326,7 +316,8 @@ const TrackDocuments = () => {
                                                                 transition: '0.3s',
                                                             }}
                                                             onClick={() => handleEditClick(doc.document_id)}
-                                                            disabled={doc.status === 2} // ปิดปุ่มเมื่อสถานะเอกสารเป็น "ดำเนินการเรียบร้อย"
+
+                                                            disabled={doc.status === 1 || doc.status === 2}
                                                         >
                                                             Edit
                                                         </Button>
@@ -343,6 +334,8 @@ const TrackDocuments = () => {
                                                                 transition: '0.3s',
                                                             }}
                                                             onClick={() => handleDelete(doc.document_id)}
+
+                                                            disabled={doc.status === 1 || doc.status === 2}
                                                         >
                                                             Delete
                                                         </Button>
@@ -375,7 +368,6 @@ const TrackDocuments = () => {
                     </Box>
                 </Box>
             </Box>
-
 
             {/* ป๊อปอัพสำหรับรายละเอียดเอกสาร */}
             <Modal
@@ -439,6 +431,7 @@ const TrackDocuments = () => {
 
                                 { label: 'ผู้ส่ง:', value: senderName },
                                 { label: 'ผู้รับเอกสาร:', value: getAdminNameById(selectedDocument.recipient) },
+                                // { label: 'ที่ต้องแก้ไข:', value: selectedDocument.reply },
                             ].map((item, index) => (
                                 <Grid item xs={12} key={index}>
                                     <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', borderBottom: '1px solid #e0e0e0', pb: 1 }}>

@@ -52,11 +52,11 @@ function Documents() {
 
 
 
-    // ฟังก์ชันกรองเอกสารตามการค้นหา
     const filteredDocuments = (activeTab === 'all' ? allDocuments : unreadDocuments).filter(doc =>
-        doc.subject.toLowerCase().includes(search.toLowerCase()) || // ชื่อเรื่อง
-        `${doc.user_fname} ${doc.user_lname}`.toLowerCase().includes(search.toLowerCase()) // ชื่อผู้ส่ง
+        (doc.subject && doc.subject.toLowerCase().includes(search.toLowerCase())) || // ตรวจสอบว่า subject ไม่เป็น null
+        (`${doc.user_fname || ''} ${doc.user_lname || ''}`.toLowerCase().includes(search.toLowerCase())) // ตรวจสอบว่า names ไม่เป็น null
     );
+
 
     // ฟังก์ชันสำหรับไฮไลท์คำค้นหา
     const highlightSearchTerm = (text) => {
@@ -493,7 +493,7 @@ function Documents() {
 
 
                                             <TableCell>
-                                                <Tooltip title="เปิดไฟล์ PDF" arrow>
+                                                <Tooltip title="เปิดไฟล์" arrow>
                                                     <Button
                                                         variant="contained"
                                                         color="primary"
@@ -508,7 +508,7 @@ function Documents() {
                                                             }
                                                         }}
                                                     >
-                                                        PDF
+                                                        View
                                                     </Button>
                                                 </Tooltip>
                                             </TableCell>

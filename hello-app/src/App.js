@@ -1,10 +1,6 @@
 // src/App.js
 import React from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import Upload from './Component/Upload';
-import UserCreate from './Component/UserCreate';
-import UserUpdate from './Component/UserUpdate';
-import File from './Component/File';
 import Navbar from './AppBar/Navbar';
 import Appbar from './AppBar/Appbar';
 import './App.css';
@@ -30,7 +26,6 @@ import UnreadDocuments from './Admin/UnreadDocuments';
 import DashboardLayoutBasic from './LayoutAdmin/DashboardLayoutBasic';
 import PaperSavingsCalculator from './Admin/PaperSavingsCalculator';
 import NewDocuments from './Admin/NewDocuments';
-import RegisterPage from './Admin/RegisterPage';
 
 function App() {
   return (
@@ -70,10 +65,6 @@ function AppContent() {
       
       <Routes>
         <Route path='/' element={<LoginPage />} />
-        <Route path='/upload' element={<Upload />} />
-        <Route path='/create' element={<UserCreate />} />
-        <Route path='/update/:id' element={<UserUpdate />} />
-        <Route path='/file' element={<File />} />
         <Route path='/loginpage' element={<LoginPage />} />
         <Route path='/Admin' element={<AdminLogin />} />
         <Route path='/user' element={<UserLogin />} />
@@ -96,7 +87,6 @@ function AppContent() {
         <Route path='/dashboard' element={<DashboardLayoutBasic />} />
         <Route path='/paper' element={<PaperSavingsCalculator />} />
         <Route path='/newdoc' element={<NewDocuments />} />
-        <Route path='/register' element={<RegisterPage />} />
         
 
 

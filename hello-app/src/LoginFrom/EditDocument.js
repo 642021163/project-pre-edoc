@@ -6,9 +6,8 @@ import SendIcon from '@mui/icons-material/Send';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import Swal from 'sweetalert2';
 
-
 const EditDocument = () => {
-    const { id } = useParams(); // ใช้ id จาก URL เพื่อดึงข้อมูล
+    const { id } = useParams();
     const [values, setValues] = useState({
         // upload_date: '',
         subject: '',
@@ -20,7 +19,6 @@ const EditDocument = () => {
     const [existingFileName, setExistingFileName] = useState('');
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-
 
     useEffect(() => {
         const fetchDocument = async () => {
@@ -45,22 +43,25 @@ const EditDocument = () => {
         setValues({ ...values, [e.target.name]: e.target.value });
     };
 
-    // ฟังก์ชันสำหรับจัดการไฟล์ที่เลือก
     const handleFileChange = (e) => {
-        setFileName(e.target.files[0].name);
+        const file = e.target.files[0];
+        if (file) {
+            setFileName(file.name);
+        } else {
+            setFileName('');
+        }
     };
 
-    // ฟังก์ชันสำหรับส่งข้อมูลที่แก้ไขไปยังเซิร์ฟเวอร์
     const handleSubmit = async () => {
         try {
             const formData = new FormData();
-            formData.append('upload_date', values.upload_date);
+            // formData.append('upload_date', values.upload_date);
             formData.append('subject', values.subject);
             formData.append('to_recipient', values.to_recipient);
             formData.append('document_type', values.document_type);
             formData.append('notes', values.notes);
             if (fileName) {
-                formData.append('file', fileName);
+                formData.append('file', fileName); // ส่งไฟล์จริงไปยังเซิร์ฟเวอร์
             }
 
             const response = await axios.put(`http://localhost:3000/useredit/document/${id}`, formData, {
@@ -79,7 +80,6 @@ const EditDocument = () => {
                     timer: 1500 // ปิดการแจ้งเตือนอัตโนมัติหลังจาก 1.5 วินาที
                 })
             }
-
             // นำกลับไปหน้า homepage หลังจากการแจ้งเตือน
             setTimeout(() => {
                 navigate('/track'); // นำไปหน้า homepage หลังจากการแจ้งเตือน
@@ -104,7 +104,6 @@ const EditDocument = () => {
             navigate('/track'); // เปลี่ยนเส้นทางไปที่หน้า homepage
         }, 400); // หน่วงเวลา 400ms ก่อนเปลี่ยนหน้า
     };
-
 
     return (
         <Box sx={{ flex: 1, p: 2, maxWidth: 800, mx: 'auto', bgcolor: '#f9f9f9', borderRadius: 2, boxShadow: 3 }}>
@@ -132,21 +131,6 @@ const EditDocument = () => {
                 <Typography variant="h4" gutterBottom>
                     แก้ไขเอกสาร
                 </Typography>
-
-                {/* ฟิลด์ต่างๆ สำหรับแก้ไข */}
-                {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box sx={{ flexGrow: 1 }}>
-                        <TextField
-                            type="datetime-local"
-                            name="upload_date"
-                            value={values.upload_date}
-                            onChange={handleInput}
-                            sx={{ width: 250 }}
-
-                        />
-                    </Box>
-                </Box> */}
-
                 <Box sx={{ width: '100%', mb: 5, display: 'flex', gap: 2, justifyContent: 'center' }}>
                     <TextField
                         label="เรื่อง"
@@ -154,7 +138,7 @@ const EditDocument = () => {
                         value={values.subject}
                         onChange={handleInput}
                         sx={{ width: 530 }}
-
+                        margin="normal"
                     />
                 </Box>
 

@@ -119,15 +119,15 @@ function UserList() {
             {/* Tabs */}
             <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 3 }}>
               <Tab label="User" />
-              <Tab label="Admin" />
+              {/* <Tab label="Admin" /> */}
             </Tabs>
 
             {/* การแสดงข้อมูลตามแท็บที่เลือก */}
             {activeTab === 0 && (
               <>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+                {/* <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2', textAlign:'left' }}>
                   Users
-                </Typography>
+                </Typography> */}
                 <TableContainer component={Paper} elevation={3} sx={{ borderRadius: 3 }}>
                   <Table>
                     <TableHead sx={{ backgroundColor: '#1976d2' }}>
@@ -135,7 +135,7 @@ function UserList() {
                         <TableCell sx={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>ลำดับ</TableCell>
                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ชื่อ-สกุล</TableCell>
                         <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>ชื่อผู้ใช้</TableCell>
-                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>บทบาท</TableCell>
+                        <TableCell sx={{ color: '#fff', fontWeight: 'bold' }}>สังกัด</TableCell>
                         <TableCell sx={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Action</TableCell>
                       </TableRow>
                     </TableHead>
@@ -151,7 +151,7 @@ function UserList() {
                           <TableCell sx={{ textAlign: 'center' }}>{index + 1}</TableCell>
                           <TableCell sx={{ padding: '12px 16px' }}>{user.user_fname} {user.user_lname}</TableCell>
                           <TableCell sx={{ padding: '12px 16px' }}>{user.username}</TableCell>
-                          <TableCell sx={{ padding: '12px 16px' }}>{user.role}</TableCell>
+                          <TableCell sx={{ padding: '12px 16px' }}>{user.affiliation}</TableCell>
                           <TableCell sx={{ textAlign: 'center' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                               <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>

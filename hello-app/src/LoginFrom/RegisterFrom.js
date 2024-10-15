@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import axios from 'axios'; // นำเข้า axios
-import { CssBaseline, Container, Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, IconButton, InputAdornment, FormHelperText, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; 
+import { CssBaseline, Container, Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, IconButton, InputAdornment, FormHelperText } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -10,26 +10,27 @@ import AppBar from '../AppBar/Appbar';
 import Swal from 'sweetalert2';
 
 const Logo = styled('img')(({ theme }) => ({
-    height: '60px', // ปรับขนาดโลโก้ตามต้องการ
-    marginBottom: theme.spacing(2), // เพิ่มระยะห่างระหว่างโลโก้กับข้อความ
+    height: '60px', 
+    marginBottom: theme.spacing(2), 
 }));
 
 function RegisterFrom() {
-    const [dialogOpen, setDialogOpen] = useState(false); // State สำหรับ Dialog
-    const [successMessage, setSuccessMessage] = useState(''); // ข้อความสำเร็จ
-    const navigate = useNavigate(); // ประกาศ navigate
+    const [dialogOpen, setDialogOpen] = useState(false); 
+    const [successMessage, setSuccessMessage] = useState('');
+    const navigate = useNavigate(); 
     const [showPassword, setShowPassword] = useState(false);
-    const [touchedFields, setTouchedFields] = useState({}); // ใช้เก็บว่าฟิลล์ไหนถูกสัมผัส
-    const [formSubmitted, setFormSubmitted] = useState(false); // สถานะสำหรับการส่งฟอร์ม
+    const [touchedFields, setTouchedFields] = useState({}); 
+    const [formSubmitted, setFormSubmitted] = useState(false); 
     const [formValues, setFormValues] = useState({
         prefix: '',
         user_fname: '',
         user_lname: '',
         username: '',
         password: '',
+        confirmPassword: '',
         phone_number: '',
         affiliation: '',
-        role: 'user' // ตรวจสอบว่า field นี้ส่งข้อมูลไปด้วย
+        role: 'user' 
     });
 
     const [errors, setErrors] = useState({
@@ -38,6 +39,7 @@ function RegisterFrom() {
         user_lname: '',
         username: '',
         password: '',
+        confirmPassword: '',
         phone_number: '',
         affiliation: '',
         role: ''
@@ -49,33 +51,81 @@ function RegisterFrom() {
         user_lname: false,
         username: false,
         password: false,
+        confirmPassword: false,
         phone_number: false,
         affiliation: false,
         role: false
     });
 
 
-    const handleChange = (event) => {
+    const handleInputChange = (event) => {
         const { name, value } = event.target;
+        setFormValues({
+            ...formValues,
+            [name]: value,
+        });
 
-        // อัปเดตค่าใน formValues
-        setFormValues(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        // บันทึกสถานะการสัมผัส
         setTouchedFields(prev => ({
             ...prev,
             [name]: true
         }));
 
-        // อัปเดตสถานะ success เฉพาะถ้าฟอร์มถูกส่ง
+
         if (formSubmitted) {
             const validationErrors = validateForm({ ...formValues, [name]: value });
             setErrors(validationErrors);
 
-            // เปลี่ยนสถานะ success
+
+            setSuccess(prev => ({
+                ...prev,
+                [name]: !validationErrors[name]
+            }));
+        }
+    };
+
+
+    useEffect(() => {
+        if (formValues.confirmPassword && formValues.password !== formValues.confirmPassword) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                confirmPassword: 'รหัสผ่านไม่ตรงกัน',
+            }));
+        } else {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                confirmPassword: null,
+            }));
+        }
+
+    }, [formValues.password, formValues.confirmPassword]);
+
+    const handleChange = (event) => {
+        const { name, value } = event.target;
+
+        setFormValues(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
+        if (errors[name]) {
+            setErrors({
+                ...errors,
+                [name]: null,
+            });
+        }
+
+
+        setTouchedFields(prev => ({
+            ...prev,
+            [name]: true
+        }));
+
+
+        if (formSubmitted) {
+            const validationErrors = validateForm({ ...formValues, [name]: value });
+            setErrors(validationErrors);
+
+
             setSuccess(prev => ({
                 ...prev,
                 [name]: !validationErrors[name]
@@ -88,63 +138,76 @@ function RegisterFrom() {
         setShowPassword(!showPassword);
     };
 
-    // ฟังก์ชันตรวจสอบค่าฟอร์ม
+
     const validateForm = (values) => {
         const newErrors = {};
 
-        // ตรวจสอบคำนำหน้า
         if (!values.prefix) newErrors.prefix = 'กรุณาเลือกคำนำหน้า';
 
-        // ตรวจสอบชื่อ
         if (!values.user_fname) newErrors.user_fname = 'กรุณากรอกชื่อ';
 
-        // ตรวจสอบนามสกุล
+
         if (!values.user_lname) newErrors.user_lname = 'กรุณากรอกนามสกุล';
 
-        // ตรวจสอบ username ต้องเป็นอีเมลที่ลงท้ายด้วย @tsu.ac.th
+
         if (!values.username) {
             newErrors.username = 'กรุณากรอกชื่อผู้ใช้งาน';
         } else if (!values.username.endsWith('@tsu.ac.th')) {
             newErrors.username = 'กรุณากรอกอีเมลที่ลงท้ายด้วย @tsu.ac.th';
         }
 
-        // ตรวจสอบรหัสผ่าน อย่างน้อย 8 ตัวอักษร
+
         if (!values.password) {
             newErrors.password = 'กรุณากรอกข้อมูลรหัสผ่าน';
         } else if (values.password.length < 8) {
             newErrors.password = 'รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร';
         }
 
-        // ตรวจสอบเบอร์โทรศัพท์ ต้องมีความยาวระหว่าง 4 ถึง 10 หลัก
-        const phonePattern = /^[0-9]{4,10}$/; // อนุญาตให้มี 4 ถึง 10 หลัก
+        if (!values.confirmPassword) newErrors.confirmPassword = 'กรุณากรอกนามสกุล';
+
+
+        const phonePattern = /^[0-9]{4,10}$/;
         if (!values.phone_number) {
             newErrors.phone_number = 'กรุณากรอกเบอร์โทรศัพท์';
         } else if (!phonePattern.test(values.phone_number)) {
             newErrors.phone_number = 'เบอร์โทรศัพท์ต้องมีระหว่าง 4 ถึง 10 หลัก';
         }
 
-        // ตรวจสอบสังกัด
+
         if (!values.affiliation) newErrors.affiliation = 'กรุณากรอกสังกัด';
 
-        // ตรวจสอบประเภทผู้ใช้
+
         if (!values.role) newErrors.role = 'กรุณาเลือกประเภทผู้ใช้';
 
         return newErrors;
     };
 
-    // ฟังก์ชันการจัดการการ submit
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         setFormSubmitted(true);
 
-        // ตรวจสอบข้อมูลที่กรอกก่อนส่ง
+
         const validationErrors = validateForm(formValues);
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
         }
 
-        // ตรวจสอบชื่อผู้ใช้ว่าไม่มีในระบบ
+        if (formValues.password !== formValues.confirmPassword) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                confirmPassword: 'รหัสผ่านไม่ตรงกัน',
+            }));
+            return;
+        }
+
+
+        setErrors((prevErrors) => ({
+            ...prevErrors,
+            confirmPassword: null,
+        }));
+
         try {
             const usernameCheckResponse = await axios.get(`http://localhost:3000/check-username?username=${formValues.username}`);
             if (usernameCheckResponse.data.exists) {
@@ -161,7 +224,7 @@ function RegisterFrom() {
             return;
         }
 
-        // หากผ่านการตรวจสอบแล้ว ให้ส่งข้อมูลไปยัง API
+
         try {
             const response = await axios.post('http://localhost:3000/users', formValues);
 
@@ -170,7 +233,7 @@ function RegisterFrom() {
                 title: 'สำเร็จ!',
                 text: 'ลงทะเบียนสำเร็จ!',
             }).then(() => {
-                navigate('/loginpage'); // ไปที่หน้า login หลังจากสำเร็จ
+                navigate('/loginpage');
             });
 
             setSuccessMessage('ลงทะเบียนสำเร็จ');
@@ -188,9 +251,6 @@ function RegisterFrom() {
 
 
 
-
-
-    // ฟังก์ชันสำหรับรีเซ็ตฟอร์ม
     const resetForm = () => {
         setFormValues({
             prefix: '',
@@ -198,6 +258,7 @@ function RegisterFrom() {
             user_lname: '',
             username: '',
             password: '',
+            confirmPassword: '',
             phone_number: '',
             affiliation: '',
             role: ''
@@ -236,25 +297,25 @@ function RegisterFrom() {
                             width: '100%',
                             maxWidth: '600px',
                             p: 2,
-                            borderRadius: 2, // เพิ่มมุมโค้งมน
-                            border: '2px solid #1976d2', // เส้นขอบ
+                            borderRadius: 2,
+                            border: '2px solid #1976d2',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
                         }}
                     >
-                        {/* โลโก้ */}
+
                         <Logo src="/asset/logosc.png" alt="Logo" />
                         <Typography
                             variant="h5"
                             component="div"
                             gutterBottom
                             sx={{
-                                color: '#1976d2', // สีของข้อความ
-                                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)', // เงาของข้อความ
-                                fontWeight: 'bold', // ทำให้ข้อความหนาขึ้น
-                                textAlign: 'center', // จัดตำแหน่งข้อความกลาง
-                                mb: 4 // เพิ่มระยะห่างด้านล่าง
+                                color: '#1976d2',
+                                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)',
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                                mb: 4
                             }}
                         >
                             Register
@@ -373,7 +434,7 @@ function RegisterFrom() {
                                 variant="outlined"
                                 margin="normal"
                                 value={formValues.password}
-                                onChange={handleChange}
+                                onChange={handleInputChange}
                                 error={Boolean(errors.password)}
                                 helperText={errors.password || '*รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร'}
                                 InputProps={{
@@ -397,6 +458,40 @@ function RegisterFrom() {
                                     },
                                 }}
                             />
+                            <TextField
+                                fullWidth
+                                label="Confirm Password"
+                                name="confirmPassword"
+                                type={showPassword ? 'text' : 'password'}
+                                variant="outlined"
+                                margin="normal"
+                                value={formValues.confirmPassword}
+                                onChange={handleInputChange}
+                                error={Boolean(errors.confirmPassword)}
+                                helperText={errors.confirmPassword || '*กรุณายืนยันรหัสผ่าน'}
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={handleClickShowPassword}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        '& fieldset': {
+                                            borderColor: success.confirmPassword ? 'green' : (errors.confirmPassword ? 'red' : ''),
+                                        },
+                                    },
+                                }}
+                            />
+
+
                             <TextField
                                 fullWidth
                                 label="โทรศัพท์"
@@ -466,7 +561,7 @@ function RegisterFrom() {
                                     <MenuItem value="สาขาวิชาวิทยาศาสตร์กายภาพ">สาขาวิชาวิทยาศาสตร์กายภาพ</MenuItem>
                                     <MenuItem value="สาขาวิชาวิทยาศาสตร์ชีวภาพ">สาขาวิชาวิทยาศาสตร์ชีวภาพ</MenuItem>
                                     <MenuItem value="หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล">หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล</MenuItem>
-                                    <MenuItem value="หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ">หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ</MenuItem>
+                                    <MenuItem value="หลักสูตร วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ">หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ</MenuItem>
                                     <MenuItem value="หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม">หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม</MenuItem>
                                     <MenuItem value="สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล">สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล</MenuItem>
                                 </Select>

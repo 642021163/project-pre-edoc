@@ -183,7 +183,6 @@ app.post('/login', async (req, res) => {
     }
 });
 
-
 const authorizeAdmin = (req, res, next) => {
     if (req.user.userType !== 'admin') {
         return res.status(403).json({ message: 'Forbidden: Admins only' });
@@ -198,50 +197,8 @@ app.get('/admin-only-route', authenticateToken, authorizeAdmin, (req, res) => {
 
 
 //Api หน้า FileUpload ฝั่ง User
-
 // ตั้งค่าการจัดเก็บไฟล์ ฝั่ง user
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         const uploadDir = path.join(__dirname, 'uploads');
-//         if (!fs.existsSync(uploadDir)) {
-//             fs.mkdirSync(uploadDir, { recursive: true }); // สร้างโฟลเดอร์ถ้ายังไม่มี
-//         }
-//         cb(null, uploadDir); // ระบุที่จัดเก็บไฟล์
-//     },
-//     filename: (req, file, cb) => {
-//         const originalName = file.originalname; // ใช้ชื่อไฟล์เดิม
-//         console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
-
-//         //  // ใช้ชื่อไฟล์ที่ถูกต้องตาม UTF-8
-//         //  const originalName = decodeURIComponent(file.originalname); // แปลงชื่อไฟล์ให้ถูกต้อง
-//         //  console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
-
-
-//         // // แปลงชื่อไฟล์ให้เป็น UTF-8
-//         // const safeFileName = Buffer.from(originalName, 'latin1').toString('utf8');
-
-//         // ตรวจสอบการทับซ้อนของชื่อไฟล์
-//         let filePath = path.join(__dirname, 'uploads', originalName);
-//         if (fs.existsSync(filePath)) {
-//             // ถ้ามีไฟล์ที่มีชื่อเดียวกันอยู่แล้ว, ให้เพิ่มหมายเลขในชื่อไฟล์
-//             const nameWithoutExt = path.basename(originalName, path.extname(originalName));
-//             const ext = path.extname(originalName);
-//             let i = 1;
-//             while (fs.existsSync(filePath)) {
-//                 filePath = path.join(__dirname, 'uploads', `${nameWithoutExt}(${i})${ext}`);
-//                 i++;
-//             }
-//             console.log("Generated filename with number:", path.basename(filePath));
-//             cb(null, path.basename(filePath));
-//         } else {
-//             // ถ้าไม่มีการทับซ้อน, ใช้ชื่อไฟล์เดิม
-//             console.log("Generated filename:", originalName);
-//             cb(null, originalName);
-//         }
-//     }
-// });
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadDir = path.join(__dirname, 'uploads');
@@ -251,10 +208,11 @@ const storage = multer.diskStorage({
         cb(null, uploadDir); // ระบุที่จัดเก็บไฟล์
     },
     filename: (req, file, cb) => {
-        const originalName = file.originalname;
+        const originalName = file.originalname; // ใช้ชื่อไฟล์เดิม
+        console.log("Original filename:", originalName); // ล็อกชื่อไฟล์เดิม
         let filePath = path.join(__dirname, 'uploads', originalName);
-
         if (fs.existsSync(filePath)) {
+            // ถ้ามีไฟล์ที่มีชื่อเดียวกันอยู่แล้ว, ให้เพิ่มหมายเลขในชื่อไฟล์
             const nameWithoutExt = path.basename(originalName, path.extname(originalName));
             const ext = path.extname(originalName);
             let i = 1;
@@ -262,30 +220,65 @@ const storage = multer.diskStorage({
                 filePath = path.join(__dirname, 'uploads', `${nameWithoutExt}(${i})${ext}`);
                 i++;
             }
-            cb(null, path.basename(filePath)); // ใช้ชื่อไฟล์ที่ถูกเพิ่มหมายเลข
+            console.log("Generated filename with number:", path.basename(filePath));
+            cb(null, path.basename(filePath));
         } else {
-            cb(null, originalName); // ใช้ชื่อไฟล์เดิม
+            // ถ้าไม่มีการทับซ้อน, ใช้ชื่อไฟล์เดิม
+            console.log("Generated filename:", originalName);
+            cb(null, originalName);
         }
     }
 });
 
+// ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
+const upload = multer({ storage: storage }); // สร้าง instance ของ multer
+// API สำหรับอัปโหลดเอกสาร
+app.post('/documents', upload.array('files'), async (req, res) => {
+    const filePaths = req.files ? req.files.map(file => path.join('uploads', file.filename)) : []; // เก็บ path ของไฟล์ที่อัปโหลด
 
+    const sql = "INSERT INTO documents (upload_date, user_id, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const values = [
+        req.body.upload_date,
+        req.body.user_id,
+        req.body.subject,
+        req.body.to_recipient,
+        req.body.document_type,
+        JSON.stringify(filePaths), // แปลง array เป็น JSON string
+        req.body.notes,
+        0, // status
+        0, // is_read
+        0, // received_by
+        req.body.user_fname,
+        req.body.user_lname
+    ];
 
-// กำหนด fileFilter เพื่อให้รองรับไฟล์ PDF และ Word เท่านั้น
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        cb(null, true); // อนุญาตให้ไฟล์ PDF และ Word อัปโหลด
-    } else {
-        cb(new Error('Only PDF and Word files are allowed'), false); // หากไม่ใช่ PDF หรือ Word จะไม่อนุญาต
-    }
-};
-// // ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
-// const upload = multer({ storage: storage }); // สร้าง instance ของ multer
-// ใช้ upload.fields เพื่อรับหลายไฟล์
-const upload = multer({
-    storage: storage,
-    fileFilter: fileFilter
+    // ส่งคำสั่ง SQL ไปยังฐานข้อมูล
+    db.query(sql, values, async (err, data) => {
+        if (err) {
+            console.error('Database Error:', err.code, err.message, err.sql);
+            return res.status(500).json({ message: "Error inserting data", error: err.message });
+        }
+
+        // ส่งการแจ้งเตือน LINE เมื่อมีการเพิ่มเอกสารใหม่
+        const token = 'YOUR_LINE_NOTIFY_TOKEN'; // เปลี่ยนเป็น Token ของคุณ
+        const message = `เอกสารใหม่ถูกส่งโดย ${req.body.user_fname} ${req.body.user_lname} มีหัวข้อ: ${req.body.subject}`;
+        await sendLineNotification(token, message);
+
+        // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
+        const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending
+        db.query(countSql, (err, countData) => {
+            if (err) {
+                console.error('Database Error:', err.code, err.message, err.sql);
+                return res.status(500).json({ message: "Error counting new documents", error: err.message });
+            }
+
+            const newDocumentCount = countData[0].newDocumentCount; // จำนวนเอกสารใหม่
+            console.log('Document created successfully with ID:', data.insertId);
+            return res.status(201).json({ message: 'Document created successfully', newDocumentCount: newDocumentCount });
+        });
+    });
 });
+
 
 
 
@@ -323,100 +316,7 @@ app.post('/send-notification', async (req, res) => {
     }
 });
 
-// app.post('/documents', upload.single('file'), async (req, res) => {
-//     const filePath = req.file ? path.join('uploads', req.file.filename) : null;
-//     const sql = "INSERT INTO documents (upload_date, user_id, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-//     const values = [
-//         req.body.upload_date,
-//         req.body.user_id,
-//         req.body.subject,
-//         req.body.to_recipient,
-//         req.body.document_type,
-//         filePath,
-//         req.body.notes,
-//         0, // status
-//         0, // is_read
-//         0, // received_by
-//         req.body.user_fname,
-//         req.body.user_lname
-//     ];
 
-//     // ส่งคำสั่ง SQL ไปยังฐานข้อมูล
-//     db.query(sql, values, async (err, data) => {
-//         if (err) {
-//             console.error('Database Error:', err.code, err.message, err.sql);
-//             return res.status(500).json({ message: "Error inserting data", error: err.message });
-//         }
-
-//         // ส่งการแจ้งเตือน LINE เมื่อมีการเพิ่มเอกสารใหม่
-//         const token = 'YOUR_LINE_NOTIFY_TOKEN'; // เปลี่ยนเป็น Token ของคุณ
-//         const message = `เอกสารใหม่ถูกส่งโดย ${req.body.user_fname} ${req.body.user_lname} มีหัวข้อ: ${req.body.subject}`;
-//         await sendLineNotification(token, message);
-
-
-//         // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
-//         const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending
-//         db.query(countSql, (err, countData) => {
-//             if (err) {
-//                 console.error('Database Error:', err.code, err.message, err.sql);
-//                 return res.status(500).json({ message: "Error counting new documents", error: err.message });
-//             }
-
-//             const newDocumentCount = countData[0].newDocumentCount; // จำนวนเอกสารใหม่
-//             console.log('Document created successfully with ID:', data.insertId);
-//             return res.status(201).json({ message: 'Document created successfully', newDocumentCount: newDocumentCount });
-//         });
-//     });
-// });
-
-app.post('/documents', upload.fields([{ name: 'file' }, { name: 'word_file' }]), async (req, res) => {
-    // ตรวจสอบว่าไฟล์ PDF และ Word มาหรือไม่
-    const filePath = req.files['file'] ? path.join('uploads', req.files['file'][0].filename) : null;
-    const wordFilePath = req.files['word_file'] ? path.join('uploads', req.files['word_file'][0].filename) : null;
-
-    console.log("PDF file path:", filePath);
-    console.log("Word file path:", wordFilePath);
-
-    // ตรวจสอบว่าไฟล์ Word มาหรือไม่
-    if (wordFilePath) {
-        console.log("Word file uploaded successfully.");
-    } else {
-        console.log("No Word file uploaded.");
-    }
-
-    // SQL Query สำหรับการเพิ่มเอกสารในฐานข้อมูล
-    const sql = `
-        INSERT INTO documents 
-        (upload_date, user_id, subject, to_recipient, document_type, file, word_file, notes, status, is_read, received_by, user_fname, user_lname) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    const values = [
-        req.body.upload_date,
-        req.body.user_id,
-        req.body.subject,
-        req.body.to_recipient,
-        req.body.document_type,
-        filePath,        // path ของไฟล์ PDF
-        wordFilePath,    // path ของไฟล์ Word
-        req.body.notes,
-        0, // status
-        0, // is_read
-        0, // received_by
-        req.body.user_fname,
-        req.body.user_lname
-    ];
-
-    db.query(sql, values, async (err, data) => {
-        if (err) {
-            console.error('Database Error:', err.code, err.message, err.sql);
-            return res.status(500).json({ message: "Error inserting data", error: err.message });
-        }
-
-        console.log('Document created successfully with ID:', data.insertId);
-        return res.status(201).json({ message: 'Document created successfully' });
-    });
-});
 
 // Api หน้า TrackDocuments ฝั่ง User
 // สำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
@@ -424,7 +324,7 @@ app.get('/documents', authenticateToken, (req, res) => {
     const userId = req.user.userId; // ดึง userId จาก token
 
     const sql = `
-    SELECT document_id, create_at, subject, to_recipient, file, status, document_number, document_type, notes, recipient
+    SELECT document_id, create_at, subject, to_recipient, file, status, document_number, document_type, notes, recipient, reply
     FROM documents
     WHERE user_id = ?  
     `;
@@ -434,8 +334,26 @@ app.get('/documents', authenticateToken, (req, res) => {
             console.error('Database Error:', err.code, err.message, err.sql);
             return res.status(500).json({ message: "Error fetching documents", error: err.message });
         }
-        console.log('Documents fetched successfully:', results);
-        return res.status(200).json(results);
+
+        // แปลงข้อมูลเพื่อส่งเฉพาะข้อมูลที่ต้องการ
+        const formattedResults = results.map(doc => ({
+            document_id: doc.document_id,
+            create_at: doc.create_at,
+            subject: doc.subject,
+            file: doc.file, // ชื่อไฟล์
+            status: doc.status,
+            document_type: doc.document_type,
+            recipient: doc.recipient,
+            document_number: doc.document_number,
+            notes: doc.notes,
+            to_recipient: doc.to_recipient,
+            reply: doc.reply
+
+
+        }));
+
+        console.log('Documents fetched successfully:', formattedResults);
+        return res.status(200).json(formattedResults);
     });
 });
 
@@ -555,52 +473,11 @@ app.put('/users/:id', (req, res) => {
     });
 });
 
-// app.put('/change-password', async (req, res) => {
-//     try {
-//         const { user_id, old_password, new_password, confirm_password } = req.body;
-
-//         // เช็คว่าเรามีค่าครบทุกตัวไหม
-//         if (!old_password || !new_password || !confirm_password) {
-//             return res.status(400).json({ message: "กรุณากรอกรหัสผ่านทั้งหมด" });
-//         }
-
-//         // เช็คว่า new_password และ confirm_password ตรงกันไหม
-//         if (new_password !== confirm_password) {
-//             return res.status(400).json({ message: "รหัสผ่านใหม่ไม่ตรงกัน" });
-//         }
-
-//         // ค้นหาผู้ใช้จาก user_id
-//         const [user] = await db.promise().query("SELECT * FROM users WHERE user_id = ?", [user_id]);
-
-//         if (user.length === 0) {
-//             return res.status(404).json({ message: "ไม่พบผู้ใช้" });
-//         }
-
-//         // เปรียบเทียบรหัสผ่านเก่ากับรหัสผ่านที่เก็บไว้ในฐานข้อมูล
-//         const isPasswordValid = await bcrypt.compare(old_password, user[0].password);
-
-//         if (!isPasswordValid) {
-//             return res.status(400).json({ message: "รหัสผ่านเดิมไม่ถูกต้อง" });
-//         }
-
-//         // เข้ารหัสรหัสผ่านใหม่
-//         const hashedPassword = await bcrypt.hash(new_password, saltRounds);
-
-//         // อัปเดตรหัสผ่านใหม่ในฐานข้อมูล
-//         const updateSql = "UPDATE users SET password = ? WHERE user_id = ?";
-//         await db.promise().query(updateSql, [hashedPassword, user_id]);
-
-//         return res.status(200).json({ message: "อัปเดตรหัสผ่านสำเร็จ" });
-//     } catch (err) {
-//         console.error('Error during password update:', err);
-//         return res.status(500).json({ message: "Internal server error", error: err.message });
-//     }
-// });
 
 // API สำหรับเปลี่ยนรหัสผ่าน
 app.put('/users/change-password/:id', async (req, res) => {
     const userId = req.params.id;
-    const { old_password, new_password, confirm_password } = req.body;
+    const { old_password, new_password } = req.body; // ลบ confirm_password ออก
 
     try {
         // ดึงข้อมูลผู้ใช้จากฐานข้อมูล
@@ -608,18 +485,18 @@ app.put('/users/change-password/:id', async (req, res) => {
         const [user] = await db.promise().query(sql, [userId]);
 
         if (user.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'ไม่พบผู้ใช้' });
         }
 
         // ตรวจสอบรหัสผ่านเดิมว่าเข้ากันหรือไม่
         const validPassword = await bcrypt.compare(old_password, user[0].password);
         if (!validPassword) {
-            return res.status(400).json({ message: 'Incorrect old password' });
+            return res.status(400).json({ message: 'รหัสผ่านเดิมไม่ถูกต้อง' });
         }
 
-        // ตรวจสอบว่ารหัสผ่านใหม่ตรงกับ confirm password หรือไม่
-        if (new_password !== confirm_password) {
-            return res.status(400).json({ message: 'New password and confirm password do not match' });
+        // ตรวจสอบความปลอดภัยของรหัสผ่านใหม่ (ออปชัน)
+        if (new_password.length < 6) {
+            return res.status(400).json({ message: 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร' });
         }
 
         // เข้ารหัสรหัสผ่านใหม่
@@ -629,14 +506,13 @@ app.put('/users/change-password/:id', async (req, res) => {
         const updateSql = "UPDATE users SET password = ? WHERE user_id = ?";
         await db.promise().query(updateSql, [hashedPassword, userId]);
 
-        return res.status(200).json({ message: 'Password updated successfully' });
+        return res.status(200).json({ message: 'อัปเดตรหัสผ่านเรียบร้อยแล้ว' });
 
     } catch (err) {
-        console.error('Error during password change:', err);
-        return res.status(500).json({ message: 'Internal server error', error: err.message });
+        console.error('เกิดข้อผิดพลาดระหว่างการเปลี่ยนรหัสผ่าน:', err);
+        return res.status(500).json({ message: 'ข้อผิดพลาดภายในเซิร์ฟเวอร์', error: err.message });
     }
 });
-
 
 //Api หน้า AdminHome ฝั่ง Admin
 // API สำหรับดึงจำนวนผู้ใช้จากตาราง users
@@ -681,21 +557,6 @@ app.get('/api/unread-document-count', (req, res) => {
 
 //Api หน้า Documents ฝั่ง Admin
 // เส้นทางสำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง admin
-// app.get('/admin/documents', (req, res) => {
-//     const sql = `
-//        SELECT document_id, create_at , subject, to_recipient, document_type, file, notes, status, is_read, user_fname, user_lname
-//         FROM documents;
-//     `;
-//     db.query(sql, (err, results) => {
-//         if (err) {
-//             console.error('Database Error:', err.code, err.message, err.sql);
-//             return res.status(500).json({ message: "Error fetching documents", error: err.message });
-//         }
-//         console.log('Documents fetched successfully:', results);
-//         return res.status(200).json(results);
-//     });
-// });
-
 app.get('/admin/documents', (req, res) => {
     const sql = `
        SELECT document_id, create_at, subject, to_recipient, document_type, file, notes, status, is_read, user_fname, user_lname
@@ -757,7 +618,7 @@ app.put('/document/:id/read', (req, res) => {
 // เส้นทางสำหรับดึงข้อมูลผู้ใช้ทั้งหมดฝั่ง Addmin
 app.get('/api/users', (req, res) => {
     const sql = `
-        SELECT user_id, username, user_fname, user_lname, phone_number, role
+        SELECT user_id, username, user_fname, user_lname, phone_number, role, affiliation
         FROM users
     `;
 
@@ -809,6 +670,9 @@ app.put('/documents/:id', (req, res) => {
         updatedDocument.status,
         updatedDocument.recipient,
         updatedDocument.notes,
+        updatedDocument.reply,    // ข้อความตอบกลับจากแอดมิน
+        updatedDocument.response_file,  // ไฟล์ที่แอดมินแนบกลับไป
+        updatedDocument.response_count, // จำนวนครั้งที่แอดมินตอบกลับ
         docId
     ];
 
@@ -923,7 +787,7 @@ app.put('/user/:id', (req, res) => {
         updatedUser.phone_number,
         updatedUser.affiliation,
         updatedUser.role,
-        updatedUser.notes || '', // ใช้ค่าเริ่มต้นเป็นสตริงว่างถ้าไม่มีโน้ต
+        updatedUser.notes,
         userId
     ];
 
@@ -1021,29 +885,6 @@ app.get('/document-receipts', (req, res) => {
         res.json(results);
     });
 });
-// app.get('/document-receipts', (req, res) => {
-//     const sql = `
-//         SELECT 
-//             dr.receipt_id, 
-//             dr.date_received, 
-//             dr.paper_cost, 
-//             d.subject, 
-//             u.user_fname, 
-//             u.user_lname
-//         FROM document_receipts dr
-//         JOIN documents d ON dr.document_id = d.document_id
-//         JOIN users u ON d.user_id = u.user_id
-//     `;
-
-//     db.query(sql, (err, results) => {
-//         if (err) {
-//             console.error('Error fetching document receipts:', err);
-//             return res.status(500).json({ error: 'Error fetching document receipts' });
-//         }
-//         res.json(results);
-//     });
-// });
-
 
 app.get('/document-receipts/:userId', (req, res) => {
     const userId = req.params.userId;
@@ -1110,86 +951,6 @@ app.get('/api/new-documents', (req, res) => {
         }
         return res.status(200).json(results); // ส่งคืนเอกสารใหม่
     });
-});
-
-
-// API สำหรับการสมัครสมาชิก
-app.post('/register', async (req, res) => {
-    try {
-        const { user_fname, user_lname, email, username, password, confirmPassword } = req.body;
-
-        // ตรวจสอบว่ารหัสผ่านตรงกันไหม
-        if (password !== confirmPassword) {
-            return res.status(400).json({ message: 'Password and confirm password do not match' });
-        }
-
-        // ตรวจสอบว่ามีชื่อผู้ใช้ซ้ำหรือไม่
-        const checkUserSql = 'SELECT * FROM user WHERE email = ? OR username = ?';
-        const [existingUser] = await db.promise().query(checkUserSql, [email, username]);
-
-        if (existingUser.length > 0) {
-            return res.status(400).json({ message: 'Email or Username already exists' });
-        }
-
-        // เข้ารหัสรหัสผ่าน
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        // สร้างคำสั่ง SQL สำหรับการเพิ่มผู้ใช้ใหม่
-        const sql = 'INSERT INTO user (user_fname, user_lname, email, username, password) VALUES (?, ?, ?, ?, ?)';
-        const values = [user_fname, user_lname, email, username, hashedPassword];
-
-        // เพิ่มข้อมูลผู้ใช้ใหม่ลงในฐานข้อมูล
-        db.query(sql, values, (err, result) => {
-            if (err) {
-                console.error('Database Error:', err.code, err.message);
-                return res.status(500).json({ message: 'Error inserting data' });
-            }
-            // ส่ง JWT เมื่อสมัครสมาชิกสำเร็จ
-            const token = jwt.sign({ id: result.insertId, email }, 'yourSecretKey', { expiresIn: '1h' });
-            res.status(201).json({ message: 'User registered successfully', token });
-        });
-    } catch (error) {
-        console.error('Error during registration:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
-});
-
-// API สำหรับการเปลี่ยนรหัสผ่าน
-app.post('/change-password', async (req, res) => {
-    try {
-        const { email, oldPassword, newPassword, confirmNewPassword } = req.body;
-
-        // ตรวจสอบว่ารหัสผ่านใหม่ตรงกันไหม
-        if (newPassword !== confirmNewPassword) {
-            return res.status(400).json({ message: 'New password and confirm password do not match' });
-        }
-
-        // ตรวจสอบว่าอีเมลล์มีอยู่ในระบบ
-        const sql = 'SELECT * FROM user WHERE email = ?';
-        const [user] = await db.promise().query(sql, [email]);
-
-        if (user.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // ตรวจสอบรหัสผ่านเดิม
-        const match = await bcrypt.compare(oldPassword, user[0].password);
-        if (!match) {
-            return res.status(400).json({ message: 'Old password is incorrect' });
-        }
-
-        // เข้ารหัสรหัสผ่านใหม่
-        const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-        // อัพเดตรหัสผ่านใหม่ในฐานข้อมูล
-        const updateSql = 'UPDATE user SET password = ? WHERE email = ?';
-        await db.promise().query(updateSql, [hashedNewPassword, email]);
-
-        res.status(200).json({ message: 'Password updated successfully' });
-    } catch (error) {
-        console.error('Error during password change:', error);
-        res.status(500).json({ message: 'Internal server error', error: error.message });
-    }
 });
 
 app.listen(port, () => {

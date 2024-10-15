@@ -176,7 +176,7 @@ function EditUser() {
         )}
 
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>เเก้ไขข้อมูลผู้ใช้</Typography>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'left', color: '#1976d2' }}>เเก้ไขข้อมูลผู้ใช้</Typography>
 
           <Paper
             sx={{
@@ -185,7 +185,7 @@ function EditUser() {
             }}
           >
             <form onSubmit={handleSubmit}>
-              <Typography variant="h6" gutterBottom sx={{ p: 2 }}>แก้ไขข้อมูลผู้ใช้</Typography>
+              {/* <Typography variant="h6" gutterBottom sx={{ p: 2 }}>แก้ไขข้อมูลผู้ใช้</Typography> */}
               <Box mb={2}>
                 <Grid container spacing={2}>
                   {/* Row 1 */}
@@ -218,6 +218,7 @@ function EditUser() {
                       onChange={handleChange}
                       fullWidth
                       required
+                      disabled // ทำให้ช่องนี้ไม่สามารถแก้ไขได้
                     />
                   </Grid>
 
@@ -233,14 +234,27 @@ function EditUser() {
                   </Grid>
 
                   <Grid item xs={12} md={6}>
-                    <TextField
-                      label="สังกัด"
-                      name="affiliation"
-                      value={user.affiliation}
-                      onChange={handleChange}
+                    <FormControl
                       fullWidth
                       required
-                    />
+                    >
+                      <InputLabel>สังกัด</InputLabel>
+                      <Select
+                        name="affiliation"
+                        value={user.affiliation}
+                        onChange={handleChange}
+                        fullWidth
+                        label="สังกัด"
+                        required
+                      >
+                        <MenuItem value="สาขาวิชาวิทยาศาสตร์กายภาพ">สาขาวิชาวิทยาศาสตร์กายภาพ</MenuItem>
+                        <MenuItem value="สาขาวิชาวิทยาศาสตร์ชีวภาพ">สาขาวิชาวิทยาศาสตร์ชีวภาพ</MenuItem>
+                        <MenuItem value="หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล">หลักสูตร วท.บ. คณิตศาสตร์และการจัดการข้อมูล</MenuItem>
+                        <MenuItem value="หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ">หลัก วท.บ. วิทยาการคอมพิวเตอร์และสารสนเทศ</MenuItem>
+                        <MenuItem value="หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม">หลักสูตร วท.บ. วิทยาศาสตร์สิ่งแวดล้อม</MenuItem>
+                        <MenuItem value="สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล">สำนักงานคณะวิทยาศาสตร์และนวัตกรรมดิจิทัล</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
 
                   <Grid item xs={12} md={6}>
