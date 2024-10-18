@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemIcon, ListItemText, Box, CssBaseline, IconButton, Badge, Menu, MenuItem, Collapse, Divider, Tooltip } from '@mui/material';
-import { Home as HomeIcon, PersonAdd, Article, InsertDriveFile, ArrowDropDown, ArrowDropUp, AddComment, Description, MenuIcon, CloseIcon, SupervisorAccount, BarChart, ExitToApp, Notifications, Search, AccountCircle } from '@mui/icons-material';
+import { Home as HomeIcon, PersonAdd, Article, InsertDriveFile, ArrowDropDown, ArrowDropUp, AddComment, Description, MenuIcon, CheckCircle, SupervisorAccount, BarChart, ExitToApp, Notifications, Search, AccountCircle } from '@mui/icons-material';
 import InputBase from '@mui/material/InputBase';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -149,6 +149,14 @@ const Layout = ({ children }) => {
       navigate('/rec');
       setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
     }, 400); // หน่วงเวลา 500ms
+  };
+
+  const handleCompletedDocuments = () => {
+    setLoading(true); // Start loading
+    setTimeout(() => {
+      navigate('/complete'); // Navigate after delay
+      setLoading(false); // Stop loading
+    }, 400); // 400ms delay
   };
 
   const handleNotificationClick = (event) => {
@@ -353,12 +361,15 @@ const Layout = ({ children }) => {
                   <ListItemIcon sx={{ color: '#F06292' }}><Description /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}
                   <ListItemText primary="เอกสารทั้งหมด" />
                 </ListItem>
-                {/* <ListItem button sx={{ pl: 4 }} onClick={handleAddFile}>
-                  <ListItemIcon sx={{ color: '#64B5F6' }}><AddComment /></ListItemIcon> 
-                  <ListItemText primary="เพิ่มเอกสาร" />
-                </ListItem> */}
+                <ListItem button onClick={handleCompletedDocuments} sx={{ pl: 4 }}>
+                  <ListItemIcon sx={{ color: '#64B5F6' }}>
+                    {loading ? <CircularProgress size={24} color="inherit" /> : <CheckCircle />}
+                  </ListItemIcon>
+                  <ListItemText primary="เอกสารที่ดำเนินการเรียบร้อย" />
+                </ListItem>
               </List>
             </Collapse>
+
 
             <ListItem button onClick={handleStatistics}>
               <ListItemIcon sx={{ color: '#FFD54F' }}><BarChart /></ListItemIcon> {/* เปลี่ยนสีให้สดใส */}

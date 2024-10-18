@@ -1,0 +1,99 @@
+# services:
+#   backend:
+#     env_file:
+#         ".env"
+#     build:
+#       context: ./backend
+#       dockerfile: Dockerfile
+#     image: "akkarachajaitrong/pre_edoc-backend"
+#     ports:
+#       - "3000:3000"
+#   frontend:
+#     build:
+#       context: ./hello-app
+#       dockerfile: Dockerfile
+#     image: "akkarachajaitrong/pre_edoc-frontend"
+#     ports:
+#       - "3001:3001"
+#     links:
+#       - "backend:be"
+#     networks:
+#       - external_network # ใช้ external network
+
+# networks:
+#   external_network:
+#     external: true
+
+# services:
+#   backend:
+#     env_file:
+#       - ".env"
+#     build:
+#       context: ./backend
+#       dockerfile: Dockerfile
+#     image: "akkarachajaitrong/pre_edoc-backend"
+#     ports:
+#       - "3000:3000"
+
+#   frontend:
+#     build:
+#       context: ./hello-app
+#       dockerfile: Dockerfile
+#     image: "akkarachajaitrong/pre_edoc-frontend"
+#     ports:
+#       - "3001:3001"  # ตรวจสอบให้แน่ใจว่า frontend รันที่พอร์ต 3001
+#     depends_on:
+#       - backend  # ตรวจสอบว่า backend รันก่อน
+#     networks:
+#       - external_network  # ใช้ external network
+
+# networks:
+#   external_network:
+#     external: true  # ใช้ external network ที่คุณสร้างไว้
+
+version: '3.8'
+
+services:
+  backend:
+    env_file:
+      - ".env" # โหลดตัวแปรจากไฟล์ .env
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: "akkarachajaitrong/pre_edoc-backend"
+    ports:
+      - "3000:3000" # Backend ใช้พอร์ต 3000
+    environment:
+      # กำหนดค่าตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ MySQL
+      # กำหนดค่าตัวแปรสภาพแวดล้อมสำหรับเชื่อมต่อ MySQL โดยตรง
+      DB_HOST: localhost # ใช้ localhost แทน ${DB_HOST}
+      DB_PORT: 3306 # ใช้ 3306 แทน ${DB_PORT}
+      DB_USER: root # ใช้ root แทน ${DB_USER}
+      DB_PASSWORD: 80945 # ใช้รหัสผ่านตรงๆ แทน ${DB_PASSWORD}
+      DB_NAME: register # ใช้ register แทน ${DB_NAME}
+
+  frontend:
+    build:
+      context: ./hello-app
+      dockerfile: Dockerfile
+    image: "akkarachajaitrong/pre_edoc-frontend"
+    ports:
+      - "3001:3001" # Frontend ใช้พอร์ต 3001
+    depends_on:
+      - backend
+    networks:
+      - external_network
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - "3306:3306"
+    networks:
+      - external_network
+
+networks:
+  external_network:
+    external: true # ใช้ external network ที่คุณสร้างไว้

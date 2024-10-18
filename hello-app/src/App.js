@@ -26,6 +26,7 @@ import UnreadDocuments from './Admin/UnreadDocuments';
 import DashboardLayoutBasic from './LayoutAdmin/DashboardLayoutBasic';
 import PaperSavingsCalculator from './Admin/PaperSavingsCalculator';
 import NewDocuments from './Admin/NewDocuments';
+import CompletedDocuments from './Admin/CompletedDocuments';
 
 function App() {
   return (
@@ -52,7 +53,8 @@ function AppContent() {
                       location.pathname.startsWith('/unread') ||
                       location.pathname.startsWith('/paper') ||
                       location.pathname.startsWith('/newdoc')  ||
-                      location.pathname.startsWith('/register') ;
+                      location.pathname.startsWith('/register') ||
+                      location.pathname.startsWith('/complete') ;
 
   return (
     <>
@@ -87,6 +89,7 @@ function AppContent() {
         <Route path='/dashboard' element={<DashboardLayoutBasic />} />
         <Route path='/paper' element={<PaperSavingsCalculator />} />
         <Route path='/newdoc' element={<NewDocuments />} />
+        <Route path='/complete' element={<CompletedDocuments />} />
         
 
 

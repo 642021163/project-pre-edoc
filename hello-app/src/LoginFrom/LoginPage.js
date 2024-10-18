@@ -175,7 +175,7 @@ function LoginPage() {
           <Box component="form" sx={{ width: '100%', mt: 2 }} onSubmit={handleLogin}>
             <TextField
               fullWidth
-              label="Username"
+              label="Email"
               variant="outlined"
               margin="normal"
               value={username}

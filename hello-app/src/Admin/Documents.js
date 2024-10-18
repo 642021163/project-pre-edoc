@@ -51,10 +51,9 @@ function Documents() {
     };
 
 
-
     const filteredDocuments = (activeTab === 'all' ? allDocuments : unreadDocuments).filter(doc =>
-        (doc.subject && doc.subject.toLowerCase().includes(search.toLowerCase())) || // ตรวจสอบว่า subject ไม่เป็น null
-        (`${doc.user_fname || ''} ${doc.user_lname || ''}`.toLowerCase().includes(search.toLowerCase())) // ตรวจสอบว่า names ไม่เป็น null
+        (doc.subject && doc.subject.toLowerCase().includes(search.toLowerCase())) ||
+        (`${doc.user_fname || ''} ${doc.user_lname || ''}`.toLowerCase().includes(search.toLowerCase())) 
     );
 
 
@@ -104,7 +103,7 @@ function Documents() {
         const statusB = statusOrder[b.status];
 
         if (statusA === statusB) {
-            return new Date(b.upload_date) - new Date(a.upload_date); // เรียงตามวันที่ (ใหม่สุดไปเก่าที่สุด)
+            return new Date(b.create_at) - new Date(a.create_at); // เรียงตามวันที่ (ใหม่สุดไปเก่าที่สุด)
         }
         return statusA - statusB; // เรียงตามสถานะ
     });
@@ -327,7 +326,7 @@ function Documents() {
                             <Search />
                         </IconButton>
                         <InputBase
-                            placeholder="Search…"
+                            placeholder="ค้นหา…"
                             value={search}
                             onChange={handleSearchChange}
                             sx={{ ml: 1, flex: 1 }}
@@ -355,7 +354,7 @@ function Documents() {
                                 {displayedDocuments.map((doc, index) => {
                                     return (
                                         <TableRow key={doc.document_id}>
-                                            <TableCell>{index + 1}</TableCell>
+                                            <TableCell>{startIndex + index + 1}</TableCell>
                                             <TableCell>{formatDateTime(doc.create_at)}</TableCell>
                                             <TableCell>
                                                 <Tooltip title={`${doc.user_fname} ${doc.user_lname}`} arrow>

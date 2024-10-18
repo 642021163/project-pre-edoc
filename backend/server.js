@@ -1,4 +1,5 @@
 const express = require("express");
+const { motion } = require('framer-motion');
 const mysql = require("mysql2");
 const cors = require("cors");
 const path = require('path');
@@ -6,28 +7,31 @@ const multer = require('multer');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const secretKey = 'your_secret_key';
-const saltRounds = 10; // จำนวนรอบของ salt สำหรับ bcrypt
+// const secretKey = 'your_secret_key';
+// const saltRounds = 10; // จำนวนรอบของ salt สำหรับ bcrypt
 const winston = require('winston'); // เพิ่มไลบรารีสำหรับการล็อก
 const { v4: uuidv4 } = require('uuid');
 const { header, data } = require("framer-motion/client");
 const axios = require('axios');
+const dotenv = require('dotenv'); // โหลด dotenv
+// โหลดไฟล์ .env ที่อยู่นอกโฟลเดอร์ backend
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-// ประกาศและกำหนดค่า `port` ที่นี่
-const port = 3000;
+const port = process.env.PORT || 3000;
+const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10;
+const secretKey = process.env.JWT_SECRET || 'your_secret_key';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "080945",
-    database: "register",
-    port: 3306
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT
 });
-
 db.connect((err) => {
     if (err) {
         console.error('Error connecting to the database:', err);
@@ -141,6 +145,7 @@ app.post('/login', async (req, res) => {
 
     try {
         const { username, password, userType } = req.body;
+        
 
         logger.info('Login attempt', { correlationId, username, userType });
 
@@ -233,9 +238,8 @@ const storage = multer.diskStorage({
 // ใช้งาน `multer` สำหรับการอัปโหลดไฟล์ ฝั่ง user
 const upload = multer({ storage: storage }); // สร้าง instance ของ multer
 // API สำหรับอัปโหลดเอกสาร
-app.post('/documents', upload.array('files'), async (req, res) => {
-    const filePaths = req.files ? req.files.map(file => path.join('uploads', file.filename)) : []; // เก็บ path ของไฟล์ที่อัปโหลด
-
+app.post('/documents', upload.single('file'), async (req, res) => {
+    const filePath = req.file ? path.join('uploads', req.file.filename) : null;
     const sql = "INSERT INTO documents (upload_date, user_id, subject, to_recipient, document_type, file, notes, status, is_read, received_by, user_fname, user_lname) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     const values = [
         req.body.upload_date,
@@ -243,7 +247,7 @@ app.post('/documents', upload.array('files'), async (req, res) => {
         req.body.subject,
         req.body.to_recipient,
         req.body.document_type,
-        JSON.stringify(filePaths), // แปลง array เป็น JSON string
+        filePath,
         req.body.notes,
         0, // status
         0, // is_read
@@ -264,6 +268,7 @@ app.post('/documents', upload.array('files'), async (req, res) => {
         const message = `เอกสารใหม่ถูกส่งโดย ${req.body.user_fname} ${req.body.user_lname} มีหัวข้อ: ${req.body.subject}`;
         await sendLineNotification(token, message);
 
+
         // คิวรีเพื่อดึงจำนวนเอกสารใหม่ที่มีสถานะเป็น 'Pending'
         const countSql = "SELECT COUNT(*) AS newDocumentCount FROM documents WHERE status = 0"; // 0 หมายถึง Pending
         db.query(countSql, (err, countData) => {
@@ -278,7 +283,6 @@ app.post('/documents', upload.array('files'), async (req, res) => {
         });
     });
 });
-
 
 
 
@@ -316,7 +320,9 @@ app.post('/send-notification', async (req, res) => {
     }
 });
 
-
+app.get('/logina',(req,res)=>{
+    return res.status(200).json({ message: 'aaaaaaaaaaaaaaaaaaaaa' });
+});
 
 // Api หน้า TrackDocuments ฝั่ง User
 // สำหรับดึงข้อมูลเอกสารทั้งหมด ฝั่ง user
@@ -658,7 +664,7 @@ app.put('/documents/:id', (req, res) => {
 
     const sql = `
     UPDATE documents
-    SET upload_date = ?, subject = ?, to_recipient = ?, document_number = ?, document_type = ?, status = ?, recipient = ?, notes = ?
+    SET upload_date = ?, subject = ?, to_recipient = ?, document_number = ?, document_type = ?, status = ?, recipient = ?, notes = ? ,reply = ?,response_file = ?,response_count = ?
     WHERE document_id = ?
   `;
     const values = [

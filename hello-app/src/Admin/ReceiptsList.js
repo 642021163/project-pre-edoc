@@ -175,7 +175,7 @@ function ReceiptsList() {
                                 <TextField
                                     fullWidth
                                     variant="outlined"
-                                    placeholder="Search by subject or sender..."
+                                    placeholder="ค้นหา..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)} // อัปเดต searchTerm เมื่อพิมพ์
                                     InputProps={{

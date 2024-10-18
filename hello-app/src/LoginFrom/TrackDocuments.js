@@ -77,7 +77,7 @@ const TrackDocuments = () => {
             const response = await axios.get('http://localhost:3000/documents', {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const sortedDocuments = response.data.sort((a, b) => new Date(b.upload_date) - new Date(a.upload_date));
+            const sortedDocuments = response.data.sort((a, b) => new Date(b.create_at) - new Date(a.create_at));
             setDocuments(sortedDocuments);
             setLoading(false);
         } catch (err) {
@@ -170,9 +170,9 @@ const TrackDocuments = () => {
 
     const sortedDocuments = filteredDocuments.sort((a, b) => {
         const statusOrder = {
-            0: 1, // รอดำเนินการ
+            0: 3, // รอดำเนินการ
             1: 2, // กำลังดำเนินการ
-            2: 3, // ดำเนินการเรียบร้อย
+            2: 1, // ดำเนินการเรียบร้อย
         };
         const statusA = statusOrder[a.status];
         const statusB = statusOrder[b.status];
@@ -181,8 +181,9 @@ const TrackDocuments = () => {
             return statusA - statusB;
         }
 
-        return new Date(b.upload_date) - new Date(a.upload_date);
+        return new Date(b.create_at) - new Date(a.create_at);
     });
+
 
     const getAdminNameById = (recipient) => {
         switch (recipient) {
