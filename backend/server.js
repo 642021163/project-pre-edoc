@@ -145,7 +145,7 @@ app.post('/login', async (req, res) => {
 
     try {
         const { username, password, userType } = req.body;
-        
+
 
         logger.info('Login attempt', { correlationId, username, userType });
 
@@ -153,7 +153,7 @@ app.post('/login', async (req, res) => {
 
         if (!user) {
             logger.warn('Invalid username or userType', { correlationId, username, userType });
-            return res.status(401).json({ message: 'กรุณาเลือกประเภทผู้ใช้งาน' });
+            return res.status(400).json({ message: 'กรุณาเลือกประเภทผู้ใช้งาน' });
         }
 
         const isPasswordValid = await comparePassword(password, user.password);
@@ -320,8 +320,8 @@ app.post('/send-notification', async (req, res) => {
     }
 });
 
-app.get('/logina',(req,res)=>{
-    return res.status(200).json({ message: 'aaaaaaaaaaaaaaaaaaaaa' });
+app.get('/logina', (req, res) => {
+    return res.status(200).json({ message: 'bbbbbbbbbbbbbbbbbb' });
 });
 
 // Api หน้า TrackDocuments ฝั่ง User
@@ -519,6 +519,46 @@ app.put('/users/change-password/:id', async (req, res) => {
         return res.status(500).json({ message: 'ข้อผิดพลาดภายในเซิร์ฟเวอร์', error: err.message });
     }
 });
+//ฝั่ง User
+// API สำหรับดึงจำนวนเอกสารของผู้ใช้ตาม user_id
+app.get('/api/user-document-count', (req, res) => {
+    const userId = req.query.user_id; // รับ user_id จาก query parameter
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const query = 'SELECT COUNT(*) AS count FROM documents WHERE user_id = ?'; // ใช้ WHERE เพื่อกรองตาม user_id
+
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            console.error('Error fetching user document count:', err);
+            return res.status(500).json({ error: 'Failed to fetch user document count' });
+        }
+        res.json({ count: result[0].count }); // ส่งจำนวนเอกสารกลับไปยัง client
+    });
+});
+
+// API สำหรับดึงจำนวนเอกสารที่ดำเนินการเรียบร้อยของผู้ใช้ตาม user_id
+app.get('/api/user-document-success', (req, res) => {
+    const userId = req.query.user_id; // รับ user_id จาก query parameter
+
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // ปรับ query เพื่อกรองตาม user_id และ status ที่ต้องการ
+    const query = 'SELECT COUNT(*) AS count FROM documents WHERE user_id = ? AND status = 2'; // ใช้ WHERE เพื่อกรองตาม user_id และ status
+
+    db.query(query, [userId], (err, result) => {
+        if (err) {
+            console.error('Error fetching user document count:', err);
+            return res.status(500).json({ error: 'Failed to fetch user document count' });
+        }
+        res.json({ count: result[0].count }); // ส่งจำนวนเอกสารกลับไปยัง client
+    });
+});
+
 
 //Api หน้า AdminHome ฝั่ง Admin
 // API สำหรับดึงจำนวนผู้ใช้จากตาราง users

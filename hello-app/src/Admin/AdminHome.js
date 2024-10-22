@@ -182,6 +182,7 @@ function AdminHome() {
                   <Paper
                     elevation={6}
                     sx={{
+                      width:'300px',
                       p: 3,
                       textAlign: 'center',
                       backgroundColor: '#17c964',
@@ -222,6 +223,7 @@ function AdminHome() {
                   <Paper
                     elevation={6}
                     sx={{
+                      width:'300px',
                       p: 3,
                       textAlign: 'center',
                       backgroundColor: '#006FEE',
@@ -262,6 +264,7 @@ function AdminHome() {
                   <Paper
                     elevation={6}
                     sx={{
+                      width:'300px',
                       p: 3,
                       textAlign: 'center',
                       backgroundColor: '#6020a0',
@@ -289,7 +292,7 @@ function AdminHome() {
                         <ReportProblem fontSize="large" sx={{ mr: 1, color: '#fff' }} />
                         สถิติการรับเอกสาร
                       </Typography>
-                      <Typography variant="h6" sx={{ color: '#fff' }}> รายการ</Typography>
+                      <Typography variant="h6" sx={{ fontSize:30,color: '#fff' }}> รายการ</Typography>
                     </>
 
                   </Paper>

@@ -182,12 +182,12 @@ function UserList() {
                           <TableCell sx={{ padding: '12px 16px' }}>{user.affiliation}</TableCell>
                           <TableCell sx={{ textAlign: 'center' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                              <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>
+                              <Tooltip title="แก้ไขข้อมูลผู้ใช้" arrow>
                                 <Button variant="contained"
                                   sx={{
                                     mx: 1,
-                                    backgroundColor: 'success', // สีหลักของปุ่ม
-                                    color: '#fff',
+                                    backgroundColor: '#ffeb3b', // สีหลักของปุ่
+                                    color: '#000',
                                     '&:hover': {
                                       backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
                                     },
@@ -196,7 +196,7 @@ function UserList() {
                                   }}
                                   onClick={() => handleEditClick(user.user_id)}>
                                   <EditIcon />
-                                  Edit
+                                  แก้ไข
                                 </Button>
                               </Tooltip>
                               {/* 

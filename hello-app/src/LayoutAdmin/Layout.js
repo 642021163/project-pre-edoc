@@ -7,6 +7,8 @@ import axios from 'axios';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import Avatar from '@mui/material/Avatar';
 import { CircularProgress, Backdrop } from '@mui/material';
+import Swal from 'sweetalert2';
+
 
 const drawerWidth = 240;
 
@@ -71,13 +73,29 @@ const Layout = ({ children }) => {
   }, []);
 
   const handleLogout = () => {
-    const confirmLogout = window.confirm("คุณแน่ใจว่าต้องการออกจากระบบไหม?");
-    if (confirmLogout) {
-      localStorage.clear();
-      navigate('/loginpage');
-      handleMenuClose(); // ปิดเมนูหลังจากออกจากระบบ
-    }
+    Swal.fire({
+      title: 'คุณแน่ใจว่าต้องการออกจากระบบไหม?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ใช่',
+      cancelButtonText: 'ไม่',
+      onBeforeOpen: () => {
+        Swal.showLoading(); // แสดง loading ขณะรอการยืนยัน
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setLoading(true); // เริ่มการโหลด
+        localStorage.clear();
+
+        // ใช้ setTimeout เพื่อเลียนแบบการโหลด
+        setTimeout(() => {
+          setLoading(false); // หยุดการโหลด
+          navigate('/loginpage');
+        }, 600); // ปรับเวลาได้ตามต้องการ
+      }
+    });
   };
+
 
   const handleProfileMenuOpen = (event) => {
     setProfileMenuAnchor(event.currentTarget);
@@ -234,12 +252,16 @@ const Layout = ({ children }) => {
               </MenuItem>
               <Divider />
               <MenuItem
-                onClick={handleLogout}
+                onClick={() => {
+                  handleProfileMenuClose(); // ปิดเมนู Dropdown
+                  handleLogout(); // เรียกฟังก์ชัน logout
+                }}
                 sx={{ fontSize: '16px' }} // ปรับแต่งฟอนต์ที่นี่
               >
                 ออกจากระบบ
               </MenuItem>
             </Menu>
+
 
 
             {/* ข้อความทักทายผู้ใช้ */}

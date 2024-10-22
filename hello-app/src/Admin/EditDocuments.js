@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {Box, CssBaseline, Typography, Paper, Button, Grid, TextField, FormControl,InputLabel, Select, MenuItem, DialogActions,} from '@mui/material';
+import { Box, CssBaseline, Typography, Paper, Button, Grid, TextField, FormControl, InputLabel, Select, MenuItem, DialogActions, } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import Layout from '../LayoutAdmin/Layout';
@@ -226,9 +226,9 @@ function EditDocuments() {
     // ตรวจสอบจำนวนหน้าของ PDF ก่อนคำนวณ
     if (pdfPages > 0) {
       const savingsPerPage = 0.9; // ตัวอย่าง: ประหยัด 0.5 บาทต่อหน้า
-      const calculatedSavings = pdfPages * savingsPerPage;
+      const calculatedSavings = (pdfPages * savingsPerPage).toFixed(2); // จำกัดทศนิยม 2 ตำแหน่ง
       const documentId = document.document_id;
-      setSavings(calculatedSavings);
+      setSavings(Number(calculatedSavings)); // แปลงกลับเป็นตัวเลขและตั้งค่า
       const userId = localStorage.getItem('user_id');
 
       if (!userId) {
@@ -285,7 +285,11 @@ function EditDocuments() {
                       fullWidth
                       required
                       InputProps={{
-                        readOnly: true,  // ให้ไม่สามารถแก้ไขได้
+                        readOnly: true, // ทำให้ฟิลด์เป็นแบบอ่านได้
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ข้อความในฟิลด์มีสีจาง
+                      }}
+                      InputLabelProps={{
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ชื่อฟิลด์มีสีจาง
                       }}
                     />
                   </Grid>
@@ -300,8 +304,10 @@ function EditDocuments() {
                       fullWidth
                       required
                       InputProps={{
-                        readOnly: true,  // ให้ไม่สามารถแก้ไขได้
+                        readOnly: true, // ทำให้ฟิลด์เป็นแบบอ่านได้
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ข้อความในฟิลด์มีสีจาง
                       }}
+
                     />
                   </Grid>
 
@@ -315,7 +321,11 @@ function EditDocuments() {
                       fullWidth
                       required
                       InputProps={{
-                        readOnly: true,  // ให้ไม่สามารถแก้ไขได้
+                        readOnly: true, // ทำให้ฟิลด์เป็นแบบอ่านได้
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ข้อความในฟิลด์มีสีจาง
+                      }}
+                      InputLabelProps={{
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ชื่อฟิลด์มีสีจาง
                       }}
                     />
                   </Grid>
@@ -331,6 +341,19 @@ function EditDocuments() {
                         onChange={handleChange}
                         required
                         disabled={!!document.recipient}
+                        sx={{
+                          backgroundColor: '#e3f2fd', // สีพื้นหลังของ Select
+                          borderRadius: '8px',
+                          '&:hover': {
+                            backgroundColor: '#bbdefb', // สีพื้นหลังเมื่อ hover
+                          },
+                          '&.Mui-focused': {
+                            backgroundColor: '#bbdefb', // สีพื้นหลังเมื่อถูกเลือก
+                          },
+                          '& .MuiSelect-select': {
+                            backgroundColor: 'transparent', // ให้สีพื้นหลังของ Select เป็นโปร่งใส
+                          },
+                        }}
                       >
                         {recipients.length > 0 ? (
                           recipients.map(admin => (
@@ -345,7 +368,6 @@ function EditDocuments() {
                     </FormControl>
                   </Grid>
 
-
                   {/* Row 5*/}
                   <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
@@ -356,6 +378,13 @@ function EditDocuments() {
                         value={document.document_type}
                         onChange={handleChange}
                         required
+                        InputProps={{
+                          readOnly: true, // ทำให้ฟิลด์เป็นแบบอ่านได้
+                          style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ข้อความในฟิลด์มีสีจาง
+                        }}
+                        InputLabelProps={{
+                          style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ชื่อฟิลด์มีสีจาง
+                        }}
 
                       >
                         {document_typeOptions.map(option => (
@@ -375,6 +404,18 @@ function EditDocuments() {
                       onChange={handleChange}
                       fullWidth
                       required
+                      sx={{
+                        '& .MuiInputBase-root': {
+                          backgroundColor: '#e3f2fd', // สีพื้นหลังของ TextField
+                          borderRadius: '8px', // มุมโค้ง
+                          '&:hover': {
+                            backgroundColor: '#bbdefb', // สีพื้นหลังเมื่อ hover
+                          },
+                          '&.Mui-focused': {
+                            backgroundColor: '#bbdefb', // สีพื้นหลังเมื่อถูกเลือก
+                          },
+                        },
+                      }}
                     />
                   </Grid>
 
@@ -390,7 +431,11 @@ function EditDocuments() {
                       multiline
                       rows={4}
                       InputProps={{
-                        readOnly: true, // เพื่อไม่ให้แอดมินแก้ไขข้อความจากผู้ใช้ได้
+                        readOnly: true, // ทำให้ฟิลด์เป็นแบบอ่านได้
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ข้อความในฟิลด์มีสีจาง
+                      }}
+                      InputLabelProps={{
+                        style: { color: 'rgba(0, 0, 0, 0.5)' }, // ทำให้ชื่อฟิลด์มีสีจาง
                       }}
                     />
                   </Grid>
@@ -404,6 +449,18 @@ function EditDocuments() {
                         value={document.status}
                         onChange={handleChange}
                         required
+                        sx={{
+                          '& .MuiSelect-root': {
+                            backgroundColor: '#e3f2fd', // สีพื้นหลังของ Select
+                            borderRadius: '8px',
+                            '&:hover': {
+                              backgroundColor: '#bbdefb',
+                            },
+                            '&.Mui-focused': {
+                              backgroundColor: '#bbdefb',
+                            },
+                          },
+                        }}
                       >
                         {statusOptions.map(option => (
                           <MenuItem key={option.value} value={option.value}>
@@ -413,7 +470,6 @@ function EditDocuments() {
                       </Select>
                     </FormControl>
                   </Grid>
-
                   {/* เงื่อนไขในการแสดง TextField และ Button */}
                   {document.status === 2 && (
                     <Grid item xs={12} md={6}>
@@ -440,6 +496,7 @@ function EditDocuments() {
                     </Grid>
                   )}
                 </Grid>
+                
               </Box>
               <Box>
 
@@ -453,11 +510,22 @@ function EditDocuments() {
                     fullWidth
                     multiline
                     rows={4}
+                    sx={{
+                      '& .MuiInputBase-root': {
+                        backgroundColor: '#e3f2fd',
+                        borderRadius: '8px',
+                        '&:hover': {
+                          backgroundColor: '#bbdefb',
+                        },
+                        '&.Mui-focused': {
+                          backgroundColor: '#bbdefb',
+                        },
+                      },
+                    }}
                   />
                 </Grid>
 
-
-                <Box sx={{ mt: 5, textAlign: 'left' }}>
+                {/* <Box sx={{ mt: 5, textAlign: 'left' }}>
                   <Grid item xs={12} md={6}>
                     <input
                       accept=".pdf,.doc,.docx" // อนุญาตให้เลือกเฉพาะไฟล์ PDF, Word
@@ -481,7 +549,7 @@ function EditDocuments() {
                   <Typography variant="caption" color="textSecondary">
                     สำหรับแนบไฟล์ตอบกลับผู้ใช้
                   </Typography>
-                </Box>
+                </Box> */}
 
               </Box>
               <DialogActions style={{ justifyContent: 'center' }}>

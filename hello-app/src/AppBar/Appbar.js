@@ -4,6 +4,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider'; // นำเข้า Divider
 import { styled } from '@mui/material/styles';
 
 // กำหนดสไตล์โลโก้
@@ -37,24 +38,35 @@ function Appbar() {
           }}
         >
           <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', flexDirection: { xs: 'column', md: 'row' } }}>
-            <Logo src="/asset/logosc.png" alt="Logo" />
-            <Box sx={{ flexGrow: 1, textAlign: 'center', mt: { xs: 2, md: 0 } }}>
-              <Typography variant="h5" component="div" gutterBottom
+            <Logo src="/asset/logosc.png" alt="Logo" aria-label="Company Logo" />
+            {/* เส้นตรงแนวตั้ง */}
+            <Divider orientation="vertical" flexItem sx={{ borderColor: 'black', mx: 2 }} />
+            <Logo src="/asset/logoemoji.png" alt="Logo" aria-label="Company Logo" />
+            <Box sx={{ flexGrow: 1, textAlign: 'left', mt: { xs: 2, md: 0 } }}>
+              <Typography
+                variant="h4"
+                component="div"
+                gutterBottom
                 sx={{
                   color: 'black',
                   [theme => theme.breakpoints.down('sm')]: {
-                    fontSize: '1.2rem', // ลดขนาด font ในหน้าจอขนาดเล็ก
+                    fontSize: '1.2rem', // ลดขนาดฟอนต์ในหน้าจอขนาดเล็ก
                   },
-                }} >
+                }}
+              >
                 ระบบเตรียมข้อมูลสำหรับป้อนเข้าสู่ระบบเอกสารอิเล็กทรอนิกส์
               </Typography>
-              <Typography variant="h6" component="div" gutterBottom
+              <Typography
+                variant="h6"
+                component="div"
+                gutterBottom
                 sx={{
                   color: 'black',
                   [theme => theme.breakpoints.down('sm')]: {
-                    fontSize: '1rem', // ลดขนาด font ในหน้าจอขนาดเล็ก
+                    fontSize: '1rem', // ลดขนาดฟอนต์ในหน้าจอขนาดเล็ก
                   },
-                }}>
+                }}
+              >
                 Data Preparation For E-DOC System
               </Typography>
             </Box>

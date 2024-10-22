@@ -451,7 +451,7 @@ function Documents() {
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
                                                     {/* ปุ่ม Edit ถูกปิดเมื่อสถานะเอกสารเป็น "ดำเนินการเรียบร้อย" */}
-                                                    <Tooltip title="แก้ไขข้อมูลเอกสาร" arrow>
+                                                    <Tooltip title="รับเอกสารและแก้ไข" arrow>
                                                         <Button
                                                             variant="contained"
                                                             sx={{
@@ -471,7 +471,7 @@ function Documents() {
                                                             disabled={doc.status === 2} // ปิดปุ่มเมื่อสถานะเป็น "ดำเนินการเรียบร้อย"
                                                         >
                                                             <EditIcon /> {/* ไอคอนการแก้ไข */}
-                                                            Edit
+                                                            แก้ไข
                                                         </Button>
                                                     </Tooltip>
 

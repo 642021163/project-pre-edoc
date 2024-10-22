@@ -26,6 +26,17 @@ const UserProfile = () => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errors, setErrors] = useState({
+    prefix: '',
+    user_fname: '',
+    user_lname: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    phone_number: '',
+    affiliation: '',
+    role: ''
+});
 
 
   useEffect(() => {
@@ -262,15 +273,22 @@ const UserProfile = () => {
           <DialogActions style={{ justifyContent: 'center' }}>
             <Button
               type="submit"
-              color="primary"
               variant="contained"
+              color="success"
+              sx={{  backgroundColor: '#0E793C' }}
               style={{ marginRight: '8px' }}
             >
               บันทึก
             </Button>
             <Button
               color="secondary"
-              variant="outlined"
+              variant="contained"
+              sx={{
+                backgroundColor: '#52525B',
+                '&:hover': {
+                  backgroundColor: '#3F3F46',
+                },
+              }}
               onClick={() => {
                 setLoading(true); // เริ่มการโหลดเมื่อกดปุ่ม
                 setTimeout(() => {
@@ -302,6 +320,7 @@ const UserProfile = () => {
             onChange={(e) => setNewPassword(e.target.value)}
             fullWidth
             margin="normal"
+            helperText={errors.password || '*รหัสผ่านต้องมีความยาวอย่างน้อย 8 ตัวอักษร'}
           />
           <TextField
             label="ยืนยันรหัสผ่านใหม่"
@@ -311,7 +330,7 @@ const UserProfile = () => {
             fullWidth
             margin="normal"
           />
-          <Button type="submit" color="primary" variant="contained" style={{ marginTop: '16px' }}>
+          <Button type="submit"  color="success" variant="contained"  sx={{  backgroundColor: '#0E793C' }} style={{ marginTop: '16px' }}>
             เปลี่ยนรหัสผ่าน
           </Button>
         </form>

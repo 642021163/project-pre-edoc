@@ -15,6 +15,7 @@ import MenuItem from '@mui/material/MenuItem';
 import HomeIcon from '@mui/icons-material/Home';
 import { useNavigate } from 'react-router-dom';
 import CircularProgress from '@mui/material/CircularProgress';
+import Swal from 'sweetalert2';
 
 
 const pages = ['Home'];
@@ -63,14 +64,27 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    if (window.confirm('คุณแน่ใจหรือว่าต้องการออกจากระบบ?')) {
-      localStorage.clear();
-      setLoading(true); // เริ่มการโหลด
-      setTimeout(() => {
-        navigate('/loginpage');
-        setLoading(false); // หยุดการโหลดหลังจากเปลี่ยนหน้า
-      }, 400); // หน่วงเวลา 400ms
-    }
+    Swal.fire({
+      title: 'คุณแน่ใจว่าต้องการออกจากระบบไหม?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'ใช่',
+      cancelButtonText: 'ไม่',
+      onBeforeOpen: () => {
+        Swal.showLoading(); // แสดง loading ขณะรอการยืนยัน
+      },
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setLoading(true); // เริ่มการโหลด
+        localStorage.clear();
+
+        // ใช้ setTimeout เพื่อเลียนแบบการโหลด
+        setTimeout(() => {
+          setLoading(false); // หยุดการโหลด
+          navigate('/loginpage');
+        }, 600); // ปรับเวลาได้ตามต้องการ
+      }
+    });
   };
 
   const stringToColor = (string) => {
@@ -180,10 +194,14 @@ function Navbar() {
                   <MenuItem>
                     <Typography textAlign="center">{username}</Typography>
                   </MenuItem>
-                  <MenuItem onClick={handleLogout}>
+                  <MenuItem onClick={() => {
+                    setAnchorElUser(null); // ปิดเมนู Dropdown
+                    handleLogout(); // เรียกฟังก์ชัน logout
+                  }}>
                     <Typography textAlign="center">Logout</Typography>
                   </MenuItem>
                 </Menu>
+
               </>
             )}
           </Box>

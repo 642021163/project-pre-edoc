@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CssBaseline, Container, Box, Typography, TextField, Button, RadioGroup, FormControlLabel, Radio, CircularProgress } from '@mui/material';
+import { CssBaseline, Container, Box, Typography, TextField, Button, RadioGroup, FormControlLabel, Radio, CircularProgress, Link, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Facebook, Twitter, Instagram, LinkedIn } from '@mui/icons-material';
 
 // กำหนดสไตล์โลโก้
 const Logo = styled('img')(({ theme }) => ({
@@ -28,7 +29,8 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate(); // กำหนด useNavigate
-  const [loading, setLoading] = useState(false);
+  const [loadingLogin, setLoadingLogin] = useState(false); // สถานะการโหลดเข้าสู่ระบบ
+  const [loadingRegister, setLoadingRegister] = useState(false); // สถานะการโหลดลงทะเบียน
 
   useEffect(() => {
     // ตรวจสอบ token เมื่อหน้า LoginPage โหลดขึ้นมา
@@ -51,7 +53,7 @@ function LoginPage() {
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    setLoading(true); // เริ่มแสดง CircularProgress
+    setLoadingLogin(true); // เริ่มแสดง CircularProgress
     try {
       // ใช้ setTimeout เพื่อเลียนแบบการหน่วงเวลา 2 วินาที
       await new Promise((resolve) => setTimeout(resolve, 1000)); // หน่วงเวลา 2 วินาที
@@ -85,29 +87,63 @@ function LoginPage() {
       console.error('Login Error:', err.response ? err.response.data : err.message);
       setError(err.response ? err.response.data.message : 'Login failed'); // แสดงข้อความผิดพลาด
     } finally {
-      setLoading(false);
+      setLoadingLogin(false);
     }
+  };
+
+
+  const handleNavigate = () => {
+    setLoadingRegister(true);
+    setTimeout(() => {
+      navigate('/registerfrom');
+      setLoadingRegister(false);
+    }, 400);
   };
 
   return (
     <React.Fragment>
       <CssBaseline />
-      {loading && (
-        <Box style={{
-          position: 'fixed',
-          top: '50%', // ย้ายขึ้นกลางจอ
-          left: '50%', // ย้ายไปกลางจอ
-          transform: 'translate(-50%, -50%)', // ปรับตำแหน่งให้ตรงกลาง
-          width: '300px', // ความกว้างของกรอบ
-          padding: '20px', // การเว้นระยะภายในกรอบ
-          backgroundColor: 'rgba(255, 255, 255, 0.9)', // เปลี่ยนสีพื้นหลัง
-          borderRadius: '8px', // มุมโค้ง
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // เงาเพื่อให้ดูเด่นขึ้น
-          zIndex: 9999
-        }}>
+      {/* CircularProgress สำหรับการเข้าสู่ระบบ */}
+      {loadingLogin && (
+        <Box
+          style={{
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '300px',
+            padding: '20px',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '8px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+            zIndex: 9999,
+          }}
+        >
           <Box sx={{ textAlign: 'center' }}>
             <CircularProgress />
             <Typography sx={{ mt: 2 }}>กำลังเข้าสู่ระบบ...</Typography>
+          </Box>
+        </Box>
+      )}
+
+      {/* CircularProgress สำหรับการลงทะเบียน */}
+      {loadingRegister && (
+        <Box
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            zIndex: 9999
+          }}
+        >
+          <Box sx={{ textAlign: 'center' }}>
+            <CircularProgress />
           </Box>
         </Box>
       )}
@@ -122,7 +158,7 @@ function LoginPage() {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          p: 2,
+          p: 1,
           backgroundImage: 'url("/asset/BG5.jpg")', // ใส่รูปภาพพื้นหลัง
           backgroundSize: 'cover', // ปรับขนาดพื้นหลังให้ครอบคลุมพื้นที่ทั้งหมด
           backgroundPosition: 'center', // จัดตำแหน่งรูปภาพให้อยู่ตรงกลาง
@@ -153,6 +189,7 @@ function LoginPage() {
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.3)', // เงาของข้อความ
               fontWeight: 'bold', // ทำให้ข้อความหนาขึ้น
               textAlign: 'center', // จัดตำแหน่งข้อความกลาง
+
             }}
           >
             LOGIN
@@ -172,7 +209,7 @@ function LoginPage() {
             </RadioGroup>
           </Box>
 
-          <Box component="form" sx={{ width: '100%', mt: 2 }} onSubmit={handleLogin}>
+          <Box component="form" sx={{ width: '100%', mt: 1 }} onSubmit={handleLogin}>
             <TextField
               fullWidth
               label="Email"
@@ -194,23 +231,29 @@ function LoginPage() {
             {error && (<Typography color="error" sx={{ mb: 2, textAlign: 'center' }}>{error}</Typography>)}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', mt: 2 }}>
-              <Button type="submit" variant="contained" color="primary" sx={{ mb: 2 }} disabled={loading}>
-                {loading ? 'Logging in...' : 'Login'}
+              <Button type="submit" variant="contained" color="primary" sx={{ mb: 2 }} disabled={loadingLogin}>
+                {loadingLogin ? 'Logging in...' : 'Login'}
               </Button>
               {userType !== 'admin' && (
-                <Button variant="outlined"
+                <Link
+                  variant="body2"
+                  onClick={handleNavigate}
                   sx={{
-                    borderColor: '#4caf50', // สีของกรอบ (สีเขียว)
-                    color: '#4caf50', // สีของข้อความ (สีเขียว)
+                    textDecoration: 'none', // ลบขีดเส้นใต้
+                    color: '#0E793C', // สีน้ำเงิน
+                    fontSize: '14px', // ปรับขนาดฟอนต์
                     '&:hover': {
-                      borderColor: '#388e3c', // สีของกรอบเมื่อเมาส์ชี้ (สีเขียวเข้ม)
-                      color: '#ffffff', // เปลี่ยนสีข้อความเมื่อเมาส์ชี้ (สีขาว)
-                      backgroundColor: '#4caf50', // เปลี่ยนสีพื้นหลังเมื่อเมาส์ชี้ (สีเขียว)
+                      textDecoration: 'underline', // เพิ่มเส้นใต้เมื่อ Hover
+                      color: '#0E793C', // เปลี่ยนสีเมื่อ Hover
                     },
+                    cursor: 'pointer', // แสดง pointer เมื่อชี้เมาส์
                   }}
-                  onClick={() => navigate('/registerfrom')}>
-                  Register
-                </Button>
+                >
+
+
+                  ยังไม่มีบัญชี? สมัครสมาชิกที่นี่
+                </Link>
+
 
               )}
             </Box>
@@ -218,11 +261,36 @@ function LoginPage() {
         </Box>
       </Container>
 
+
       {/* Footer */}
-      <Box sx={{ bgcolor: '#1976d2', color: 'white', p: 2, textAlign: 'center' }}>
-        <Typography variant="body2">
-          © 2024 Faculty of Science and Digital Innovation, Thaksin University
+      <Box sx={{ bgcolor: '#003b8c', color: '#e0e0e0', p: 1, textAlign: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 1, sm: 0 }, justifyContent: 'center' }}>
+            <img src="/asset/logoemoji.png" alt="Logo" style={{ height: '40px', marginRight: '10px' }} />
+            <Typography variant="body2" sx={{ textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>
+              © 2024 Faculty of Science and Digital Innovation, Thaksin University
+            </Typography>
+          </Box>
+        </Box>
+
+        <Typography variant="body2" sx={{ mb: 1, textShadow: '1px 1px 2px rgba(0, 0, 0, 0.5)' }}>
+          Contact us: akkarachai003@gmail.com | Phone: (096) 864-8749
         </Typography>
+
+        {/* <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
+          <IconButton component={Link} href="https://facebook.com" color="inherit" target="_blank" sx={{ mx: 0.5 }}>
+            <Facebook />
+          </IconButton>
+          <IconButton component={Link} href="https://twitter.com" color="inherit" target="_blank" sx={{ mx: 0.5 }}>
+            <Twitter />
+          </IconButton>
+          <IconButton component={Link} href="https://instagram.com" color="inherit" target="_blank" sx={{ mx: 0.5 }}>
+            <Instagram />
+          </IconButton>
+          <IconButton component={Link} href="https://linkedin.com" color="inherit" target="_blank" sx={{ mx: 0.5 }}>
+            <LinkedIn />
+          </IconButton>
+        </Box> */}
       </Box>
     </React.Fragment>
   );

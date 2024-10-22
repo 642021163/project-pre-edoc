@@ -97,7 +97,7 @@ const TrackDocuments = () => {
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            cancelButtonColor: '#52525B',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel',
         }).then(async (result) => {
@@ -224,9 +224,9 @@ const TrackDocuments = () => {
             )}
             <Drawer menuOpen={menuOpen} toggleMenu={toggleMenu} />
             {/* เนื้อหาหลัก */}
-            <Box sx={{ flex: 1, p: 2, bgcolor: '#E4E4E7' }}>
+            <Box sx={{ flex: 1, p: 2, bgcolor: '#E4E4E7',textAlign:'left' }}>
                 <Typography variant="h4" gutterBottom>
-                    ยินดีต้อนรับสู่หน้าแรก
+                    ติดตามเอกสาร
                 </Typography>
                 <Box sx={{ overflowX: 'auto', p: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '4px', px: 1, mx: 2, mb: 4 }}>
@@ -309,27 +309,29 @@ const TrackDocuments = () => {
                                                             startIcon={<EditIcon />}
                                                             color="primary"
                                                             sx={{
-                                                                mx: 0.5,
+                                                                mx: 1,
+                                                                backgroundColor: '#ffeb3b', // สีหลักของปุ่ม
+                                                                color: '#000',
                                                                 '&:hover': {
-                                                                    backgroundColor: '#1976d2',
-                                                                    boxShadow: '0 4px 20px rgba(25, 118, 210, 0.3)',
+                                                                    backgroundColor: '#fbc02d', // สีเมื่อชี้เมาส์
                                                                 },
-                                                                transition: '0.3s',
+                                                                display: 'flex',
+                                                                alignItems: 'center', // จัดแนวให้อยู่กลาง
                                                             }}
                                                             onClick={() => handleEditClick(doc.document_id)}
 
                                                             disabled={doc.status === 1 || doc.status === 2}
                                                         >
-                                                            Edit
+                                                            แก้ไข
                                                         </Button>
                                                         <Button
-                                                            variant="outlined"
+                                                            variant="contained"
                                                             startIcon={<DeleteIcon />}
                                                             color="error"
                                                             sx={{
                                                                 mx: 0.5,
                                                                 '&:hover': {
-                                                                    backgroundColor: '#f44336',
+                                                                    backgroundColor: '#b71c1c', 
                                                                     color: '#fff',
                                                                 },
                                                                 transition: '0.3s',
@@ -338,7 +340,7 @@ const TrackDocuments = () => {
 
                                                             disabled={doc.status === 1 || doc.status === 2}
                                                         >
-                                                            Delete
+                                                            ลบ
                                                         </Button>
                                                     </Box>
                                                 </TableCell>
@@ -432,7 +434,7 @@ const TrackDocuments = () => {
 
                                 { label: 'ผู้ส่ง:', value: senderName },
                                 { label: 'ผู้รับเอกสาร:', value: getAdminNameById(selectedDocument.recipient) },
-                                // { label: 'ที่ต้องแก้ไข:', value: selectedDocument.reply },
+                                { label: 'ที่ต้องแก้ไข:', value: selectedDocument.reply },
                             ].map((item, index) => (
                                 <Grid item xs={12} key={index}>
                                     <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', borderBottom: '1px solid #e0e0e0', pb: 1 }}>
@@ -451,11 +453,19 @@ const TrackDocuments = () => {
                     <Button
                         onClick={handleClose}
                         variant="contained"
-                        color="secondary"
-                        sx={{ mt: 3, width: '100%' }}
+                        sx={{
+                            mt: 3,
+                            width: '100%',
+                            backgroundColor: '#52525B',
+                            color: '#FFFFFF',
+                            '&:hover': {
+                                backgroundColor: '#3F3F46', // สีที่เข้ากันเมื่อ hover
+                            },
+                        }}
                     >
                         ปิด
                     </Button>
+
                 </Box>
             </Modal>
         </Box>

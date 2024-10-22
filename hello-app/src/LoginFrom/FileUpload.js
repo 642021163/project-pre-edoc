@@ -258,7 +258,7 @@ function FileUpload() {
                 <InputLabel>ถึง</InputLabel>
                 <Select
                   name="to_recipient"
-                  value={values.to_recipient}
+                  value={values.to_recipient}               
                   onChange={(e) => {
                     const value = e.target.value;
                     setValues((prev) => ({
@@ -310,7 +310,6 @@ function FileUpload() {
 
                 >
                   <MenuItem value="">
-                    <em>None</em>
                   </MenuItem>
                   <MenuItem value="เอกสารภายใน">เอกสารภายใน</MenuItem>
                   <MenuItem value="เอกสารภายนอก">เอกสารภายนอก</MenuItem>
@@ -339,7 +338,7 @@ function FileUpload() {
                 {/* ช่องสำหรับเลือกไฟล์ */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <input
-                    accept=".pdf,.doc,.docx " // อนุญาตให้เลือกเฉพาะไฟล์ PDF
+                    accept=".doc,.docx " // อนุญาตให้เลือกเฉพาะไฟล์ PDF
                     id="upload-file"
                     type="file"
                     style={{ display: 'none' }} // ซ่อน input ดั้งเดิม
@@ -350,7 +349,7 @@ function FileUpload() {
                     <Button
                       variant="contained"
                       component="span"
-                      startIcon={<PictureAsPdfIcon />}
+                      startIcon={<InsertDriveFileIcon />}
                       sx={{ mr: 2, width: '150px', height: '50px', fontSize: '16px' }}
                     >
                       เลือกไฟล์
@@ -387,7 +386,7 @@ function FileUpload() {
 
                 {/* ข้อความแจ้งเตือนสำหรับไฟล์ PDF */}
                 <Typography variant="caption" color="textSecondary">
-                  * ไฟล์ PDF , Word
+                  * แนบไฟล์  Word
                 </Typography>
               </Box>
 
@@ -443,15 +442,19 @@ function FileUpload() {
                   variant="contained" endIcon={<SendIcon />}
                   onClick={handleSubmit}
                   disabled={!fileName}
-                  sx={{ width: '150px', height: '50px', fontSize: '16px' }}
+                   color="success"
+                  sx={{ width: '150px', height: '50px', fontSize: '16px',backgroundColor:'#0E793C' }}
                 >
                   บันทึก
                 </Button>
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="error"
                   onClick={resetForm}
-                  sx={{ width: '150px', height: '50px', fontSize: '16px' }}
+                  sx={{ width: '150px', height: '50px', fontSize: '16px',backgroundColor:'#52525B',
+                    '&:hover': {
+                        backgroundColor: '#3F3F46', // สีที่เข้ากันเมื่อ hover
+                    }, }}
                 >
                   ล้างข้อมูล
                 </Button>
@@ -472,16 +475,16 @@ function FileUpload() {
             </Typography>
             <Box component="ol" sx={{ pl: 2, mt: 2 }}>
               <Typography component="li" variant="body1" sx={{ mb: 1 }}>
-                กรอกข้อมูลในแบบฟอร์มทางซ้ายมือ เช่น ชื่อเอกสารและผู้รับ
+                กรอกข้อมูลในแบบฟอร์มทางซ้ายมือ เช่น ชื่อเอกสาร
               </Typography>
               <Typography component="li" variant="body1" sx={{ mb: 1 }}>
-                เลือกประเภทเอกสาร และเพิ่มรายละเอียดในช่องหมายเหตุ (ถ้ามี)
+                เลือกประเภทเอกสาร และเพิ่มรายละเอียดในช่องหมายเหตุ" (ถ้าไม่มีใส่ - ) "
               </Typography>
               <Typography component="li" variant="body1" sx={{ mb: 1 }}>
-                คลิกปุ่ม "เลือกไฟล์" เพื่ออัปโหลดเอกสารในรูปแบบ PDF
+                คลิกปุ่ม "เลือกไฟล์" เพื่ออัปโหลดเอกสารด้วยไฟล์ WORD ชื่อไฟล์ที่รองรับ เช่น exam.docx
               </Typography>
               <Typography component="li" variant="body1" sx={{ mb: 1 }}>
-                เมื่ออัปโหลดเสร็จแล้ว คุณสามารถติดตามสถานะของเอกสารได้ในหน้าติดตามเอกสาร
+                เมื่ออัปโหลดเสร็จแล้ว คุณสามารถติดตามสถานะของเอกสารได้ในหน้า "ติดตามเอกสาร"
               </Typography>
             </Box>
             <Typography variant="body1" sx={{ mt: 2, color: '#555' }}>

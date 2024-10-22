@@ -5,6 +5,7 @@ import axios from 'axios';
 import SendIcon from '@mui/icons-material/Send';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import Swal from 'sweetalert2';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 
 const EditDocument = () => {
     const { id } = useParams();
@@ -197,8 +198,8 @@ const EditDocument = () => {
                             mt: 2
                         }}
                     >
-                        <PictureAsPdfIcon sx={{ color: '#d32f2f', mr: 1 }} /> {/* แสดงไอคอน PDF */}
-                        <Typography variant="body2" sx={{ color: 'black' }}>
+                        <InsertDriveFileIcon sx={{ color: '#006FEE', mr: 1 }} /> {/* แสดงไอคอน PDF */}
+                        <Typography variant="body2" sx={{ color: 'primary' }}>
                             ไฟล์ที่เคยอัปโหลด: {existingFileName}
                         </Typography>
                     </Paper>
@@ -206,8 +207,8 @@ const EditDocument = () => {
 
                 {/* ปุ่มสำหรับอัปโหลดไฟล์ใหม่ */}
                 <Box sx={{ width: '100%', mb: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mt: 3 }}>
-                    <Button variant="contained" component="label" startIcon={<PictureAsPdfIcon />} >
-                        อัปโหลดไฟล์ใหม่
+                    <Button variant="contained" component="label" startIcon={<InsertDriveFileIcon />} >
+                        เลือกไฟล์ใหม่
                         <input type="file" hidden onChange={handleFileChange} />
                     </Button>
                     {fileName && (
@@ -221,7 +222,7 @@ const EditDocument = () => {
                                 borderRadius: 1,
                             }}
                         >
-                            <PictureAsPdfIcon sx={{ color: '#d32f2f', mr: 1 }} />
+                            <InsertDriveFileIcon sx={{ color: '#d32f2f', mr: 1 }} />
                             <Typography variant="body2" sx={{ mt: 1 }}>
                                 ไฟล์ที่เลือก: {fileName}
                             </Typography>
@@ -236,17 +237,28 @@ const EditDocument = () => {
                             variant="contained"
                             endIcon={<SendIcon />}
                             onClick={handleSubmit}
-                            sx={{ width: '150px', height: '50px', fontSize: '16px' }}
+                            color="success"
+                            sx={{ width: '150px', height: '50px', fontSize: '16px', backgroundColor: '#0E793C' }}
                         >
                             บันทึก
                         </Button>
                         <Button
                             variant="contained"
-                            sx={{ width: '150px', height: '50px', fontSize: '16px' }}
                             onClick={handleCancel}
+                            sx={{
+                                width: '150px',
+                                height: '50px',
+                                fontSize: '16px',
+                                backgroundColor: '#52525B',
+                                color: '#FFFFFF',
+                                '&:hover': {
+                                    backgroundColor: '#3F3F46', // สีที่เข้ากันเมื่อ hover
+                                },
+                            }}
                         >
                             ยกเลิก
                         </Button>
+
                     </Box>
                 </Box>
 

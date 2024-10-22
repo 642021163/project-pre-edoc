@@ -282,7 +282,8 @@ function ReceiptsList() {
                                                 </TableRow>
                                                 <TableRow>
                                                     <TableCell>รวมเงินประหยัดกระดาษ</TableCell>
-                                                    <TableCell>{totalSavings}</TableCell>
+                                                    <TableCell>{Number(totalSavings).toFixed(2)}</TableCell> {/* จำกัดทศนิยม 2 ตำแหน่ง */}
+
                                                 </TableRow>
                                             </TableHead>
                                         </Table>
@@ -305,7 +306,8 @@ function ReceiptsList() {
                                                     <TableRow key={admin.user_id}>
                                                         <TableCell>{`${admin.user_fname} ${admin.user_lname}`}</TableCell>
                                                         <TableCell>{admin.count}</TableCell>
-                                                        <TableCell>{admin.paper_cost}</TableCell>
+                                                        <TableCell>{Number(admin.paper_cost).toFixed(2)}</TableCell> {/* จำกัดทศนิยม 2 ตำแหน่ง */}
+
                                                     </TableRow>
                                                 ))}
                                                 {/* แถวรวม */}
@@ -318,9 +320,12 @@ function ReceiptsList() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <strong>
-                                                            {adminData.reduce((total, admin) => total + admin.paper_cost, 0).toLocaleString()}
+                                                            {(
+                                                                adminData.reduce((total, admin) => total + admin.paper_cost, 0)
+                                                            ).toFixed(2).toLocaleString()} {/* จำกัดทศนิยม 2 ตำแหน่งและแปลงเป็นรูปแบบที่อ่านได้ */}
                                                         </strong>
                                                     </TableCell>
+
                                                 </TableRow>
                                             </TableBody>
                                         </Table>

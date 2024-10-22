@@ -112,10 +112,13 @@ const CompletedDocuments = () => {
 
     return (
         <Layout>
-            <Box sx={{ padding: 3 }}>
-                <Typography variant="h4" gutterBottom>
-                    เอกสารที่ดำเนินการเรียบร้อย
-                </Typography>
+           
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#1976d2' }}>
+              เอกสารที่ดำเนินการเรียบร้อย
+              </Typography>
+              </Box>
+              
 
                 <TextField
                     variant="outlined"
@@ -136,8 +139,8 @@ const CompletedDocuments = () => {
                 {loading ? (
                     <CircularProgress />
                 ) : (
-                    <TableContainer>
-                        <Table>
+                    <TableContainer sx={{ maxHeight: 440, bgcolor: '#f8f8f8', borderRadius: '8px', boxShadow: 2 }}>
+                        <Table stickyHeader>
                             <TableHead>
                                 <TableRow>
                                     <TableCell>ลำดับ</TableCell>
@@ -212,7 +215,7 @@ const CompletedDocuments = () => {
                         onChange={(event, value) => setPage(value)} // เปลี่ยนหน้าเมื่อคลิก
                     />
                 </Box>
-            </Box>
+           
         </Layout>
     );
 };
